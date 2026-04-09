@@ -1,3 +1,4 @@
+import DependenciesSection from "@/features/home/component/depndnces-sction";
 import HeroSection from "@/features/home/component/hero";
 import { HeroStats } from "@/features/home/component/hero-stats";
 import StepsSection from "@/features/home/component/steps-sections";
@@ -14,6 +15,7 @@ export default async function Home() {
       <WhyUsSection />
       <ServicesSection />
       <StepsSection />
+      <DependenciesSection />
     </main>
   );
 }
