@@ -1,0 +1,147 @@
+{
+  "hello": "hello",
+  "socials": {
+    "facebook": "facebook",
+    "twitter": "twitter",
+    "instagram": "instagram",
+    "tiktok": "tiktok",
+    "whatsapp": "whatsapp"
+  },
+    "navbar": {
+    "home": "home",
+    "about": "about",
+    "services": "services",
+    "contact": "contact",
+    "clients": "clients",
+    "blog": "blog",
+    "courses": "courses",
+    "faq": "faq",
+    "contact-us": "contact-us",
+    "login": "login"
+  },
+  "not-found": {
+    "title": "404 - Page Not Found",
+    "description": "Sorry, the page you are looking for does not exist or has been moved.",
+    "backHome": "Back to Home"
+  },
+  "hero": {
+    "title": "Howeyah",
+    "description": "For Marketing and Digital Solutions",
+    "subDescription": "We study your brand to set you on the fastest path to achieving your goals ahead of competitors.",
+    "contactUs": "Contact Us",
+    "viewServices": "Book your services now",
+    "stats": {
+      "leadership": {
+        "title": "Years of Leadership",
+        "description": "Experience that builds trust and delivers results"
+      },
+      "success": {
+        "title": "Success Story",
+        "description": "Every story is a testament to our achievements"
+      },
+      "sales": {
+        "title": "Million Riyals in Sales",
+        "description": "Numbers that speak to the strength of our strategies"
+      },
+      "traffic": {
+        "title": "Free Traffic",
+        "description": "Real Growth Through Marketing Intelligence"
+      }
+    }
+  },
+  "why-choose-us": {
+    "title": "Why Choose Howeyah Marketing?",
+    "description": "At Howeyah, we believe that every success begins with an innovative idea and precise execution. We turn your vision into a tangible reality through innovative marketing strategies and exclusive content, backed by accurate market research, to provide customized solutions that ensure your marketing goals are achieved efficiently and confidently.",
+    "features": [
+      {
+        "title": "Leading Local and International Experience:",
+        "description": "Howeyah is one of the best marketing companies in Muscat and Oman, with extensive experience in understanding local and Gulf markets, designing innovative digital strategies."
+      },
+      {
+        "title": "Good Reputation in the Labor Market",
+        "description": "Known as the best marketing company in the Arabian Gulf, providing integrated marketing solutions with a focus on excellence in digital campaign management."
+      },
+      {
+        "title": "Effective and Precise Campaign Management:",
+        "description": "If you are looking for the best advertising campaign company, Howeyah excels in professional campaigns that target the right audience at the right time."
+      },
+      {
+        "title": "Measurable Results and Continuous Improvement:",
+        "description": "We are considered the best campaign company thanks to advanced analysis tools that allow real-time monitoring of campaign performance."
+      },
+      {
+        "title": "Innovative and Customized Solutions:",
+        "description": "We don't rely on traditional methods, but create innovative digital marketing strategies customized for each client."
+      }
+    ]
+  },
+  "servicesSection": {
+    "title": "Professional Marketing Services for Your Business Success",
+    "subtitle": "We provide comprehensive digital marketing solutions to help you achieve strong results, increase your customers, and grow your business consistently.",
+ "items": [
+      {
+        "title": "E-commerce Management",
+        "description": "We help you expand your business by creating and managing your online store professionally, showcasing your products in an organized and attractive way that increases sales and grows your customer base. This includes optimizing user experience, integrating payment systems, and delivering a seamless experience with measurable results."
+      },
+      {
+        "title": "Social Media Management (SMM)",
+        "description": "We strengthen your brand presence across all platforms through professional content and effective publishing strategies that ensure audience engagement. We help you build strong relationships with your customers and increase brand loyalty, resulting in consistent digital growth."
+      },
+      {
+        "title": "Ad Campaign Management (ADS)",
+        "description": "We create and manage effective advertising campaigns across multiple platforms, precisely targeting your audience and continuously analyzing performance to ensure optimal results. Our focus is on maximizing ROI, increasing reach, and attracting potential customers for sustainable business growth."
+      },
+      {
+        "title": "Search Engine Optimization (SEO)",
+        "description": "We improve your website’s visibility on Google and top search results through effective SEO strategies, helping you attract more potential customers and increase organic traffic. We optimize site structure, performance, and content to ensure top rankings and the best outcomes."
+      },
+      {
+        "title": "Influencer Marketing",
+        "description": "We help your brand reach a wider audience by collaborating with trusted influencers in your niche, increasing brand awareness and building customer trust. We carefully select influencers to ensure maximum campaign impact."
+      },
+      {
+        "title": "Website Development",
+        "description": "We transform your digital presence into a powerful experience by designing and developing professional websites that reflect your brand identity and provide a smooth user experience. We focus on high performance and full responsiveness across all devices."
+      },
+      {
+        "title": "Reels Video Production",
+        "description": "We turn your ideas into engaging short-form videos (Reels) that capture attention and boost engagement across social media platforms. Using modern editing techniques, we ensure high reach and strong marketing impact."
+      },
+      {
+        "title": "Graphic Design",
+        "description": "We create modern and distinctive designs that reflect your brand identity and present your business professionally. Our services include social media designs and full visual identity solutions for a strong and lasting impact."
+      }
+    ]
+  },
+  "searchDialog": {
+    "title": "Know About Howeyah",
+    "description": "Search for services, products, or any other information on our website.",
+    "placeholder": ["Who is Howeyah ?", "What are Howeyah's services ?", "What are Howeyah's projects ?"]
+  },
+  "stepsSection": {
+    "title": "How do we help your business grow?",
+    "subtitle": "We provide integrated marketing solutions in digital marketing, and help you achieve strong results, increase your customers, and grow your business consistently.",
+    "items": [
+      {
+        "title": "Custom Marketing Strategies",
+        "description": "We design digital campaigns that align with your goals and target audience."
+      },
+      {
+        "title": "Improve Your Search Visibility (SEO)",
+        "description": "We increase your website’s visibility in search results to reach your customers easily."
+      },
+      {
+        "title": "Manage Your Ad Campaigns",
+        "description": "We run effective paid campaigns to achieve the highest return on investment."
+      },
+      {
+        "title": "Social Media Marketing",
+        "description": "We boost your audience engagement and build an active community around your brand."
+      },
+      {
+        "title": "Performance Analysis & Improvement",
+        "description": "We monitor performance and continuously develop your strategy for sustainable growth."
+      }
+    ]
+  }
+}
