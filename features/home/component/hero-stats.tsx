@@ -20,16 +20,16 @@ function StatItem({ value, suffix, title, description, index }: StatItemProps) {
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-white/50 backdrop-blur-3xl flex flex-col items-center justify-center p-4   rounded-2xl   text-center min-w-[250px] flex-1"
+      className="bg-white/50 backdrop-blur-3xl flex flex-col items-center justify-center p-4   rounded-2xl   text-center min-w-[200px] flex-1"
     >
-      <div className="lg:text-5xl text-3xl font-extrabold text-brand flex items-center gap-0.5">
+      <div className=" text-3xl font-extrabold text-brand flex items-center gap-0.5">
         <NumberTicker value={value} className="text-brand" />
         {suffix && <span className="text-brand">{suffix}</span>}
       </div>
-      <h3 className=" font-bold mt-2 text-zinc-800 text-lg">
+      <h3 className=" font-bold mt-2 text-zinc-800 text-xs">
         {title}
       </h3>
-      <p className=" text-zinc-900  mt-1 max-w-[180px] text-xs">
+      <p className=" text-zinc-900  mt-1 max-w-[180px] text-[10px]">
         {description}
       </p>
     </motion.div>
