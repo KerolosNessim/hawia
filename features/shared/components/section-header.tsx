@@ -8,6 +8,7 @@ type SectionHeaderProps = {
   badge?: string;
   align?: "center" | "start";
   subtitleColor?: string;
+  titleColor?: string;
 };
 
 export default function SectionHeader({
@@ -16,6 +17,7 @@ export default function SectionHeader({
   badge,
   align = "center",
   subtitleColor = "text-gray-200",
+  titleColor = "text-brand",
 }: SectionHeaderProps) {
   const alignment = {
     start: " text-start ",
@@ -43,7 +45,7 @@ export default function SectionHeader({
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         viewport={{ once: true }}
-        className="text-3xl md:text-4xl text-brand font-bold tracking-tight"
+        className={`text-3xl md:text-4xl ${titleColor} font-bold tracking-tight`}
       >
         {title}
       </motion.h2>

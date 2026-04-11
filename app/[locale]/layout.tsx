@@ -1,5 +1,6 @@
 import { DirectionProvider } from "@/components/ui/direction";
 import FloatingSocials from "@/features/shared/components/floating-socials";
+import Footer from "@/features/shared/components/footer";
 import Navbar from "@/features/shared/components/navbar";
 import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
@@ -48,6 +49,7 @@ export default async function RootLayout({
           <DirectionProvider dir={locale === "ar" ? "rtl" : "ltr"}>
             <Navbar/>
             {children}
+            <Footer />
             <FloatingSocials />
           </DirectionProvider>
         </NextIntlClientProvider>

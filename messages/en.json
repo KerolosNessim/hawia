@@ -147,5 +147,189 @@
     "dependenciesSection": {
     "title": "Our Dependencies",
     "subtitle": "Our dependencies are not just logos, but strong partnerships in identity that we build plans with to ensure our clients achieve the best results and excel in the market"
+  },
+  "adsSection": {
+    "title": "Our Innovative Advertising Solutions",
+    "subtitle":"Every shot here reflects the strength of Howeyah, the best advertising company in Saudi Arabia, in turning digital marketing strategies into real results. Through it, we see the impact of our paid campaigns and SEO in increasing our clients' website visibility, improving their search rankings, and attracting a targeted audience, ensuring rapid and sustainable growth for their businesses.",
+    "seo":"Client Samples (SEO)",
+    "ads":"Client Samples (ADS)",
+    "programming":"Client Samples (Programming)",
+    "graphic":"Client Samples (Graphic Design)"
+  },
+  "testimonialsSection": {
+    "title": "Client Reviews & Experiences",
+    "subtitle": "Our clients' reviews confirm that Howeyah is one of the best SEO companies in Muscat, helping improve their websites' visibility, increase targeted visits, and achieve tangible digital results.",
+    "items": [
+      {
+        "quote": "Excellent and distinctive service of the highest quality. We highly recommend them.",
+        "name": "Raslan Al-Maqrami",
+        "role": "E-commerce Store Owner",
+        "company": "Independent Store",
+        "rating": 5
+      },
+      {
+        "quote": "Sultan Al-Hassan",
+        "name": "Sultan Al-Hassan",
+        "role": "Marketing Director",
+        "company": "Al-Hayat Company",
+        "rating": 5
+      },
+      {
+        "quote": "Their team gives you a very organized and transparent view of the results, just as they were once described.",
+        "name": "Bahr Ahmed",
+        "role": "Executive Director",
+        "company": "Felix Company",
+        "rating": 5
+      },
+      {
+        "quote": "The results were remarkable. Our website traffic doubled within just 3 months of working with them.",
+        "name": "Mariam Al-Zahrawi",
+        "role": "CEO",
+        "company": "Al-Noor Trading",
+        "rating": 5
+      },
+      {
+        "quote": "Highly professional team that truly understands digital marketing and delivers beyond expectations.",
+        "name": "Khalid Al-Harbi",
+        "role": "Marketing Manager",
+        "company": "Horizon Tech",
+        "rating": 5
+      },
+      {
+        "quote": "Working with Howeyah transformed our online presence. Their SEO strategies brought us to the top of search results.",
+        "name": "Fatima Al-Rashidi",
+        "role": "Brand Manager",
+        "company": "Pearl Boutique",
+        "rating": 5
+      }
+    ]
+  },
+    "clientsSection":{
+    "title":"Our Partners",
+    "subtitle":"We are proud to collaborate with leading companies and institutions that trust our expertise. With HOweyah’s innovative marketing solutions, our partners have achieved stronger digital presence, effective ad campaigns, and higher customer engagement."
+  },
+  "packagesSection": {
+    "title": "Our Packages",
+    "tabs": [
+      "SEO Packages",
+      "Ads Campaigns",
+      "Visual Identity",
+      "Web Design & Dev"
+    ],
+    "seoPackages": [
+      {
+        "title": "Basic SEO Package",
+        "description": "Ideal for startups, businesses, and individuals who have just launched their website and want to systematically improve their search engine visibility",
+        "button": "Details",
+        "icon": "rocket"
+      },
+      {
+        "title": "Professional SEO Package",
+        "description": "Recommended for businesses seeking to fully enhance their search engine presence and drive more traffic and leads through advanced SEO strategies",
+        "button": "Details",
+        "isPopular": true,
+        "icon": "gem"
+      },
+      {
+        "title": "Comprehensive E-commerce Package",
+        "description": "Recommended for companies and individuals seeking to launch or develop an integrated online store, with all the necessary tools and strategies to increase sales and improve customer experience",
+        "button": "Details",
+        "icon": "target"
+      }
+    ]
+  },
+  "articlesSection": {
+    "title": "Latest Articles in Digital Marketing",
+    "subtitle": "Check out our latest articles in digital marketing and discover how Howeyah, the best marketing company in Saudi Arabia, can help you boost your website's visibility and achieve tangible results.",
+    "readMore": "Read More",
+    "items": [
+      {
+        "title": "Writing Product Descriptions | Professional Guide to Increase Sales",
+        "description": "You can write product descriptions in an attractive and professional way that helps customers understand...",
+        "date": "March 17, 2026",
+        "image": "/ads-2.webp",
+        "link": "#"
+      },
+      {
+        "title": "Types of E-commerce | Comprehensive Guide to Popular Types",
+        "description": "E-commerce types vary based on transaction parties (seller and buyer), including...",
+        "date": "March 16, 2026",
+        "image": "/ads-3.webp",
+        "link": "#"
+      },
+      {
+        "title": "Difference between Zid and Salla | Strategic Guide for Online Stores",
+        "description": "Salla and Zid are among the top platforms for creating online stores in Saudi Arabia...",
+        "date": "March 15, 2026",
+        "image": "/ads-4.webp",
+        "link": "#"
+      }
+    ]
+  },
+  "contactSection": {
+    "title": "Contact Us Now",
+    "subtitle": "Are you ready to accelerate your business growth and increase your brand visibility? Contact us now and let the best SEO company in Oman and our specialized team provide you with innovative digital solutions and effective advertising campaigns to achieve fast, measurable results.",
+    "stayConnected": "Stay in Touch with Us",
+    "phoneLabel": "Mobile / WhatsApp",
+    "emailLabel": "Email",
+    "workingHoursLabel": "Working Hours",
+    "workingHoursText": "Sunday to Thursday: 10 AM to 6 PM",
+    "leaveMessage": "Leave your message here",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Mobile Number",
+      "message": "Your Message",
+      "submit": "Send"
+    }
+  },
+  "footer": {
+    "brandDescription": "Leaving a mark at the core of your brand",
+    "registeredTrademark": "Registered Trademark No. 181546",
+    "trademarkCertificate": "Trademark Certificate",
+    "authenticatedBy": "Authenticated by the Ministry of Commerce & Investment",
+    "omanServicesTitle": "Most Requested Services in Oman:",
+    "turkeyServicesTitle": "Most Requested Services in Turkey:",
+    "saudiServicesTitle": "Most Requested Services in Saudi Arabia:",
+    "omanServicesIntro": "Howeyah, the best marketing company in Muscat, is proud to be:",
+    "turkeyServicesIntro": "Howeyah, the best e-marketing company in Turkey, is proud to be:",
+    "saudiServicesIntro": "Howeyah, the best e-marketing company in Saudi Arabia, is proud to be:",
+    "omanServices": [
+      "Best SEO Company in Muscat",
+      "Ad Campaigns Mgmt Company in Muscat",
+      "Visual Identity Design Company in Muscat",
+      "Web Design Company in Muscat"
+    ],
+    "turkeyServices": [
+      "Best SEO Company in Turkey",
+      "Ad Campaigns Mgmt Company in Turkey",
+      "Visual Identity Design Company in Turkey",
+      "Web Design Company in Turkey"
+    ],
+    "saudiServices": [
+      "Best SEO Company in Saudi Arabia",
+      "Ad Campaigns Mgmt Company in Saudi Arabia",
+      "Visual Identity Design Company in Saudi Arabia",
+      "Web Design Company in Saudi Arabia"
+    ],
+    "officesTitle": "Our Offices",
+    "offices": [
+      "Turkey Office: Istanbul - Beylikdüzü - Cumhuriyet Mah. - Ikarus Complex",
+      "Oman Office: Muscat - Seeb - Al Khoudh Bldg 304 - Complex 333 - Road 1002",
+      "Egypt Office: Cairo - 6th of October - 1st District - 1st Neighborhood",
+      "Saudi Arabia Office: Jeddah - Al Rawdah District"
+    ],
+    "contactTitle": "Mobile / WhatsApp",
+    "phones": [
+      "(+90) 536 031 67 75",
+      "(+968) 9520 4555",
+      "(+968) 9525 1971"
+    ],
+    "email": "info@howeyah.com",
+    "copyright": "© 2024 All rights reserved - Howeyah Company",
+    "rights2": "Affiliate of Masar Digital Solutions.. CR 1640611",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "refund": "Refund Policy"
   }
 }
