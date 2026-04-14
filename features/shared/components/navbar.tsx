@@ -1,14 +1,20 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import { Link, usePathname } from "@/i18n/navigation";
 import logo from "@/public/logo.png";
 import * as motion from "framer-motion/client";
-import { LucideUserRound, SearchIcon } from "lucide-react";
+import { LucideUserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import LocaleSwitcher from "./locale-switcher";
 import NavbarSheet from "./navbar-sheet";
 import { SearchDialog } from "./searh-dialog";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { Button } from "@/components/ui/button";
+
 export default function Navbar() {
   const t = useTranslations("navbar");
   const path = usePathname();
@@ -18,7 +24,6 @@ export default function Navbar() {
   const links = [
     { href: "/", label: t("home") },
     { href: "/about", label: t("about") },
-    { href: "/services", label: t("services") },
     { href: "/contact", label: t("contact") },
     { href: "/clients", label: t("clients") },
     { href: "/blog", label: t("blog") },
@@ -26,6 +31,7 @@ export default function Navbar() {
     { href: "/faq", label: t("faq") },
     { href: "/contact-us", label: t("contact-us") },
   ];
+  const servicesLinks = t.raw("servicesLinks") as string[];
   return (
     <motion.header
       initial={{ opacity: 0, y: -50 }}
@@ -44,7 +50,38 @@ export default function Navbar() {
       </Link>
       <div className="max-xl:hidden p-4 rounded-full backdrop-blur-2xl bg-white flex items-center justify-between">
         <nav className="flex items-center gap-3">
-          {links.map((link) => (
+          {links?.slice(0, 2).map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={` ${path === link.href ? active : ""} p-2 rounded-full font-semibold ${hover}`}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button className="bg-transparent text-primary text-base font-semibold">
+                {t("services")}
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              <div className="flex flex-col gap-2">
+                {servicesLinks?.map((link, index) => (
+                  <Link
+                    key={index}
+                    href={`/services/${index + 1}`}
+                    className={` ${path === `/services/${index + 1}` ? active : ""} p-2 rounded-full font-semibold ${hover}`}
+                  >
+                    {link}
+                  </Link>
+                ))}
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+
+          {links?.slice(2).map((link) => (
             <Link
               key={link.href}
               href={link.href}

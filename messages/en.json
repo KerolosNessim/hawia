@@ -17,7 +17,17 @@
     "courses": "courses",
     "faq": "faq",
     "contact-us": "contact-us",
-    "login": "login"
+    "login": "login",
+    "servicesLinks": [
+    "Search Engine Optimization (SEO)",
+    "Ads Campaign Management (ADS)",
+    "Social Media Management (SMM)",
+    "E-commerce Management",
+    "Graphic Design",
+    "Reels Video Production",
+    "Influencer Marketing",
+    "Web Development"
+  ]
   },
   "not-found": {
     "title": "404 - Page Not Found",
@@ -331,5 +341,266 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Use",
     "refund": "Refund Policy"
+  },
+  "singleService": {
+    "title": "Search Engine Optimization (SEO) Services",
+    "description": "Let your customers find you first",
+      "seo_section": {
+    "description_top": "Making your website easy to use and understand for both visitors and Google search engines enhances your visibility and ranking in search results. It increases the number of targeted visitors based on using the most relevant and commonly searched keywords. لذلك، many business owners and website operators seek the best SEO companies to achieve their goals and increase their profits.",
+    "title": "Optimize your website and improve its ranking among the top pages on global search engines",
+    "description_bottom": "At Huweya, we offer one of the best SEO services in the Arab world. Our Search Engine Optimization (SEO) solutions are specifically designed to help your website appear on the first pages of Google and other search engines, whether you sell through platforms like Salla or run an independent website. We focus on making your website understandable for both users and search engines through on-page and technical SEO optimization, and by using the keywords your target audience is searching for."
+  },
+    "why_seo": {
+    "title": "Why Do You Need SEO Services?",
+    "items": [
+      "With Huweya, one of the best SEO companies in Saudi Arabia, improving your visibility in search engines ensures top rankings on Google and direct access to customers interested in your services or products.",
+      "Search engine optimization attracts high-quality targeted traffic to your website and increases conversion and sales opportunities.",
+      "Improving your Google ranking without relying on paid ads gives you a long-term digital presence and reduces marketing costs.",
+      "Appearing on the first page enhances user trust and positions your brand as a reliable and professional choice.",
+      "SEO includes on-page optimization, technical SEO, and user experience improvements, which increase user engagement and time spent on your site.",
+      "Using SEO tools such as Google Search Console and Ahrefs allows accurate analysis and continuous performance tracking.",
+      "SEO results are long-term, especially when using sustainable and well-planned strategies instead of temporary campaigns.",
+      "Optimizing SEO for Salla stores gives your e-commerce business a strong presence in the Saudi market and increases visibility and sales."
+    ]
+  },
+  "seoCheckForm": {
+    "title": "Enter your information below to get a free SEO audit for your site.",
+    "websitePlaceholder": "Your website link",
+    "emailPlaceholder": "The email address the report will be sent to",
+    "agreement": "I agree to provide my email address, name, and additional contact information for future storage and processing.",
+    "submit": "Audit Now"
+  },
+  
+  "whatWeOffer": {
+    "title": "What Do We Offer in SEO Services?",
+    "subtitle": "At Identity Company, the best marketing company in Saudi Arabia, we provide a comprehensive plan covering all aspects of Search Engine Optimization (SEO). This includes:",
+    "cards": [
+      {
+        "id": "01",
+        "title": "Comprehensive Website Analysis (Full SEO Audit)",
+        "description": "",
+        "points": [
+          "Reviewing the website structure and its crawlability by search engines.",
+          "Evaluating page loading speed and mobile performance.",
+          "Analyzing currently used keywords and their alignment with user intent.",
+          "Identifying technical issues affecting visibility, such as broken links or non-indexed pages.",
+          "Assessing content quality, headings, meta descriptions, and keyword distribution."
+        ]
+      },
+      {
+        "id": "02",
+        "title": "On-Page SEO Optimization",
+        "description": "Enhancing your website’s internal content in line with Google standards to ensure proper indexing and better search visibility. This includes:",
+        "points": [
+          "Optimizing page titles (Title Tags) to be engaging and keyword-focused.",
+          "Improving meta descriptions to increase click-through rates and engagement.",
+          "Using keywords strategically within headings and content without keyword stuffing.",
+          "Enhancing internal linking structure to distribute authority and improve navigation.",
+          "Optimizing images with alt text and compression to improve loading speed.",
+          "Improving user experience with clear design, high speed, and full mobile responsiveness."
+        ]
+      },
+      {
+        "id": "03",
+        "title": "Technical SEO",
+        "description": "At Identity Company, the #1 SEO company, we focus on your website’s technical infrastructure to ensure proper indexing and fast performance aligned with modern Google standards. This includes:",
+        "points": [
+          "Improving website loading speed to reduce bounce rates and enhance user experience.",
+          "Fixing crawling and indexing issues using tools like Google Search Console.",
+          "Configuring Robots.txt and Sitemap.xml files to guide search engine crawlers effectively.",
+          "Ensuring mobile-friendliness due to the importance of mobile browsing.",
+          "Implementing HTTPS to enhance security and trust.",
+          "Fixing broken links and managing redirects for a smooth user and crawler experience.",
+          "Enhancing structured data (Schema Markup) to better communicate your content to search engines."
+        ]
+      },
+      {
+        "id": "04",
+        "title": "Backlink Building",
+        "description": "",
+        "points": [
+          "Acquiring backlinks from trusted, niche-relevant websites to improve rankings and credibility.",
+          "Avoiding spammy or misleading tactics and relying only on natural, Google-compliant links.",
+          "Diversifying backlink sources including guest posts, local directories, PR mentions, and brand citations.",
+          "Analyzing your backlink profile and removing harmful links that may affect rankings.",
+          "Using advanced tools like Ahrefs and SEMrush to identify valuable link-building opportunities."
+        ]
+      },
+      {
+        "id": "05",
+        "title": "SEO for Salla, Zid, and E-commerce Stores",
+        "description": "At Identity Company, the best SEO company in Oman, we provide professional SEO solutions for Salla and other e-commerce platforms to ensure your products reach the right audience. Our work includes:",
+        "points": [
+          "Optimizing product and category pages with relevant keywords to improve search rankings.",
+          "Enhancing meta tags (titles and descriptions) to be engaging and SEO-friendly.",
+          "Organizing internal linking and improving store navigation to boost user engagement.",
+          "Creating fresh, keyword-rich content to support organic search visibility.",
+          "Integrating your store with Google Search Console and Google Merchant Center for better product visibility and performance tracking."
+        ]
+      },
+      {
+        "id": "06",
+        "title": "AI Integration (Generative SEO)",
+        "description": "We keep up with the latest SEO trends by integrating artificial intelligence into every stage of your SEO strategy, aligned with modern Google updates like SGE (Search Generative Experience). This includes:",
+        "points": [
+          "Analyzing the impact of Search Generative Experience and optimizing your site to appear in generative results.",
+          "Using Generative AI to create initial content drafts, speeding up production while maintaining human quality.",
+          "Discovering AI-driven keyword opportunities aligned with user behavior.",
+          "Analyzing competitors’ content and user behavior using AI to identify strengths and weaknesses.",
+          "Early alert systems for algorithm updates to ensure fast adaptation to Google changes.",
+          "Creating smart visual and textual content to increase engagement and session duration.",
+          "Optimizing for AI Overview by improving content structure and increasing chances of appearing in AI-driven search results."
+        ]
+      }
+    ]
+  },
+  
+  "seoSteps": {
+    "title": "SEO Optimization Steps: How Do We Start?",
+    "subtitle": "If you're wondering how to improve your website’s SEO, here are our proven steps at Identity, the best marketing company in Oman:",
+    "steps": [
+      {
+        "id": "01",
+        "title": "Comprehensive Website & Keyword Analysis",
+        "description": "We begin with a full technical and content audit of your website, along with in-depth research on keywords and target audience behavior."
+      },
+      {
+        "id": "02",
+        "title": "On-Page & Off-Page Optimization Implementation",
+        "description": "We apply necessary improvements to your website structure and content, while building high-quality external backlinks."
+      },
+      {
+        "id": "03",
+        "title": "Video Advertising (YouTube Ads)",
+        "description": "Promote your products or services through targeted video ads that appear before or during YouTube content."
+      },
+      {
+        "id": "04",
+        "title": "Continuous Technical Optimization",
+        "description": "We continuously monitor your website performance and implement ongoing improvements in speed, security, and technical structure according to the latest SEO standards."
+      },
+      {
+        "id": "05",
+        "title": "SEO-Optimized Content Creation",
+        "description": "We create content aligned with user intent, supported by the right keywords to strengthen your page rankings."
+      },
+      {
+        "id": "06",
+        "title": "Enhancing User Experience with AI Technologies",
+        "description": "At Identity, we focus on improving website design, navigation ease, and responsiveness using AI technologies to increase session duration and reduce bounce rate."
+      },
+      {
+        "id": "07",
+        "title": "Performance Monitoring & Analysis",
+        "description": "We track ranking progress, user behavior, and conversion rates using advanced analytics tools."
+      },
+      {
+        "id": "08",
+        "title": "Transparent Periodic Reporting",
+        "description": "We provide detailed reports showing completed work, its impact on rankings, and future optimization opportunities."
+      }
+    ],
+    "note": "At Identity, the best SEO company in Muscat, we are committed to following the latest SEO best practices to ensure sustainable and effective improvements in your website’s search engine visibility."
+},
+  "seoTools": {
+    "title": "Advanced Tools & Technologies We Use in SEO",
+    "subtitle": "At Identity, the best SEO company in Muscat, we rely on the latest advanced tools—both paid and free—to achieve the best results in search engine optimization (SEO), including:",
+    "paidToolsTitle":"Paid Tools",
+    "freeToolsTitle":"Free Tools",
+    "paidTools": [
+      "Ahrefs and SEMrush for backlink analysis, keyword research, and competitor performance tracking.",
+      "Screaming Frog for comprehensive technical audits and identifying website structure issues.",
+      "Website speed and performance tools such as PageSpeed Insights and GTmetrix.",
+      "Advanced keyword research and competitor monitoring tools to ensure continuous ranking improvement."
+    ],
+    "freeTools": [
+      "Google Search Console to monitor indexing and analyze search performance.",
+      "Google Analytics to track traffic and user behavior on the website."
+    ]
+  },
+  "whyUs": {
+    "title": "Why Are We the Best SEO Company in the Arab World?",
+    "points": [
+      "We have a specialized team in on-page and technical SEO with extensive experience in website analysis and user experience optimization.",
+      "We follow customized strategies for each project based on market research, audience insights, and relevant keyword analysis.",
+      "At Identity, we provide top SEO services using advanced tools like Ahrefs, SEMrush, and Google Search Console to deliver accurate and measurable results.",
+      "We specialize in SEO for Salla and e-commerce platforms, making us a preferred choice for digital commerce platforms in Oman, Saudi Arabia, and the الخليج region.",
+      "Transparent reporting and continuous communication with clients to update strategies and effectively achieve growth goals."
+    ]
+  },
+  "faq": {
+    "title": "Frequently Asked Questions About SEO Services",
+    "items": [
+      {
+        "question": "What are SEO services?",
+        "answer": "SEO services are a set of strategies and techniques aimed at improving your website’s visibility in the first search results on Google and other search engines, which increases the number of organic visitors and improves your website’s ranking in search results."
+      },
+      {
+        "question": "How long does it take to see results after SEO optimization?",
+        "answer": "The time required to see results varies depending on several factors, including website size, competition, and current website status. Generally, results start appearing within 3-6 months, and improve significantly within 6-12 months."
+      },
+      {
+        "question": "Do you offer SEO services for e-commerce stores?",
+        "answer": "Yes, we offer specialized SEO services for e-commerce stores on platforms like Salla, Noon, and others. We focus on improving user experience, optimizing products, and increasing sales through effective SEO strategies."
+      },
+      {
+        "question": "What is the importance of SEO for my website?",
+        "answer": "SEO helps increase brand awareness, attract targeted visitors, increase sales, build customer trust, and improve user experience. It also helps improve your website’s ranking in search results, making it more visible to the target audience."
+      },
+      {
+        "question": "Do you provide periodic reports on SEO performance?",
+        "answer": "Yes, we provide transparent periodic reports showing your website’s performance, keyword rankings, number of visitors, and conversion rates. We also provide recommendations for improving performance and achieving growth goals."
+      },
+      {
+        "question": "Do you offer SEO services for multilingual websites?",
+        "answer": "Yes, we offer SEO services for multilingual websites, focusing on improving user experience and keywords for each language separately. We also help improve your website’s visibility in global search results."
+      },
+      {
+        "question": "Do you offer SEO services for new websites?",
+        "answer": "Yes, we offer SEO services for new websites, focusing on improving website structure, keywords, and user experience. We also help build high-quality external links to improve the website’s ranking in search results."
+      },
+      {
+        "question": "Do you offer SEO services for old websites?",
+        "answer": "Yes, we offer SEO services for old websites, focusing on improving website structure, keywords, and user experience. We also help build high-quality external links to improve the website’s ranking in search results."
+      },
+      {
+        "question": "Do you offer SEO services for multilingual websites?",
+        "answer": "Yes, we offer SEO services for multilingual websites, focusing on improving user experience and keywords for each language separately. We also help improve your website’s visibility in global search results."
+      },
+      {
+        "question": "Do you offer SEO services for multilingual websites?",
+        "answer": "Yes, we offer SEO services for multilingual websites, focusing on improving user experience and keywords for each language separately. We also help improve your website’s visibility in global search results."
+      }
+    ]
+  },
+    "seoPackages": {
+    "title": "SEO Packages",
+        "seoPackages": [
+      {
+        "title": "Basic SEO Package",
+        "description": "Perfect for startups and individuals who have just launched their website and want to improve their search engine visibility step by step.",
+        "button": "Details",
+        "icon": "rocket"
+      },
+      {
+        "title": "Professional SEO Package",
+        "description": "Recommended for businesses and companies that want to enhance their website’s visibility in search engines, increase visitors and potential customers through advanced SEO strategies.",
+        "button": "Details",
+        "isPopular": true,
+        "icon": "gem"
+      },
+      {
+        "title": "E-Commerce SEO Package",
+        "description": "Recommended for businesses and individuals looking to launch or develop a complete e-commerce store, with all the tools and strategies needed to increase sales and improve customer experience.",
+        "button": "Details",
+        "icon": "target"
+      }
+    ]
+
+  },
+  "contact": {
+    "title": "Contact our SEO experts to start improving your visibility, building customer trust, and increasing sales.",
+    "btn": "Contact Us"
   }
+}
 }
