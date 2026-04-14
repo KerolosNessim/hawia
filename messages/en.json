@@ -602,5 +602,56 @@
     "title": "Contact our SEO experts to start improving your visibility, building customer trust, and increasing sales.",
     "btn": "Contact Us"
   }
+},
+"about":{
+  "title":"About Us",
+  "description":"We are a leading company in the field of website and application development, providing high-quality services to our clients around the world",
+  "identity":{
+  "title": "Howeyah for Digital Marketing and Solutions",
+  "description":[
+    "Identity for Digital Solutions is a leading Turkish-Omani company in the field of digital marketing, founded with an ambitious vision to become the premier technical, marketing, and consulting partner for institutions, companies, and e-commerce stores seeking growth and digital transformation in the Middle East and North Africa region. Over eight years, we have kept pace with everything new in the Gulf market, enabling us to help hundreds of clients and companies of all sizes and experience levels—both professional and emerging—achieve double the success and profits through online marketing. We are a multinational digital marketing company, combining Arab and international expertise, with our headquarters in Turkey – Istanbul. We have administrative offices in Oman, Saudi Arabia, Egypt, and Turkey, and we are confidently expanding into Gulf and Arab markets. We specialize in providing integrated technical and marketing solutions supported by the latest AI tools, data analytics, and visual identity design, guiding our clients toward real growth and sustainable impact."
+  ]
+},
+"vision":{
+  "title": "Our Vision",
+  "description": "To become the best SEO and digital marketing company in the Arab world, and the trusted strategic partner for every business seeking leadership, through smart and innovative solutions that achieve tangible results."
+},
+"mession":{
+  "title": "Our Mission",
+  "description": "To empower our clients to achieve digital excellence and effective reach, through professional marketing services based on a deep understanding of the local and global market, providing real value that aligns with their goals."
+},
+"why_choose_title": "Why Choose Hawiya?",
+  "why_choose": [
+    "A multinational Arab team with local and global expertise.",
+    "Innovative and customized digital marketing solutions for each client.",
+    "Effective integration between traditional marketing and modern technologies such as AI.",
+    "Continuous follow-up with measurable results.",
+    "Long-term partnership built on trust and transparency."
+  ],
+  "values_title": "Our Values",
+  "values": [
+    {
+      "title": "Innovation",
+      "description": "We believe excellence can only be achieved through creativity."
+    },
+    {
+      "title": "Professionalism",
+      "description": "We are committed to the highest standards of quality and clarity."
+    },
+    {
+      "title": "Flexibility",
+      "description": "We adapt our services based on market and client needs."
+    },
+    {
+      "title": "Transparency",
+      "description": "We involve our clients in every step and provide accurate, continuous reports."
+    },
+    {
+      "title": "Results Commitment",
+      "description": "Your success is our top priority."
+    }
+  ],
+  "ideal_client_title": "Who is our ideal client?",
+  "ideal_client": "With steady steps to become the best digital marketing company in the Arab world, we work with ambitious companies in various sectors, from startups to large institutions, and anyone looking for a trusted digital marketing company or professional SEO company to push them to the top."
 }
 }

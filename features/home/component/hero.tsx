@@ -18,26 +18,21 @@ export default function HeroSection() {
       {/* content */}
       <div className="xl:w-1/2 container  flex items-center justify-center ">
         <div className="flex flex-col gap-4 text-center">
-          <Highlighter
-            animationDuration={1000}
-            action="highlight"
-            color="#a3cd39"
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 1 }}
+            className="xl:text-9xl text-5xl font-bold mb-4   text-gray-900"
           >
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: 1 }}
-              className=""
-            >
-              <MorphingText
-                className="xl:text-9xl text-5xl xl:py-22  text-white"
-                texts={[t("title")]}
-              />
-            </motion.div>
-          </Highlighter>
+            {t("title")}
+          </motion.div>
           <div className=" w-fit mx-auto xl:py-3 py-1">
-            <TypingAnimation delay={1000} loop className="xl:text-2xl text-lg font-bold ">
+            <TypingAnimation
+              delay={1000}
+              loop
+              className="xl:text-2xl text-lg font-bold text-gray-900 "
+            >
               {t("description")}
             </TypingAnimation>
           </div>
@@ -46,7 +41,7 @@ export default function HeroSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 1 }}
-            className="xl:text-2xl text-lg font-bold"
+            className="xl:text-2xl text-lg font-bold text-gray-900 "
           >
             {t("subDescription")}
           </motion.p>

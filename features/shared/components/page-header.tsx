@@ -2,11 +2,15 @@ import * as motion from 'framer-motion/client'
 
 interface PageHeaderProps {
   title: string;
-  description: string;
+  description?: string;
+  image?: string;
 }
-export default function PageHeader({ title, description }: PageHeaderProps) {
+export default function PageHeader({ title, description, image="/seo-banner.jpg" }: PageHeaderProps) {
   return (
-    <div className="lg:h-[60vh] md:h-[40vh] h-[30vh]   bg-[url('/seo-banner.jpg')] bg-cover bg-center bg-no-repeat">
+    <div
+      style={{ backgroundImage: `url(${image})` }}
+      className="lg:h-[60vh] md:h-[40vh] h-[30vh] bg-cover bg-center bg-no-repeat"
+    >
       {/* layer */}
       <div className=" bg-black/70 h-full flex items-center justify-center">
         {/* content */}

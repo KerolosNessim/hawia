@@ -19,14 +19,14 @@ export default function DependenciesSection() {
   const card = (image: string, index: number, alt?: string) => (
     <div
       key={index}
-      className="group relative mx-2 flex items-center justify-center h-32 w-44 shrink-0 rounded-2xl border border-neutral-200/50 bg-neutral-50/30 p-8 transition-all duration-300 hover:border-primary/30 hover:bg-neutral-50/50 dark:border-neutral-800/50 dark:bg-neutral-900/30 dark:hover:border-primary/30 dark:hover:bg-neutral-900/50"
+      className="group relative mx-2 flex items-center justify-center h-32 w-44 shrink-0 rounded-2xl border border-neutral-200/50 bg-neutral-50/30 p-8 transition-all duration-300 hover:border-brand hover:bg-neutral-50/50 dark:border-neutral-800/50 dark:bg-neutral-900/30 dark:hover:border-primary/30 dark:hover:bg-neutral-900/50"
     >
       <Image
         src={image}
         alt={alt ?? `${t("title")} ${index}`}
         width={180}
         height={80}
-        className="h-full w-full object-contain opacity-60 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0"
+        className="h-full w-full object-contain  transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0"
       />
     </div>
   );

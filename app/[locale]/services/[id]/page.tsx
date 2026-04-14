@@ -1,14 +1,14 @@
-import PageHeader from "@/features/shared/components/page-header";
-import { useTranslations } from "next-intl";
-import * as motion from "framer-motion/client";
-import Image from "next/image";
-import SeoCheckForm from "@/features/services/components/seo-check-form";
 import OfferServiceSection from "@/features/services/components/offer-service-section";
-import SeoSteps from "@/features/services/components/seo-steps";
-import SeoTools from "@/features/services/components/seo-tools";
+import SeoCheckForm from "@/features/services/components/seo-check-form";
 import SeoFaq from "@/features/services/components/seo-faq";
 import SeoPackages from "@/features/services/components/seo-packages";
-import ServicesContact from "@/features/services/components/services-contact";
+import SeoSteps from "@/features/services/components/seo-steps";
+import SeoTools from "@/features/services/components/seo-tools";
+import PageContact from "@/features/shared/components/page-contact";
+import PageHeader from "@/features/shared/components/page-header";
+import * as motion from "framer-motion/client";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 export default function ServicePage() {
   const t = useTranslations("singleService");
@@ -90,7 +90,7 @@ export default function ServicePage() {
         <SeoPackages />
 
         {/* contact */}
-        <ServicesContact />
+        <PageContact title={t("contact.title")}  />
 
       </div>
     </div>

@@ -1,5 +1,5 @@
 import AdsSection from "@/features/home/component/ads-section";
-import ArticlesSection from "@/features/home/component/articles-section";
+import ArticlesSection from "@/features/blogs/components/articles-section";
 import ClientsSection from "@/features/home/component/clients-section";
 import ContactSection from "@/features/home/component/contact-section";
 import DependenciesSection from "@/features/home/component/depndnces-sction";
