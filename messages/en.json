@@ -653,5 +653,50 @@
   ],
   "ideal_client_title": "Who is our ideal client?",
   "ideal_client": "With steady steps to become the best digital marketing company in the Arab world, we work with ambitious companies in various sectors, from startups to large institutions, and anyone looking for a trusted digital marketing company or professional SEO company to push them to the top."
-}
+},
+"faq":{
+  "title":"Frequently Asked Questions",
+  "description":"We are always here to achieve your brand's success"
+},
+"contact":{
+  "title":"Contact Us",
+  "description":"We are always here to achieve your brand's success",
+  "our_offices":"Our Offices",
+  "offices": [
+    {
+      "title": "Turkey Office",
+      "location": "Istanbul - Beylikduzu - Cumhuriyet Mahallesi - Akros Complex"
+    },
+    {
+      "title": "Oman Office",
+      "location": "Muscat - Al Seeb - Al Khoudh Building 304 - Complex 333 - Way 1002"
+    },
+    {
+      "title": "Egypt Office",
+      "location": "Cairo - 6th of October City - 1st District - 1st Neighborhood"
+    },
+    {
+      "title": "Saudi Arabia Office",
+      "location": "Jeddah - Ar Rawdah District"
+    }
+  ]
+},
+ "auth": {
+    "title": "Create New Account",
+    "username": "Username",
+    "fullName": "Full Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Register",
+    "login": "Login",
+    "register": "Create New Account",
+    "errors": {
+      "username": "Username must be at least 3 characters",
+      "fullName": "Full name is required",
+      "email": "Invalid email address",
+      "password": "Password must be at least 6 characters",
+      "confirmPassword": "Passwords do not match"
+    }
+  }
 }

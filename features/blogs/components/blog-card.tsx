@@ -66,7 +66,7 @@ export default function BlogCard({
 
           <div className="mt-auto">
             <Link
-              href={article.link}
+              href={"/blogs/1"}
               className="inline-flex items-center text-brand font-bold hover:text-brand/80 transition-colors text-sm"
             >
               {t("readMore")}

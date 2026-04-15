@@ -9,6 +9,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { Cairo, Geist } from "next/font/google";
 import { notFound } from "next/navigation";
 import "../globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,8 +52,10 @@ export default async function RootLayout({
             {children}
             <Footer />
             <FloatingSocials />
+            <Toaster richColors position="top-right"/>
           </DirectionProvider>
         </NextIntlClientProvider>
+
       </body>
     </html>
   );
