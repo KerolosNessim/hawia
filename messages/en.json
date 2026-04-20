@@ -698,5 +698,16 @@
       "password": "Password must be at least 6 characters",
       "confirmPassword": "Passwords do not match"
     }
+  },
+  "clients":{
+    "title":"Models of our clients",
+    "description":"We are always here to achieve your brand's success",
+    "tabs":[
+      "All",
+      "seo",
+      "Digital Marketing",
+      "Web Design",
+      "Brand Identity"
+    ]
   }
 }

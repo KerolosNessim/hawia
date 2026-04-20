@@ -2,7 +2,7 @@
 import { Link, usePathname } from "@/i18n/navigation";
 import logo from "@/public/logo.png";
 import * as motion from "framer-motion/client";
-import { LucideUserRound } from "lucide-react";
+import { ChevronDown, LucideUserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import LocaleSwitcher from "./locale-switcher";
@@ -59,13 +59,14 @@ export default function Navbar() {
             </Link>
           ))}
 
-          <HoverCard>
+          <HoverCard openDelay={100} closeDelay={100}>
             <HoverCardTrigger asChild>
-              <Button className="bg-transparent text-primary text-base font-semibold">
+              <Button className="group/btn bg-transparent text-primary text-base font-semibold px-0">
                 {t("services")}
+                <ChevronDown className="size-4 group-hover/btn:rotate-180 transition-all duration-300 ease-in-out" />
               </Button>
             </HoverCardTrigger>
-            <HoverCardContent>
+            <HoverCardContent >
               <div className="flex flex-col gap-2">
                 {servicesLinks?.map((link, index) => (
                   <Link
