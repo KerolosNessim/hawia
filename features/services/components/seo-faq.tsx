@@ -1,21 +1,19 @@
-import SectionHeader from '@/features/shared/components/section-header'
-import { useTranslations } from 'next-intl';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import SectionHeader from '@/features/shared/components/section-header';
+import { Faqs } from "../types";
 
-export default function SeoFaq() {
-  const t = useTranslations("singleService.faq");
-  const items = t.raw("items") as { question: string; answer: string }[];
+export default function SeoFaq({faq}: {faq: Faqs}) {
   return (
     <div className="container space-y-8">
-      <SectionHeader title={t("title")} />
-      <div className="grid grid-cols-2 gap-4">
+      <SectionHeader title={faq?.title} subtitle={faq?.description} subtitleColor='text-gray-500' />
+      <div className="grid grid-cols-1 gap-4">
       <Accordion type="single" collapsible className=" gap-4">
-        {items.slice(0, 5).map((item, index) => (
+        {faq?.items?.map((item, index) => (
           <AccordionItem key={index} value={`item-${index}`}>
             <AccordionTrigger className="text-lg font-semibold">{item.question}</AccordionTrigger>
             <AccordionContent>{item.answer}</AccordionContent>
@@ -23,14 +21,14 @@ export default function SeoFaq() {
         ))}
       </Accordion>
 
-      <Accordion type="single" collapsible className=" gap-4">
+      {/* <Accordion type="single" collapsible className=" gap-4">
         {items.slice(5).map((item, index) => (
           <AccordionItem key={index} value={`item-${index}`}>
             <AccordionTrigger className="text-lg font-semibold">{item.question}</AccordionTrigger>
             <AccordionContent>{item.answer}</AccordionContent>
           </AccordionItem>
         ))}
-      </Accordion>
+      </Accordion> */}
       </div>
 
     </div>

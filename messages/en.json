@@ -709,5 +709,9 @@
       "Web Design",
       "Brand Identity"
     ]
+  },
+  "courses":{
+    "title":"Training Courses",
+    "description":"We are always here to achieve your brand's success"
   }
 }

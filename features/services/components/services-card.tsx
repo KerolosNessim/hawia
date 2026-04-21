@@ -8,17 +8,18 @@ import {
 import { LucideIcon } from "lucide-react";
 import * as motion from "framer-motion/client";
 import Link from "next/link";
+import { Service } from "../types";
 export default function ServicesCard({
   item,
   icon: Icon,
   index,
 }: {
-  item: { title: string; description: string };
+  item: Service;
   icon: LucideIcon;
   index: number;
 }) {
   return (
-    <Link href={`/services/${index + 1}`} className="h-full">
+    <Link href={`/services/${item?.slug}`} className="h-full">
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.8 }}
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -33,13 +34,13 @@ export default function ServicesCard({
                 <Icon className="w-8 h-8 md:w-10 md:h-10" />
               </div>
               <p className="text-xl  font-bold text-center group-hover:text-white transition-all duration-300">
-                {item.title}
+                {item?.title}
               </p>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription className=" text-base font-semibold leading-relaxed text-center group-hover:text-gray-200 transition-all duration-300">
-              {item.description}
+              {item?.description}
             </CardDescription>
           </CardContent>
         </Card>

@@ -6,9 +6,11 @@ import * as motion from "framer-motion/client";
 export default function PageContact({
   title,
   description,
+  phone,
 }: {
   title?: string;
   description?: string;
+  phone?: string;
 }) {
   const t = useTranslations("singleService.contact");
   return (
@@ -21,7 +23,7 @@ export default function PageContact({
     >
       <p className="text-2xl font-bold text-brand">{title}</p>
       {description && (
-        <p className="text-2xl font-bold text-brand">{description}</p>
+        <div dangerouslySetInnerHTML={{ __html: description }} className="text-2xl font-bold text-brand"></div>
       )}
       <Button
         className={`w-32 h-12 rounded-full font-bold shadow-md transition-all duration-300 bg-brand hover:bg-brand/90 text-white`}

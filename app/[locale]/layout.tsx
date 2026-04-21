@@ -10,6 +10,7 @@ import { Cairo, Geist } from "next/font/google";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,15 +47,17 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${font.className} `} suppressHydrationWarning>
       <body dir={locale === "ar" ? "rtl" : "ltr"}>
-        <NextIntlClientProvider messages={messages}>
-          <DirectionProvider dir={locale === "ar" ? "rtl" : "ltr"}>
-            <Navbar/>
-            {children}
-            <Footer />
-            <FloatingSocials />
-            <Toaster richColors position="top-right"/>
-          </DirectionProvider>
-        </NextIntlClientProvider>
+        <QueryProvider>
+          <NextIntlClientProvider messages={messages}>
+            <DirectionProvider dir={locale === "ar" ? "rtl" : "ltr"}>
+              <Navbar/>
+              {children}
+              <Footer />
+              <FloatingSocials />
+              <Toaster richColors position="top-right"/>
+            </DirectionProvider>
+          </NextIntlClientProvider>
+        </QueryProvider>
 
       </body>
     </html>
