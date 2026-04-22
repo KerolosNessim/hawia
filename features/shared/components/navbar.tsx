@@ -14,10 +14,15 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
+import { useGetServices } from "@/features/services/hooks/useGetServices";
 
 export default function Navbar() {
   const t = useTranslations("navbar");
   const path = usePathname();
+    const { data, isLoading, error } = useGetServices();
+  const services = data?.data ?? [];
+  console.log(services)
+  
   const active = " bg-brand text-white  rounded-full";
   const hover =
     " hover:bg-brand hover:text-white hover: hover:rounded-full transition-all duration-300 ease-in-out";
@@ -30,7 +35,6 @@ export default function Navbar() {
     { href: "/faq", label: t("faq") },
     { href: "/contact-us", label: t("contact-us") },
   ];
-  const servicesLinks = t.raw("servicesLinks") as string[];
   return (
     <motion.header
       initial={{ opacity: 0, y: -50 }}
@@ -68,13 +72,13 @@ export default function Navbar() {
             </HoverCardTrigger>
             <HoverCardContent >
               <div className="flex flex-col gap-2">
-                {servicesLinks?.map((link, index) => (
+                {services?.map((link) => (
                   <Link
-                    key={index}
-                    href={`/services/${index + 1}`}
-                    className={` ${path === `/services/${index + 1}` ? active : ""} p-2 rounded-full font-semibold ${hover}`}
+                    key={link.id}
+                    href={`/services/${link.slug}`}
+                    className={` ${path === `/services/${link.slug}` ? active : ""} p-2 rounded-full font-semibold ${hover}`}
                   >
-                    {link}
+                    {link?.title}
                   </Link>
                 ))}
               </div>
