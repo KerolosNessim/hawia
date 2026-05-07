@@ -20,63 +20,45 @@ function StatItem({ value, suffix, title, description, index }: StatItemProps) {
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-white/50 backdrop-blur-3xl flex flex-col items-center justify-center p-4   rounded-2xl   text-center min-w-[200px] flex-1"
+      className="bg-white  flex flex-col items-center justify-center gap-4 p-4   rounded-2xl   text-center min-w-[200px] flex-1"
     >
-      <div className=" text-3xl font-extrabold text-brand flex items-center gap-0.5">
+      <div className=" text-5xl font-extrabold text-brand flex items-center gap-0.5">
         <NumberTicker value={value} className="text-brand" />
         {suffix && <span className="text-brand">{suffix}</span>}
       </div>
-      <h3 className=" font-bold mt-2 text-zinc-800 text-xs">
+      <h3 className=" text-xl  font-bold mt-2 text-zinc-800">
         {title}
       </h3>
-      <p className=" text-zinc-900  mt-1 max-w-[180px] text-[10px]">
+      <p className=" text-zinc-900  mt-1 max-w-[180px]  text-sm">
         {description}
       </p>
     </motion.div>
   );
 }
 
-export function HeroStats() {
+import type { HeroStat } from "../types";
+
+export function HeroStats({ stats }: { stats?: HeroStat[] }) {
   const t = useTranslations("hero.stats");
 
-  const stats = [
-    {
-      value: 10,
-      suffix: "+",
-      title: t("leadership.title"),
-      description: t("leadership.description"),
-    },
-    {
-      value: 500,
-      suffix: "+",
-      title: t("success.title"),
-      description: t("success.description"),
-    },
-    {
-      value: 500,
-      suffix: "+",
-      title: t("sales.title"),
-      description: t("sales.description"),
-    },
-    {
-      value: 500,
-      suffix: "%",
-      title: t("traffic.title"),
-      description: t("traffic.description"),
-    },
-  ];
+  const displayStats = stats?.map(stat => {
+    // Extract numbers and non-numbers from the string (e.g., "+10" -> value: 10, suffix: "+")
+    const numMatch = stat.content.number.match(/\d+/);
+    const suffixMatch = stat.content.number.match(/[^\d]+/);
+    
+    return {
+      value: numMatch ? parseInt(numMatch[0]) : 0,
+      suffix: suffixMatch ? suffixMatch[0] : "",
+      title: stat.content.title,
+      description: stat.content.description,
+    };
+  }) || [];
+
+  if (displayStats.length === 0) return null;
 
   return (
-    <div
-      className={cn(
-        "grid gap-4 mt-4",
-        // Mobile: horizontal scroll or wrap
-        "grid-cols-2",
-        // Desktop: vertical stack (as requested "بالطول")
-        "xl:grid-cols-1 "
-      )}
-    >
-      {stats.map((stat, index) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {displayStats.map((stat, index) => (
         <StatItem key={index} {...stat} index={index} />
       ))}
     </div>

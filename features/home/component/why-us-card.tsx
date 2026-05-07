@@ -3,11 +3,13 @@ import React from "react";
 import { motion, useTransform, type MotionValue } from "motion/react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface WhyUsCardProps {
   title: string;
   description: string;
   icon: LucideIcon;
+  image?: string;
   index: number;
   progress: MotionValue<number>;
   range: [number, number];
@@ -18,6 +20,7 @@ export const WhyUsCard: React.FC<WhyUsCardProps> = ({
   title,
   description,
   icon: Icon,
+  image,
   index,
   progress,
   range,
@@ -26,7 +29,7 @@ export const WhyUsCard: React.FC<WhyUsCardProps> = ({
   const scale = useTransform(progress, range, [1, targetScale]);
 
   return (
-    <div 
+    <div
       className="flex items-center justify-center sticky pt-24"
       style={{ top: `${index * 20 + 80}px` }}
     >
@@ -48,8 +51,18 @@ export const WhyUsCard: React.FC<WhyUsCardProps> = ({
         </div>
 
         <div className="shrink-0">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand/20 flex items-center justify-center text-brand">
-            <Icon className="w-8 h-8 md:w-10 md:h-10" />
+          <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-brand/10 flex items-center justify-center text-brand overflow-hidden">
+            {image ? (
+              <Image
+                src={image}
+                alt={title}
+                width={100}
+                height={100}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <Icon className="w-8 h-8 md:w-10 md:h-10" />
+            )}
           </div>
         </div>
       </motion.div>

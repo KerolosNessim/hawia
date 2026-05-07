@@ -4,17 +4,13 @@ import { useTranslations, useLocale } from "next-intl";
 import Marquee from "react-fast-marquee";
 import Image from "next/image";
 
-const images = [
-  "/dep-1.png",
-  "/dep-2.png",
-  "/dep-3.png",
-  "/dep-4.png",
-  "/dep-5.png",
-];
+import type { Accreditation } from "../types";
 
-export default function DependenciesSection() {
+export default function DependenciesSection({ accreditation }: { accreditation?: Accreditation }) {
   const t = useTranslations("dependenciesSection");
   const locale = useLocale();
+
+  const images = accreditation?.images.map(img => img.url) || [];
 
   const card = (image: string, index: number, alt?: string) => (
     <div
@@ -31,11 +27,13 @@ export default function DependenciesSection() {
     </div>
   );
 
+  if (images.length === 0) return null;
+
   return (
     <section className="container py-16 space-y-8 overflow-hidden">
       <SectionHeader
-        title={t("title")}
-        subtitle={t("subtitle")}
+        title={accreditation?.title || t("title")}
+        subtitle={accreditation?.description || t("subtitle")}
         subtitleColor="text-gray-500"
       />
 

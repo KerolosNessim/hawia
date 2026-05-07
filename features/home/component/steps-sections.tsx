@@ -14,6 +14,9 @@ import {
   ArrowDown,
 } from "lucide-react";
 import SectionHeader from "@/features/shared/components/section-header";
+import { useSteps } from "../hooks/useSteps";
+
+import Image from "next/image";
 
 const icons = [TrendingUp, Search, BarChart2, Users, FileText];
 
@@ -21,11 +24,22 @@ export default function StepsSection() {
   const t = useTranslations("stepsSection");
   const locale = useLocale();
   const isRTL = locale === "ar";
+  const { data, isLoading } = useSteps();
+  console.log("data",data)
+  const apiItems = data?.data?.map(single => ({
+    title: single.content.title,
+    description: single.content.description,
+    image: single.image,
+  })) || [];
 
-  const items = t.raw("items") as {
+
+  const items = apiItems.length > 0 ? apiItems : (t.raw("items") as {
     title: string;
     description: string;
-  }[];
+    image?: string;
+  }[]);
+
+  if (isLoading) return null;
 
   return (
     <section className="py-24 bg-gray-900 relative overflow-hidden">
@@ -54,7 +68,7 @@ export default function StepsSection() {
       </div>
 
       <div className="container  px-4 relative z-10">
-        <SectionHeader title={t("title")} />
+        <SectionHeader title={ t("title")} />
 
         {/* Desktop Staggered Layout */}
         <div className="hidden lg:flex items-center justify-between gap-4 mt-20 min-h-[400px]">
@@ -77,9 +91,19 @@ export default function StepsSection() {
                   className="flex flex-col items-center text-center w-full"
                 >
                   <div className="relative">
-                    {/* Circle Icon */}
-                    <div className="w-28 h-28 rounded-full bg-white shadow-[0_10px_40px_rgba(0,0,0,0.08)] flex items-center justify-center border border-gray-100 group hover:scale-110 transition-transform duration-300">
-                      <Icon className="w-10 h-10 text-brand" />
+                    {/* Circle Image/Icon */}
+                    <div className="w-28 h-28 rounded-full bg-white shadow-[0_10px_40px_rgba(0,0,0,0.08)] flex items-center justify-center border border-gray-100 group hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      {step.image ? (
+                        <Image
+                          src={step.image}
+                          alt={step.title}
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <Icon className="w-10 h-10 text-brand" />
+                      )}
                     </div>
                   </div>
 
@@ -130,8 +154,18 @@ export default function StepsSection() {
                 viewport={{ once: true }}
                 className="flex flex-col items-center text-center"
               >
-                <div className="w-24 h-24 rounded-full bg-white shadow-xl flex items-center justify-center border border-gray-100 mb-6">
-                  <Icon className="w-10 h-10 text-brand" />
+                <div className="w-24 h-24 rounded-full bg-white shadow-xl flex items-center justify-center border border-gray-100 mb-6 overflow-hidden">
+                  {step.image ? (
+                    <Image
+                      src={step.image}
+                      alt={step.title}
+                      width={60}
+                      height={60}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <Icon className="w-10 h-10 text-brand" />
+                  )}
                 </div>
                 <span className="text-3xl font-black text-brand leading-none">
                   {String(index + 1).padStart(2, "0")}

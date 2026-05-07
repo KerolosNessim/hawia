@@ -4,18 +4,18 @@ import { useTranslations, useLocale } from "next-intl";
 import Marquee from "react-fast-marquee";
 import Image from "next/image";
 
-const images = [
-  "/client-1.webp",
-  "/client-2.webp",
-  "/client-3.webp",
-  "/client-4.webp",
-  "/client-5.webp",
-  "/client-6.avif",
-];
+import type { Partner } from "../types";
 
-export default function ClientsSection() {
+export default function ClientsSection({ partners }: { partners?: Partner[] }) {
   const t = useTranslations("clientsSection");
   const locale = useLocale();
+
+  const partnerImages = partners?.flatMap(partner => 
+    partner.images.map(img => ({
+      url: img.url,
+      title: partner.title
+    }))
+  ) || [];
 
   const card = (image: string, index: number, alt?: string) => (
     <div
@@ -32,9 +32,11 @@ export default function ClientsSection() {
     </div>
   );
 
+  if (partnerImages.length === 0) return null;
+
   return (
     <section className=" py-16 space-y-8 overflow-hidden bg-gray-900">
-      <SectionHeader title={t("title")} subtitle={t("subtitle")} />
+      <SectionHeader title={ partners?.[0]?.title || t("title")} subtitle={ partners?.[0]?.description || t("subtitle")} />
 
       <div dir="ltr" className="space-y-8 relative">
         {/* Gradient Masks */}
@@ -48,7 +50,7 @@ export default function ClientsSection() {
           pauseOnHover
           autoFill
         >
-          {images.map((image, index) => card(image, index))}
+          {partnerImages.map((partner, index) => card(partner.url, index, partner.title))}
         </Marquee>
 
         {/* Row 2: opposite direction */}
@@ -58,16 +60,7 @@ export default function ClientsSection() {
           pauseOnHover
           autoFill
         >
-          {images.map((image, index) => card(image, index))}
-        </Marquee>
-        {/* Row 3: natural direction */}
-        <Marquee
-          direction={locale === "ar" ? "right" : "left"}
-          speed={50}
-          pauseOnHover
-          autoFill
-        >
-          {images.map((image, index) => card(image, index))}
+          {partnerImages.map((partner, index) => card(partner.url, index, partner.title))}
         </Marquee>
       </div>
     </section>

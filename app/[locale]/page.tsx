@@ -10,21 +10,29 @@ import StepsSection from "@/features/home/component/steps-sections";
 import TestimonialsSection from "@/features/home/component/testimonials-section";
 import WhyUsSection from "@/features/home/component/why-us-section";
 import ServicesSection from "@/features/services/components/services-section";
+import { getLandingPageData } from "@/features/home/services/hero";
 
 export default async function Home() {
+  const data = await getLandingPageData();
+  console.log(data);
+
+  if(!data.data) return null
+  
   return (
     <main>
-      <HeroSection />
-      <div className="container xl:hidden mb-16">
-        <HeroStats />
+      <HeroSection heroData={data?.data?.hero} />
+      <div className="bg-gray-900">
+        <div className="container mx-auto lg:-translate-y-16 max-lg:pt-16">
+          <HeroStats stats={data?.data?.hero?.stats} />
+        </div>
+        <WhyUsSection />
       </div>
-      <WhyUsSection />
       <ServicesSection />
       <StepsSection />
-      <DependenciesSection />
+      <DependenciesSection accreditation={data?.data?.accreditation} />
       <AdsSection />
       <TestimonialsSection />
-      <ClientsSection/>
+      <ClientsSection partners={data?.data?.partners} />
       <PackagesSection />
       <ArticlesSection />
       <ContactSection />

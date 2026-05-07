@@ -1,29 +1,23 @@
 import SectionHeader from '@/features/shared/components/section-header'
 import React from 'react'
-import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import * as motion from "motion/react-client"
-export default function AdsSection() {
-  const t = useTranslations("adsSection")
+import { getAdsData } from '../services/ads'
+export default async function AdsSection() {
+  const t = await getTranslations("adsSection")
 
-  const items = [
-    {
-      title: t("seo"),
-      img: "/ads-1.webp",
-    },
-    {
-      title: t("ads"),
-      img: "/ads-2.webp",
-    },
-    {
-      title: t("programming"),
-      img: "/ads-3.webp",
-    },
-    {
-      title: t("graphic"),
-      img: "/ads-4.webp",
-    },
-  ]
+  const data = await getAdsData()
+  console.log(data)
+
+  
+
+  const items = data?.data?.singles?.map((item) => {
+    return {
+      title: item?.content?.title,
+      img: item?.image,
+    }
+  }) || []
   return (
     <section className="py-16 space-y-8 bg-gray-900 relative overflow-hidden">
       {/* Decorative Wavy Background Pattern (Simplified) */}
@@ -52,7 +46,7 @@ export default function AdsSection() {
       </div>
 
       <div className="container px-4 relative z-10">
-        <SectionHeader title={t("title")} subtitle={t("subtitle")} />
+        <SectionHeader title={data?.data?.content?.title || t("title")} subtitle={data?.data?.content?.description || t("subtitle")} />
       </div>
 
       <div className="container px-4 relative z-10">

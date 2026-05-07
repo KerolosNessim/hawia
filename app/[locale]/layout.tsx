@@ -46,7 +46,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={`${font.className} `} suppressHydrationWarning>
-      <body dir={locale === "ar" ? "rtl" : "ltr"}>
+      <body dir={locale === "ar" ? "rtl" : "ltr"} className=" relative overflow-x-hidden ">
         <QueryProvider>
           <NextIntlClientProvider messages={messages}>
             <DirectionProvider dir={locale === "ar" ? "rtl" : "ltr"}>
