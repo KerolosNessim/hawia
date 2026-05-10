@@ -14,18 +14,20 @@ import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
 import { Quote, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import React from "react";
+import { useTestimonials } from "../hooks/useTestimonials";
 
 function TestimonialCard({
   quote,
   name,
   role,
   rating,
+  image,
 }: {
   quote: string;
   name: string;
   role: string;
   rating: number;
+  image?: string;
 }) {
   return (
     <div className="p-2 h-full ">
@@ -40,10 +42,9 @@ function TestimonialCard({
                 <Star
                   key={i}
                   className={`w-4 h-4 ${
-                    i < rating
-                      ? "fill-brand text-brand"
-                      : "fill-white/10 text-white/10"
+                    i < rating ? "text-brand" : "text-brand "
                   }`}
+                  fill={i < rating ? "currentColor" : "none"}
                 />
               ))}
             </div>
@@ -56,7 +57,7 @@ function TestimonialCard({
         <CardFooter className="border-t border-brand bg-transparent mt-4 pt-4 pb-4 flex items-center gap-4">
           <Avatar className="size-12 ring-2 ring-brand ring-offset-2">
             <AvatarImage
-              src={"/user.webp"}
+              src={image || "/user.webp"}
               alt={name}
               className="w-full h-full object-cover"
             />
@@ -75,8 +76,17 @@ export default function TestimonialsSection() {
   const t = useTranslations("testimonialsSection");
   const locale = useLocale();
   const isRtl = locale === "ar";
+  const { data, isLoading } = useTestimonials();
 
-  const testimonials = t.raw("items") as {
+  const apiTestimonials = data?.data?.testimonials?.map(item => ({
+    quote: item.content.content,
+    name: item.content.name,
+    role: item.content.job_title,
+    rating: item.rate,
+    image: item.image,
+  })) || [];
+
+  const staticTestimonials = t.raw("items") as {
     quote: string;
     name: string;
     role: string;
@@ -84,11 +94,15 @@ export default function TestimonialsSection() {
     rating: number;
   }[];
 
+  const testimonials = apiTestimonials.length > 0 ? apiTestimonials : staticTestimonials;
+
+  if (isLoading) return null;
+
   return (
     <section className="container py-16 space-y-8">
       <SectionHeader
-        title={t("title")}
-        subtitle={t("subtitle")}
+        title={data?.data?.content?.title || t("title")}
+        subtitle={data?.data?.content?.description || t("subtitle")}
         subtitleColor="text-gray-500"
       />
 
@@ -120,6 +134,7 @@ export default function TestimonialsSection() {
                   name={item.name}
                   role={item.role}
                   rating={item.rating}
+                  image={'image' in item ? item.image : undefined}
                 />
               </CarouselItem>
             ))}
@@ -139,3 +154,4 @@ export default function TestimonialsSection() {
     </section>
   );
 }
+

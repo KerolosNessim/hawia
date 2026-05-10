@@ -147,4 +147,33 @@ export interface StepsResponse {
     message: string,
     data:SolutionSingleItem[],
 }
-  
+export interface TestimonialItem {
+    id: number;
+    content: {
+        name: string;
+        job_title: string;
+        content: string;
+    };
+    image: string;
+    rate: number;
+    sort_order: number;
+    seo: {
+        meta_title: string | null;
+        meta_description: string | null;
+    };
+}
+
+export interface TestimonialsData {
+    id: number;
+    content: {
+        title: string;
+        description: string;
+    };
+    testimonials: TestimonialItem[];
+}
+
+export interface TestimonialsResponse {
+    status: string | boolean;
+    message: string;
+    data: TestimonialsData;
+}
