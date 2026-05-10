@@ -177,3 +177,27 @@ export interface TestimonialsResponse {
     message: string;
     data: TestimonialsData;
 }
+
+export interface FaqItem {
+    id: number;
+    question: string;
+    answer: string;
+    sort_order: number;
+}
+
+export interface FaqData {
+    id: number;
+    title: string;
+    description: string;
+    meta_title: string | null;
+    meta_description: string | null;
+    items: FaqItem[];
+    is_active: boolean;
+    created_at: string;
+}
+
+export interface FaqResponse {
+    status: string | boolean;
+    message: string;
+    data: FaqData;
+}
