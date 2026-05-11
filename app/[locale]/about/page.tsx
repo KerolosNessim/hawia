@@ -3,28 +3,60 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import PageHeader from "@/features/shared/components/page-header";
 import { Play } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
-import * as motion from "framer-motion/client"
+import * as motion from "framer-motion/client";
 import Identity from "@/features/about/components/identity";
 import VissionAndMession from "@/features/about/components/vision-and-mession";
 import ServicesSection from "@/features/services/components/services-section";
 import Values from "@/features/about/components/values";
 import SectionHeader from "@/features/shared/components/section-header";
 import PageContact from "@/features/shared/components/page-contact";
+import { Metadata } from "next";
+import { getAboutData } from "@/features/about/services/about";
 
-export default function AboutPage() {
-  const t = useTranslations("about");
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  await params;
+  try {
+    const response = await getAboutData();
+    const data = response.data;
+
+    return {
+      title: data.meta_title || data.title,
+      description: data.meta_description || data.description,
+    };
+  } catch (error) {
+    return {
+      title: "About Us",
+    };
+  }
+}
+
+export default async function AboutPage() {
+  const t = await getTranslations("about");
+
+  let data;
+  try {
+    const response = await getAboutData();
+    data = response.data;
+  } catch (error) {
+    console.error("Failed to fetch About Us data:", error);
+  }
+
   return (
     <div className="space-y-16 pb-16">
       <PageHeader
-        title={t("title")}
-        description={t("description")}
-        image="/hero-bg.webp"
+        title={data?.title || t("title")}
+        description={data?.description || t("description")}
+        image={data?.image || "/hero-bg.webp"}
       />
       {/* video */}
       <Dialog>
@@ -53,7 +85,10 @@ export default function AboutPage() {
               <iframe
                 width="100%"
                 height="500"
-                src="https://www.youtube.com/embed/pQ4dZ-GftNM?si=6uEa7nAEqcJo3Kj_"
+                src={
+                  data?.video_url ||
+                  "https://www.youtube.com/embed/pQ4dZ-GftNM?si=6uEa7nAEqcJo3Kj_"
+                }
                 title="YouTube video player"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -66,24 +101,29 @@ export default function AboutPage() {
       </Dialog>
       {/* identity */}
       <Identity
-        title={t("identity.title")}
-        description={t.raw("identity.description")}
+        title={data?.sections[0]?.title || t("identity.title")}
+        description={data?.sections[0]?.description || ""}
+        image={data?.sections[0]?.image || "/about-identity.webp"}
       />
       {/* vision and mession */}
-      <VissionAndMession />
+      <VissionAndMession data={data?.vision_sections[0] } />
       {/* services */}
       <ServicesSection />
       {/* values */}
-      <Values />
+      <Values data={data?.why_us_sections[0]}/>
       {/* ideal client */}
-      <div className="bg-gray-900 px-5 py-10">
+      {/* <div className="bg-gray-900 px-5 py-10">
         <SectionHeader
           title={t("ideal_client_title")}
           subtitle={t("ideal_client")}
         />
-      </div>
+      </div> */}
       {/* contact */}
-      <PageContact title={t("contact.title")}  description={t("contact.description")} />
+      <PageContact
+        title={data?.contact_sections[0]?.title || t("contact.title")}
+        description={data?.contact_sections[0]?.description || t("contact.description")}
+        phone={data?.contact_sections[0]?.phone}
+      />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import React from "react";
@@ -27,6 +28,7 @@ export default function PageContact({
       )}
       <Button
         className={`w-32 h-12 rounded-full font-bold shadow-md transition-all duration-300 bg-brand hover:bg-brand/90 text-white`}
+        onClick={() => window.open(`https://wa.me/${phone}`)}
       >
         {t("btn")}
         <FaWhatsapp className="w-4 h-4" />

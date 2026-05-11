@@ -23,14 +23,14 @@ export default function PageHeader({ title, description, image="/seo-banner.jpg"
           >
             {title}
           </motion.h1>
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg text-white mt-4"
+            dangerouslySetInnerHTML={{ __html: description || "" }}
           >
-            {description}
-          </motion.p>
+          </motion.div>
         </div>
       </div>
     </div>

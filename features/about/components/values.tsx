@@ -1,8 +1,9 @@
 import { useTranslations } from "next-intl";
 import * as motion from "framer-motion/client";
 import Image from "next/image";
+import { WhyUsSection } from "../types";
 
-export default function Values() {
+export default function Values({ data }: { data: WhyUsSection | undefined }) {
   const t = useTranslations("about");
   const whyChoose = t.raw("why_choose");
   const values = t.raw("values");
@@ -16,24 +17,40 @@ export default function Values() {
       >
         <div className="space-y-4">
           <h2 className="text-3xl font-bold text-brand mb-4">
-            {t("why_choose_title")}
+            {data?.title || t("why_choose_title")}
           </h2>
-          <ul className="space-y-3  ">
-            {whyChoose?.map((item: string, index: number) => (
-              <li
-                key={index}
-                className="font-semibold flex items-baseline gap-2"
-              >
-                <span className="w-2 h-2 bg-brand rounded-full shrink-0"></span>
-                {item}
-              </li>
-            ))}
-          </ul>
+          {data?.description ? (
+            <div
+              className="font-semibold flex items-baseline gap-2 [&>p]:text-brand [&>p]:font-bold"
+              dangerouslySetInnerHTML={{ __html: data?.description || "" }}
+            >
+            </div>
+          ) : (
+            <ul className="space-y-3  ">
+              {whyChoose?.map((item: string, index: number) => (
+                <li
+                  key={index}
+                  className="font-semibold flex items-baseline gap-2"
+                >
+                  <span className="w-2 h-2 bg-brand rounded-full shrink-0"></span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="space-y-4 mt-10">
           <h2 className="text-3xl font-bold text-brand mb-4">
-            {t("values_title")}
+            {data?.values_title || t("values_title")}
           </h2>
+          {
+            data?.values_description ? (
+              <div
+                className="font-semibold flex items-baseline gap-2 [&>p]:text-brand [&>p]:font-bold"
+                dangerouslySetInnerHTML={{ __html: data?.values_description || "" }}
+              >
+              </div>
+            ) : (
           <ul className="space-y-3  ">
             {values?.map(
               (item: { title: string; description: string }, index: number) => (
@@ -48,6 +65,7 @@ export default function Values() {
               ),
             )}
           </ul>
+          )}
         </div>
       </motion.div>
       <motion.div
@@ -58,7 +76,7 @@ export default function Values() {
         viewport={{ once: true }}
       >
         <Image
-          src="/values.webp"
+          src={data?.image || "/values.webp"}
           alt=""
           width={500}
           height={500}
