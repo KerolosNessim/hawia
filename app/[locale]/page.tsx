@@ -1,5 +1,6 @@
 import AdsSection from "@/features/home/component/ads-section";
 import ArticlesSection from "@/features/blogs/components/articles-section";
+import { blogToCardPayload, fetchPublicBlogs } from "@/features/blogs/server/public-blogs";
 import ClientsSection from "@/features/home/component/clients-section";
 import ContactSection from "@/features/home/component/contact-section";
 import DependenciesSection from "@/features/home/component/depndnces-sction";
@@ -11,13 +12,17 @@ import TestimonialsSection from "@/features/home/component/testimonials-section"
 import WhyUsSection from "@/features/home/component/why-us-section";
 import ServicesSection from "@/features/services/components/services-section";
 import { getLandingPageData } from "@/features/home/services/hero";
+import type { Locale } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 export default async function Home() {
   const data = await getLandingPageData();
-  console.log(data);
 
-  if(!data.data) return null
-  
+  if (!data.data) return null;
+
+  const locale = (await getLocale()) as Locale;
+  const latestBlogs = (await fetchPublicBlogs()).slice(0, 3).map((b) => blogToCardPayload(b, locale));
+
   return (
     <main>
       <HeroSection heroData={data?.data?.hero} />
@@ -34,7 +39,7 @@ export default async function Home() {
       <TestimonialsSection />
       <ClientsSection partners={data?.data?.partners} />
       <PackagesSection />
-      <ArticlesSection />
+      <ArticlesSection items={latestBlogs} />
       <ContactSection />
     </main>
   );

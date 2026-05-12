@@ -9,6 +9,8 @@ export default function RatingSection() {
   const [count, setCount] = useState(1); // عدد التقييمات
   const average = 5; // ثابت زي الصورة (غيره بالداتا الحقيقية)
 
+  return null;
+
   return (
     <div className="text-center py-10">
       {/* Title */}

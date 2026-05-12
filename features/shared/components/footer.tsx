@@ -56,7 +56,8 @@ export default function Footer() {
                 alt="Howeyah Logo"
                 width={160}
                 height={60}
-                className="rtl:ml-auto ltr:mr-auto"
+                className="rtl:ml-auto ltr:mr-auto h-auto w-auto max-w-[160px]"
+                style={{ width: "auto", height: "auto" }}
               />
             </Link>
             <p className="text-gray-700 font-bold text-lg max-w-[200px] leading-snug mx-auto lg:mx-0">

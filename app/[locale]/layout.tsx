@@ -44,12 +44,14 @@ export default async function RootLayout({
 
   const font = locale === "ar" ? cairo : geistSans;
 
+  const dir = locale === "ar" ? "rtl" : "ltr";
+
   return (
-    <html lang={locale} className={`${font.className} `} suppressHydrationWarning>
-      <body dir={locale === "ar" ? "rtl" : "ltr"} className=" relative overflow-x-hidden ">
+    <html lang={locale} dir={dir} className={`${font.className} `} suppressHydrationWarning>
+      <body className=" relative overflow-x-hidden ">
         <QueryProvider>
           <NextIntlClientProvider messages={messages}>
-            <DirectionProvider dir={locale === "ar" ? "rtl" : "ltr"}>
+            <DirectionProvider direction={dir}>
               <Navbar/>
               {children}
               <Footer />

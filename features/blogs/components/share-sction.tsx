@@ -1,16 +1,23 @@
 "use client";
 
-import React from "react";
 import { toast } from "sonner";
 import { Share2, Link2 } from "lucide-react";
 import { FaFacebook, FaLinkedin, FaTwitter } from "react-icons/fa";
 
+type ShareSectionProps = {
+  /** Full URL including locale path; falls back to `window.location.href` */
+  shareUrl?: string;
+  shareLabel?: string;
+};
 
-const ShareSection = () => {
-  const articleUrl = typeof window !== "undefined" ? window.location.href : "";
+const ShareSection = ({ shareUrl: shareUrlProp, shareLabel = "شارك المقال:" }: ShareSectionProps) => {
+  const articleUrl =
+    shareUrlProp ||
+    (typeof window !== "undefined" ? window.location.href : "");
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(articleUrl);
+    if (!articleUrl) return;
+    void navigator.clipboard.writeText(articleUrl);
     toast.success("تم نسخ الرابط بنجاح", {
       description: "يمكنك الآن مشاركته مع أصدقائك.",
     });
@@ -48,7 +55,7 @@ const ShareSection = () => {
     <div
       className="container flex items-center  gap-4 py-6 border-y border-gray-100 "
     >
-      <span className="text-sm font-bold text-slate-700">شارك المقال:</span>
+      <span className="text-sm font-bold text-slate-700">{shareLabel}</span>
 
       <div className="flex gap-2">
         {socialPlatforms.map((platform) => (
