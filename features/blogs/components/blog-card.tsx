@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -7,32 +9,33 @@ import {
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-interface Blog
-   {
-    title: string;
-    description: string;
-    date: string;
-    image: string;
-    link: string;
-  }
- 
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
-  interface BlogCardProps{
-    article: Blog;
-    index: number;
-    isRtl: boolean;
-    t: (key: string) => string;
-    isLight?: boolean;
-  }
+interface Blog {
+  title: string;
+  /** Localized excerpt HTML from the CMS — rendered inside the card. */
+  description: string;
+  date: string;
+  image: string;
+  /** Blog post path — must work with `@/i18n/navigation` `Link`. */
+  link: string;
+}
+
+interface BlogCardProps {
+  article: Blog;
+  index: number;
+  isRtl: boolean;
+  isLight?: boolean;
+}
 
 export default function BlogCard({
   article,
   index,
   isRtl,
-  t,
-  isLight=false,
+  isLight = false,
 }: BlogCardProps) {
+  const t = useTranslations("articlesSection");
   return (
     <motion.div
       key={index}
@@ -48,10 +51,12 @@ export default function BlogCard({
         <CardHeader className="p-0 border-b-2 border-brand">
           <div className="relative w-full h-[240px]  overflow-hidden">
             <Image
-              src={"/blog.webp"}
+              src={article.image}
               alt={article.title}
               fill
+              priority={index < 3}
               className="object-cover transition-transform duration-500 hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
             />
           </div>
         </CardHeader>
@@ -60,13 +65,17 @@ export default function BlogCard({
           <h3 className={`text-xl font-bold mb-4  leading-snug line-clamp-2 hover:text-brand transition-colors cursor-pointer ${isLight ? "text-gray-900" : "text-white"}`}>
             {article.title}
           </h3>
-          <p className={`text-sm leading-relaxed mb-6 line-clamp-3 ${isLight ? "text-gray-500" : "text-gray-300"}`}>
-            {article.description}
-          </p>
+          {article.description.trim() ? (
+            <div
+              dir={isRtl ? "rtl" : "ltr"}
+              className={`blog-card-excerpt text-sm leading-relaxed mb-6 line-clamp-3 max-w-none [&_p]:mb-0 [&_p+_p]:mt-1 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold ${isLight ? "text-gray-500" : "text-gray-300"}`}
+              dangerouslySetInnerHTML={{ __html: article.description }}
+            />
+          ) : null}
 
           <div className="mt-auto">
             <Link
-              href={"/blogs/1"}
+              href={article.link}
               className="inline-flex items-center text-brand font-bold hover:text-brand/80 transition-colors text-sm"
             >
               {t("readMore")}

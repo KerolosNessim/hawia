@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useSettings } from "@/features/settings/hooks/use-settings";
 import SectionHeader from "@/features/shared/components/section-header";
 import { Clock, Mail, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -15,7 +16,12 @@ export default function ContactSection({
 }) {
   const t = useTranslations("contactSection");
   const f = useTranslations("contact");
-  const locations = f.raw("offices") as { title: string; location: string }[];
+  const { data: settings } = useSettings();
+  
+  const offices = settings?.offices || [];
+  const phones = settings?.contact?.phones || [];
+  const email = settings?.contact?.email || "info@howeyah.com";
+  const workingHours = settings?.working_hours;
 
   return (
     <section className="py-16 bg-linear-to-t from-brand/50 to-transparent">
@@ -42,9 +48,10 @@ export default function ContactSection({
                   <h4 className="font-bold text-lg">{t("phoneLabel")}</h4>
                 </div>
                 <div className="space-y-2 text-gray-300 text-sm ">
-                  <p>(+90) 75 67 031 536</p>
-                  <p>(+968) 4555 9520</p>
-                  <p>(+968) 1971 9525</p>
+                  {phones.map((phone, idx) => (
+                    <p key={idx}>{phone.number || (phone as any)}</p>
+                  ))}
+                  {phones.length === 0 && <p>(+966) 123 456 789</p>}
                 </div>
               </div>
 
@@ -55,7 +62,7 @@ export default function ContactSection({
                   <h4 className="font-bold text-lg">{t("emailLabel")}</h4>
                 </div>
                 <div className="text-gray-300 text-sm ">
-                  <p>info@howeyah.com</p>
+                  <p>{email}</p>
                 </div>
               </div>
               {/* Locations Block */}
@@ -66,10 +73,10 @@ export default function ContactSection({
                     <h4 className="font-bold text-lg">{f("our_offices")}</h4>
                   </div>
                   <div className="text-gray-300 text-sm  space-y-2">
-                    {locations?.map((location, index) => (
+                    {offices.map((office, index) => (
                       <div key={index} className="space-y-1">
-                        <p className="font-bold text-brand">{location.title}</p>
-                        <p className="text-gray-300">{location.location}</p>
+                        <p className="font-bold text-brand">{office.title}</p>
+                        <p className="text-gray-300">{office.address || (office as any).location}</p>
                       </div>
                     ))}
                   </div>
@@ -85,7 +92,13 @@ export default function ContactSection({
                   </h4>
                 </div>
                 <div className="text-gray-300 text-sm ">
-                  <p>{t("workingHoursText")}</p>
+                  {workingHours ? (
+                    <p>
+                      {workingHours.from_day} - {workingHours.to_day}: {workingHours.from_hour} - {workingHours.to_hour}
+                    </p>
+                  ) : (
+                    <p>{t("workingHoursText")}</p>
+                  )}
                 </div>
               </div>
             </div>

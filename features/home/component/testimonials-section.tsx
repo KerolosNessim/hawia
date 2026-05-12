@@ -78,23 +78,27 @@ export default function TestimonialsSection() {
   const isRtl = locale === "ar";
   const { data, isLoading } = useTestimonials();
 
-  const apiTestimonials = data?.data?.testimonials?.map(item => ({
-    quote: item.content.content,
-    name: item.content.name,
-    role: item.content.job_title,
-    rating: item.rate,
-    image: item.image,
-  })) || [];
+  const apiTestimonials = Array.isArray(data?.data?.testimonials)
+    ? data?.data?.testimonials.map((item) => ({
+        quote: item.content.content,
+        name: item.content.name,
+        role: item.content.job_title,
+        rating: item.rate,
+        image: item.image,
+      }))
+    : [];
 
-  const staticTestimonials = t.raw("items") as {
-    quote: string;
-    name: string;
-    role: string;
-    company: string;
-    rating: number;
-  }[];
+  const staticTestimonials = Array.isArray(t.raw("items"))
+    ? (t.raw("items") as {
+        quote: string;
+        name: string;
+        role: string;
+        company: string;
+        rating: number;
+      }[])
+    : [];
 
-  const testimonials = apiTestimonials.length > 0 ? apiTestimonials : staticTestimonials;
+  const testimonials = apiTestimonials?.length > 0 ? apiTestimonials : staticTestimonials;
 
   if (isLoading) return null;
 

@@ -138,6 +138,12 @@
   html {
     @apply font-sans;
   }
+  a,
+  button,
+  [role="button"],
+  [role="link"] {
+    cursor: pointer;
+  }
 }
 @theme {
   /* ========= colors ========= */

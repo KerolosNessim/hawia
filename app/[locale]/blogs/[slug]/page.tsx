@@ -1,217 +1,248 @@
-import RatingSection from "@/features/blogs/components/rating-section";
 import RelatedBlogsSection from "@/features/blogs/components/related-blogs-section";
 import ShareSection from "@/features/blogs/components/share-sction";
+import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import RatingSection from "@/features/blogs/components/rating-section";
+import {
+  blogToCardPayload,
+  fetchPublicBlogBySlug,
+  fetchPublicBlogs,
+  pickLocalizedRichText,
+  plainTextFromHtml,
+} from "@/features/blogs/server/public-blogs";
 import PageHeader from "@/features/shared/components/page-header";
 import { Calendar, Clock } from "lucide-react";
+import type { Locale } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { FaStar } from "react-icons/fa";
 
-export default function SingleBlogPage() {
+async function absoluteBlogUrl(locale: string, slug: string): Promise<string | null> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return null;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}/${locale}/blogs/${encodeURIComponent(slug)}`;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { slug, locale } = await params;
+  const blog = await fetchPublicBlogBySlug(slug);
+
+  const tNotFound = await getTranslations("blogDetail");
+  const visibleLocale = locale as Locale;
+
+  if (!blog) {
+    return { title: tNotFound("notFoundTitle"), robots: { index: false, follow: false } };
+  }
+
+  const title =
+    typeof blog.meta_title === "string" && blog.meta_title.trim()
+      ? blog.meta_title
+      : blog.title;
+  const description =
+    typeof blog.meta_description === "string" && blog.meta_description.trim()
+      ? blog.meta_description
+      : plainTextFromHtml(
+          typeof blog.description === "string" ? blog.description : String(blog.description ?? ""),
+        ).slice(0, 160);
+
+  const robots = blog.is_searchable
+    ? { index: true as const, follow: true as const }
+    : { index: false as const, follow: false as const, googleBot: { index: false, follow: false } };
+
+  const canonical = blog.canonical_url?.trim()
+    ? blog.canonical_url.trim()
+    : (await absoluteBlogUrl(locale, slug)) ?? undefined;
+
+  const ogImages = [];
+  const img = resolveMediaUrl(blog.image);
+  if (img && img !== "/blog.webp") {
+    ogImages.push({ url: img, alt: blog.image_alt || blog.title });
+  }
+
+  return {
+    title,
+    description,
+    robots,
+    alternates: canonical ? { canonical } : undefined,
+    openGraph: {
+      title,
+      description,
+      locale: visibleLocale === "ar" ? "ar_SA" : "en_US",
+      type: "article",
+      ...(ogImages.length ? { images: ogImages } : {}),
+    },
+  };
+}
+
+export default async function SingleBlogPage({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}) {
+  const { slug, locale } = await params;
+  const blog = await fetchPublicBlogBySlug(slug);
+  if (!blog) notFound();
+
+  const t = await getTranslations("blogDetail");
+
+  let publishedLabel = "";
+  const dateSource = blog.published_at || blog.created_at;
+  if (dateSource) {
+    try {
+      publishedLabel = new Intl.DateTimeFormat(locale === "ar" ? "ar-SA-u-ca-gregory" : "en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(new Date(dateSource));
+    } catch {
+      publishedLabel = dateSource;
+    }
+  }
+
+  const shareUrl =
+    blog.canonical_url?.trim() || (await absoluteBlogUrl(locale, slug)) || undefined;
+
+  const visibleLocale = (await getLocale()) as Locale;
+  const articleLang = visibleLocale === "ar" ? "ar" : "en";
+  const categoryId = blog.category?.id;
+
+  const related =
+    categoryId != null
+      ? (await fetchPublicBlogs({ blog_category_id: categoryId }))
+          .filter((b) => b.slug !== blog.slug)
+          .slice(0, 6)
+          .map((b) => blogToCardPayload(b, visibleLocale))
+      : [];
+
+  const heroImage = resolveMediaUrl(blog.image);
+
+  const localizedTitle =
+    pickLocalizedRichText(blog.titleRichSource ?? blog.title, articleLang).trim() || blog.title;
+  const localizedSubtitleHtml =
+    pickLocalizedRichText(blog.subtitleRichSource ?? blog.subtitle, articleLang).trim();
+  const subtitlePlainBanner = localizedSubtitleHtml
+    ? plainTextFromHtml(localizedSubtitleHtml).slice(0, 280)
+    : "";
+  const subtitleLooksLikeHtml =
+    localizedSubtitleHtml.length > 0 && /<[a-z][\s\S]*>/i.test(localizedSubtitleHtml);
+
+  const descRich = pickLocalizedRichText(blog.descriptionRichSource ?? blog.description, articleLang).trim();
+  const contentRich = pickLocalizedRichText(blog.contentRichSource ?? blog.content, articleLang).trim();
+
+  /** Lead (description/summary HTML) plus main body HTML — both render as rich text. */
+  const articleCombinedHtml =
+    descRich || contentRich
+      ? [
+          descRich
+            ? `<section class="blog-description-lead mb-8 space-y-3 [&_p]:mb-3 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold">${descRich}</section>`
+            : "",
+          contentRich,
+        ]
+          .filter(Boolean)
+          .join("")
+      : "";
+
   return (
     <div className="pb-16 space-y-16">
       <PageHeader
         image="/blogs-banner.jfif"
-        title="أنواع التجارة الإلكترونية | دليل شامل لأشهر الأنواع وفوائدها"
+        title={localizedTitle}
+        description={subtitleLooksLikeHtml ? undefined : subtitlePlainBanner || undefined}
+        descriptionHtml={subtitleLooksLikeHtml ? localizedSubtitleHtml : undefined}
       />
 
-      {/* main image  */}
       <div className="lg:w-2/3 mx-auto max-lg:container space-y-8">
-        <Image
-          src={"/blog.webp"}
-          width={500}
-          height={500}
-          alt="single blog"
-          className="w-full "
-        />
-        <div className="flex items-center justify-between">
-          {/* logo and name */}
+        <div className="relative mx-auto aspect-[16/10] max-h-[480px] w-full overflow-hidden rounded-2xl">
+          <Image
+            src={heroImage}
+            fill
+            className="object-cover"
+            alt={blog.image_alt?.trim() || localizedTitle}
+            sizes="(max-width: 1024px) 100vw, 66vw"
+            priority
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
           <div className="flex items-center gap-4">
             <Image
-              src={"/logo.png"}
+              src="/logo.png"
               width={200}
               height={200}
-              alt="logo"
-              className="size-12 bg-white rounded-full object-contain ring-2 ring-offset-2 ring-brand"
+              alt=""
+              className="size-12 rounded-full bg-white object-contain ring-2 ring-offset-2 ring-brand"
             />
-            <p className="text-gray-900 font-bold">
-              هُوِيَّة للحلول التسويقية والرقمية
-            </p>
+            <div>
+              <p className="text-gray-900 font-bold">{blog.publisher_name}</p>
+              {blog.category?.name ? (
+                <p className="text-sm text-muted-foreground">{blog.category.name}</p>
+              ) : null}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {/* date */}
-            <div className="flex items-center gap-2">
-              <Calendar className="size-5 text-brand" />
-              <p className="text-gray-900 font-bold">
-                {new Date().toLocaleDateString()}
-              </p>
-            </div>
-            {/* time */}
-            <div className="flex items-center gap-2">
-              <Clock className="size-5 text-brand" />
-              <p className="text-gray-900 font-bold">
-                {new Date().toLocaleTimeString()}
-              </p>
-            </div>
-
-            {/* rate */}
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-4 text-gray-900">
+            {publishedLabel ? (
+              <div className="flex items-center gap-2">
+                <Calendar className="size-5 text-brand" />
+                <span className="font-bold">{publishedLabel}</span>
+              </div>
+            ) : null}
+            {blog.reading_time != null ? (
+              <div className="flex items-center gap-2">
+                <Clock className="size-5 text-brand" />
+                <span className="font-bold">
+                  {t("readingMinutes", { count: Math.max(1, blog.reading_time) })}
+                </span>
+              </div>
+            ) : null}
+            <div className="flex items-center gap-0.5" aria-hidden>
               {Array.from({ length: 5 }).map((_, i) => (
-                <FaStar key={i} className="size-5 text-yellow-500 " />
+                <FaStar key={i} className="size-5 text-yellow-500" />
               ))}
             </div>
           </div>
         </div>
+
+        {!blog.is_searchable ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {t("noIndexNotice")}
+          </p>
+        ) : null}
       </div>
 
-      {/* content */}
-      <div className="container text-gray-900 font-semibold ">
-        <p className="text-lg">
-          <span className="text-brand font-bold">
-            أنواع التجارة الإلكترونية
-          </span>{" "}
-          تتنوع بناءً على أطراف المعاملة (بائع ومشتري)، وتشمل الأنواع الرئيسية:
-          بيع الشركات للمستهلكين (B2C) كالمتاجر، والبيع بين الشركات (B2B)، وبين
-          المستهلكين (C2C) كالمزادات، وبيع المستهلك للشركات (C2B). تتميز هذه
-          الأنواع بالسرعة، وتنوع المنتجات، وتوفر طرق دفع رقمية، وتساهم في تقليل
-          التكاليف التشغيلية.
-        </p>
-      </div>
+      <article className="container max-w-3xl space-y-6 text-gray-900">
+        <div
+          className="blog-content space-y-4 text-lg leading-relaxed [&_img]:mx-auto [&_img]:my-4 [&_img]:max-h-[480px] [&_img]:max-w-full [&_img]:rounded-xl [&_a]:font-semibold [&_a]:text-brand [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:scroll-mt-24 [&_h3]:text-xl [&_h3]:font-semibold [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6 [&_blockquote]:border-s-4 [&_blockquote]:border-brand [&_blockquote]:bg-muted/30 [&_blockquote]:py-2 [&_blockquote]:ps-4"
+          dangerouslySetInnerHTML={{
+            __html: articleCombinedHtml || "<p></p>",
+          }}
+        />
 
-      {/* describtion */}
-      <div className="lg:w-2/3 mx-auto max-lg:container space-y-8">
-        {/* Title */}
-        <h1 className="text-3xl font-bold  text-brand">
-          ما هي التجارة الإلكترونية؟
-        </h1>
-
-        {/* Paragraph */}
-        <p>
-          هي عملية بيع وشراء المنتجات أو الخدمات عبر الإنترنت، وتشمل تبادل
-          البيانات والمعلومات بين الشركات والأفراد باستخدام التكنولوجيا الحديثة.
-        </p>
-
-        {/* List */}
-        <ul className="list-disc marker:text-brand  space-y-2 ">
-          <li>توفر الوقت والجهد للعملاء.</li>
-          <li>تسمح بالوصول إلى عملاء عالميين.</li>
-          <li>تقلل التكاليف التشغيلية.</li>
-          <li>تساعد في تحليل سلوك العملاء.</li>
-        </ul>
-
-        {/* Image Placeholder */}
-        <div>
-          <div className="w-full h-[300px] relative rounded-xl overflow-hidden ">
-            <Image
-              src="/single-blog-1.webp"
-              alt="blog"
-              fill
-              className="object-contain"
-            />
+        {blog.tags.length ? (
+          <div className="flex flex-wrap gap-2 pt-6">
+            {blog.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-brand/30 bg-brand/5 px-3 py-1 text-sm font-semibold text-brand"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
-        </div>
+        ) : null}
+      </article>
 
-        {/* Section */}
-        <h2 className="text-2xl font-bold  text-brand">
-          أنواع التجارة الإلكترونية
-        </h2>
-
-        {/* Subsection */}
-        <h3 className="text-xl font-bold ">التجارة بين الشركات (B2B)</h3>
-
-        <p>يتم فيها تبادل المنتجات أو الخدمات بين الشركات وبعضها البعض.</p>
-
-        <ul className="list-disc marker:text-brand  space-y-2 ">
-          <li>بيع بالجملة</li>
-          <li>توريد المنتجات</li>
-          <li>عقود طويلة الأمد</li>
-        </ul>
-
-        {/* Subsection */}
-        <h3 className="text-xl font-bold ">
-          التجارة بين الشركات والمستهلك (B2C)
-        </h3>
-
-        <p>وهي الأكثر انتشارًا، حيث تبيع الشركات منتجاتها مباشرة للمستهلكين.</p>
-
-        <ul className="list-disc marker:text-brand  space-y-2 ">
-          <li>متاجر إلكترونية</li>
-          <li>تجربة مستخدم سهلة</li>
-          <li>خيارات دفع متعددة</li>
-        </ul>
-
-        {/* Image Placeholder */}
-        <div>
-          <div className="w-full h-[300px] relative rounded-xl overflow-hidden ">
-            <Image
-              src="/single-blog-2.webp"
-              alt="blog"
-              fill
-              className="object-contain"
-            />
-          </div>
-        </div>
-
-        {/* Subsection */}
-        <h3 className="text-xl font-bold ">التجارة بين المستهلكين (C2C)</h3>
-
-        <p className="mb-4">
-          تتم بين الأفراد مثل البيع عبر المنصات الإلكترونية.
-        </p>
-
-        <ul className="list-disc marker:text-brand space-y-2">
-          <li>منصات بيع مستعمل</li>
-          <li>مزادات إلكترونية</li>
-          <li>تبادل المنتجات</li>
-        </ul>
-        <div className="w-full h-[300px] relative rounded-xl overflow-hidden ">
-          <Image
-            src="/single-blog-3.webp"
-            alt="blog"
-            fill
-            className="object-contain"
-          />
-        </div>
-        {/* Subsection */}
-        <h3 className="text-xl font-bold ">
-          التجارة الإلكترونية من شركة إلى حكومة (B2G)
-        </h3>
-
-        <p className="mb-4">
-          تشمل الشركات التي تقدم خدمات أو منتجات للقطاعات الحكومية، مثل شركات
-          تصميم مواقع إلكترونية للمؤسسات الحكومية.
-        </p>
-
-        <ul className="list-disc marker:text-brand space-y-2">
-          <li>منصات بيع مستعمل</li>
-          <li>مزادات إلكترونية</li>
-          <li>تبادل المنتجات</li>
-        </ul>
-        {/* Subsection */}
-        <h3 className="text-xl font-bold ">
-          التجارة الإلكترونية من المستهلك إلى حكومة (C2G)
-        </h3>
-
-        <p className="mb-4">
-          يتضمن معاملات المستهلك مع الحكومة إلكترونيًا، مثل تقديم الإقرارات
-          الضريبية أو إصدار السجلات التجارية عبر الإنترنت.
-        </p>
-
-        <ul className="list-disc marker:text-brand space-y-2">
-          <li>منصات بيع مستعمل</li>
-          <li>مزادات إلكترونية</li>
-          <li>تبادل المنتجات</li>
-        </ul>
-      </div>
-
-
-      {/* rating section */}
       <RatingSection />
 
-      {/* share section  */}
-      <ShareSection />
-      
-      {/* related blogs section */}
-      <RelatedBlogsSection />
+      <ShareSection shareUrl={shareUrl ?? undefined} shareLabel={t("shareArticle")} />
+
+      <RelatedBlogsSection articles={related} />
     </div>
   );
 }

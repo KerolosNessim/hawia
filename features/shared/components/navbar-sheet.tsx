@@ -27,8 +27,9 @@ export default function NavbarSheet() {
       { href: "/services", label: t("services") },
       { href: "/contact", label: t("contact") },
       { href: "/clients", label: t("clients") },
-      { href: "/blog", label: t("blog") },
+      { href: "/blogs", label: t("blog") },
       { href: "/courses", label: t("courses") },
+      { href: "/packages", label: t("packages") },
       { href: "/faq", label: t("faq") },
       { href: "/contact-us", label: t("contact-us") },
     ];
@@ -49,7 +50,8 @@ export default function NavbarSheet() {
                   alt="logo"
                   width={100}
                   height={100}
-                  className="w-30 h-30 object-contain"
+                  className="h-20 w-auto object-contain"
+                  style={{ width: "auto", height: "auto" }}
                 />
               </Link>
             </SheetTitle>

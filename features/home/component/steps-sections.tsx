@@ -26,18 +26,24 @@ export default function StepsSection() {
   const isRTL = locale === "ar";
   const { data, isLoading } = useSteps();
   console.log("data",data)
-  const apiItems = data?.data?.map(single => ({
-    title: single.content.title,
-    description: single.content.description,
-    image: single.image,
-  })) || [];
+  const apiItems = Array.isArray(data?.data)
+    ? data?.data?.map((single) => ({
+        title: single.content.title,
+        description: single.content.description,
+        image: single.image,
+      }))
+    : [];
 
 
-  const items = apiItems.length > 0 ? apiItems : (t.raw("items") as {
-    title: string;
-    description: string;
-    image?: string;
-  }[]);
+  const staticItems = Array.isArray(t.raw("items"))
+    ? (t.raw("items") as {
+        title: string;
+        description: string;
+        image?: string;
+      }[])
+    : [];
+
+  const items = apiItems?.length > 0 ? apiItems : staticItems;
 
   if (isLoading) return null;
 
@@ -72,7 +78,7 @@ export default function StepsSection() {
 
         {/* Desktop Staggered Layout */}
         <div className="hidden lg:flex items-center justify-between gap-4 mt-20 min-h-[400px]">
-          {items.map((step, index) => {
+          {items?.map((step, index) => {
             const Icon = icons[index % icons.length];
             const isUp = index % 2 === 0;
 
@@ -143,7 +149,7 @@ export default function StepsSection() {
 
         {/* Mobile Vertical Layout */}
         <div className="flex flex-col gap-6 lg:hidden mt-12">
-          {items.map((step, index) => {
+          {items?.map((step, index) => {
             const Icon = icons[index % icons.length];
             return (
               <motion.div

@@ -22,7 +22,7 @@ export default function ServicesSection() {
   const items = t.raw("items") as { title: string; description: string }[];
   const [selectedCountry, setSelectedCountry] = useState("SA");
   const { data, isLoading, error } = useGetServices();
-  const services = data?.data ?? [];
+  const services = Array.isArray(data?.data) ? data?.data : [];
 
   const icons = [
     Search,
@@ -90,7 +90,7 @@ export default function ServicesSection() {
       </div> */}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {services.map((item, index) => (
+        {services?.map((item, index) => (
           <ServicesCard
             icon={icons[index]}
             key={index}

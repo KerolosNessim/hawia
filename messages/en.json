@@ -15,6 +15,7 @@
     "clients": "clients",
     "blog": "blog",
     "courses": "courses",
+    "packages": "Packages",
     "faq": "faq",
     "contact-us": "contact-us",
     "login": "login",
@@ -220,33 +221,21 @@
   },
   "packagesSection": {
     "title": "Our Packages",
-    "tabs": [
-      "SEO Packages",
-      "Ads Campaigns",
-      "Visual Identity",
-      "Web Design & Dev"
-    ],
-    "seoPackages": [
-      {
-        "title": "Basic SEO Package",
-        "description": "Ideal for startups, businesses, and individuals who have just launched their website and want to systematically improve their search engine visibility",
-        "button": "Details",
-        "icon": "rocket"
-      },
-      {
-        "title": "Professional SEO Package",
-        "description": "Recommended for businesses seeking to fully enhance their search engine presence and drive more traffic and leads through advanced SEO strategies",
-        "button": "Details",
-        "isPopular": true,
-        "icon": "gem"
-      },
-      {
-        "title": "Comprehensive E-commerce Package",
-        "description": "Recommended for companies and individuals seeking to launch or develop an integrated online store, with all the necessary tools and strategies to increase sales and improve customer experience",
-        "button": "Details",
-        "icon": "target"
-      }
-    ]
+    "empty": "No packages are available at the moment.",
+    "emptyCategory": "No packages in this category yet.",
+    "otherTab": "Other",
+    "details": "Details"
+  },
+  "packagesPage": {
+    "title": "Our Packages",
+    "description": "Explore pricing and service bundles tailored for your goals.",
+    "empty": "No packages are available at the moment."
+  },
+  "packageDetail": {
+    "back": "All packages",
+    "features": "What's included",
+    "order": "Get started",
+    "notFound": "This package could not be found."
   },
   "articlesSection": {
     "title": "Latest Articles in Digital Marketing",
@@ -275,6 +264,21 @@
         "link": "#"
       }
     ]
+  },
+  "blogsPage": {
+    "metaTitle": "Blog | Howeyah",
+    "metaDescription": "Latest articles on digital marketing, branding, and growth from Howeyah.",
+    "title": "Latest Articles in Digital Marketing",
+    "description": "Browse our blog for practical insights on marketing, SEO, and building your brand online.",
+    "allCategories": "All categories",
+    "empty": "No published articles match this filter yet."
+  },
+  "blogDetail": {
+    "notFoundTitle": "Article not found",
+    "relatedTitle": "Related articles",
+    "readingMinutes": "{count} min read",
+    "noIndexNotice": "This article is marked noindex and may be hidden from search engines.",
+    "shareArticle": "Share this article:"
   },
   "contactSection": {
     "title": "Contact Us Now",
@@ -712,6 +716,15 @@
   },
   "courses":{
     "title":"Training Courses",
-    "description":"We are always here to achieve your brand's success"
+    "description":"We are always here to achieve your brand's success",
+    "catalog_empty": "No courses are available yet.",
+    "catalog_error": "We could not load courses. Please try again later.",
+    "not_found": "This course could not be found.",
+    "about_title": "About this course",
+    "objectives_title": "What you will learn",
+    "curriculum_title": "Curriculum",
+    "lesson_count": "{count} lessons",
+    "preview_badge": "Free preview",
+    "enroll_cta": "Enroll now"
   }
 }

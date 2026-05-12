@@ -41,18 +41,20 @@ import type { HeroStat } from "../types";
 export function HeroStats({ stats }: { stats?: HeroStat[] }) {
   const t = useTranslations("hero.stats");
 
-  const displayStats = stats?.map(stat => {
-    // Extract numbers and non-numbers from the string (e.g., "+10" -> value: 10, suffix: "+")
-    const numMatch = stat.content.number.match(/\d+/);
-    const suffixMatch = stat.content.number.match(/[^\d]+/);
-    
-    return {
-      value: numMatch ? parseInt(numMatch[0]) : 0,
-      suffix: suffixMatch ? suffixMatch[0] : "",
-      title: stat.content.title,
-      description: stat.content.description,
-    };
-  }) || [];
+  const displayStats = Array.isArray(stats)
+    ? stats.map((stat) => {
+        // Extract numbers and non-numbers from the string (e.g., "+10" -> value: 10, suffix: "+")
+        const numMatch = stat.content.number.match(/\d+/);
+        const suffixMatch = stat.content.number.match(/[^\d]+/);
+
+        return {
+          value: numMatch ? parseInt(numMatch[0]) : 0,
+          suffix: suffixMatch ? suffixMatch[0] : "",
+          title: stat.content.title,
+          description: stat.content.description,
+        };
+      })
+    : [];
 
   if (displayStats.length === 0) return null;
 

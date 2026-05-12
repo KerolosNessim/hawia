@@ -10,12 +10,14 @@ export default function ClientsSection({ partners }: { partners?: Partner[] }) {
   const t = useTranslations("clientsSection");
   const locale = useLocale();
 
-  const partnerImages = partners?.flatMap(partner => 
-    partner.images.map(img => ({
-      url: img.url,
-      title: partner.title
-    }))
-  ) || [];
+  const partnerImages = Array.isArray(partners)
+    ? partners.flatMap((partner) =>
+        partner.images.map((img) => ({
+          url: img.url,
+          title: partner.title,
+        }))
+      )
+    : [];
 
   const card = (image: string, index: number, alt?: string) => (
     <div
@@ -36,7 +38,10 @@ export default function ClientsSection({ partners }: { partners?: Partner[] }) {
 
   return (
     <section className=" py-16 space-y-8 overflow-hidden bg-gray-900">
-      <SectionHeader title={ partners?.[0]?.title || t("title")} subtitle={ partners?.[0]?.description || t("subtitle")} />
+      <SectionHeader
+        title={(Array.isArray(partners) && partners[0]?.title) || t("title")}
+        subtitle={(Array.isArray(partners) && partners[0]?.description) || t("subtitle")}
+      />
 
       <div dir="ltr" className="space-y-8 relative">
         {/* Gradient Masks */}
