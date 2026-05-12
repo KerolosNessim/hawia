@@ -22,7 +22,7 @@ export default function ServicesSection() {
   const items = t.raw("items") as { title: string; description: string }[];
   const [selectedCountry, setSelectedCountry] = useState("SA");
   const { data, isLoading, error } = useGetServices();
-  const services = Array.isArray(data?.data) ? data?.data : [];
+  const services = Array.isArray(data?.data) ? data.data : [];
 
   const icons = [
     Search,

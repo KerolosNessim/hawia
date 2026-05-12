@@ -1,23 +1,76 @@
 import BlogCard from "@/features/blogs/components/blog-card";
 import BlogCategoriesFilter from "@/features/blogs/components/blog-categories-filter";
+import { BlogListPagination } from "@/features/blogs/components/blog-list-pagination";
+import { blogCategoryPath, blogIndexHref } from "@/features/blogs/lib/blog-routes";
+import { buildBreadcrumbJsonLd, jsonLdScript } from "@/features/blogs/lib/json-ld";
 import {
   blogToCardPayload,
   fetchPublicBlogCategories,
-  fetchPublicBlogs,
+  fetchPublicBlogsPaginated,
+  fetchVisibleBlogCountByCategoryId,
+  plainTextFromHtml,
 } from "@/features/blogs/server/public-blogs";
 import PageHeader from "@/features/shared/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { cn } from "@/lib/utils";
+
+const BLOG_LIST_PER_PAGE = 9;
 
 type SearchParamsType = Record<string, string | string[] | undefined>;
 
-export async function generateMetadata(): Promise<Metadata> {
+function parsePage(sp: SearchParamsType): number {
+  const raw = typeof sp.page === "string" ? sp.page : Array.isArray(sp.page) ? sp.page[0] : "1";
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+function parseSearch(sp: SearchParamsType): string {
+  const raw =
+    typeof sp.search === "string" ? sp.search : Array.isArray(sp.search) ? sp.search[0] : "";
+  return raw.trim();
+}
+
+async function absolutePath(path: string): Promise<string | null> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return null;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  if (path.startsWith("http")) return path;
+  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: Locale }>;
+  searchParams?: Promise<SearchParamsType>;
+}): Promise<Metadata> {
+  await params;
   const t = await getTranslations("blogsPage");
+  const locale = (await getLocale()) as Locale;
+  const sp = searchParams ? await searchParams : {};
+  const page = parsePage(sp);
+  const search = parseSearch(sp);
+  const canonicalPath = blogIndexHref(locale, page > 1 ? page : 1, { search });
+  const canonical = (await absolutePath(canonicalPath)) ?? undefined;
+
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
     robots: { index: true, follow: true },
+    alternates: canonical ? { canonical } : undefined,
+    openGraph: {
+      title: t("metaTitle"),
+      description: t("metaDescription"),
+      locale: locale === "ar" ? "ar_SA" : "en_US",
+      type: "website",
+    },
   };
 }
 
@@ -27,75 +80,154 @@ export default async function BlogPage(props: {
 }) {
   await props.params;
   const t = await getTranslations("blogsPage");
-
   const sp = props.searchParams ? await props.searchParams : {};
-  const rawCat =
-    typeof sp.category === "string" ? sp.category : Array.isArray(sp.category) ? sp.category[0] : "";
-  const activeCategoryId = /^\d+$/.test(rawCat) ? Number.parseInt(rawCat, 10) : null;
+  const page = parsePage(sp);
+  const search = parseSearch(sp);
 
   const locale = (await getLocale()) as Locale;
 
-  const filteredQuery =
-    activeCategoryId != null ? { blog_category_id: activeCategoryId } : null;
-
-  const [categories, allVisibleBlogs, categoryFiltered] = await Promise.all([
+  const [categories, visibleCountByCategoryId, { blogs, meta }] = await Promise.all([
     fetchPublicBlogCategories(locale),
-    fetchPublicBlogs(),
-    filteredQuery ? fetchPublicBlogs(filteredQuery) : Promise.resolve(null),
+    fetchVisibleBlogCountByCategoryId(),
+    fetchPublicBlogsPaginated({
+      paginationPath: `/${locale}/blogs`,
+      page,
+      per_page: BLOG_LIST_PER_PAGE,
+      search: search || undefined,
+    }),
   ]);
 
-  const blogs = filteredQuery ? categoryFiltered! : allVisibleBlogs;
+  const sortedCategories = [...categories].sort(
+    (a, b) => Number(b.is_featured) - Number(a.is_featured),
+  );
 
-  const visibleCountByCategoryId = new Map<number, number>();
-  for (const b of allVisibleBlogs) {
-    const cid = b.category?.id;
-    if (cid == null || !Number.isFinite(cid)) continue;
-    visibleCountByCategoryId.set(cid, (visibleCountByCategoryId.get(cid) ?? 0) + 1);
-  }
-
+  const visibleLocale = locale;
   const cards = blogs.map((b) => ({
-    article: blogToCardPayload(b, locale),
+    article: blogToCardPayload(b, visibleLocale),
     key: String(b.id),
   }));
 
-  const activeCategory =
-    activeCategoryId != null ? categories.find((c) => c.id === activeCategoryId) : undefined;
+  const blogIndexAbs = (await absolutePath(`/${locale}/blogs`)) ?? `/${locale}/blogs`;
+  const listAbs =
+    (await absolutePath(blogIndexHref(locale, page, { search }))) ?? blogIndexAbs;
+
+  const breadcrumbLd = buildBreadcrumbJsonLd([
+    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
+    { name: t("breadcrumbBlog"), url: blogIndexAbs },
+  ]);
+
+  const webPageLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${listAbs}#webpage`,
+    url: listAbs,
+    name: t("title"),
+    description: t("metaDescription"),
+    isPartOf: { "@type": "WebSite", name: "Howeyah" },
+  };
+
+  const structuredData = jsonLdScript([breadcrumbLd, webPageLd]);
 
   return (
     <div className="space-y-12 pb-16">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+
       <PageHeader title={t("title")} description={t("description")} image="/blogs-banner.jfif" />
-      <div className="container space-y-8">
+
+      <div className="container space-y-10">
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold text-foreground">{t("categoriesHeading")}</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sortedCategories.map((c) => {
+              const descRaw = c.descriptionRich ?? "";
+              const excerpt = descRaw ? plainTextFromHtml(descRaw).slice(0, 140) : "";
+              const count = visibleCountByCategoryId.get(c.id) ?? c.blogs_count ?? 0;
+              return (
+                <Link
+                  key={c.id}
+                  href={c.slug ? blogCategoryPath(c.slug) : "/blogs"}
+                  className={cn(
+                    "group flex flex-col rounded-2xl border border-border/70 bg-card p-5 shadow-sm transition hover:border-brand/40 hover:shadow-md",
+                    !c.is_searchable && "opacity-90",
+                  )}
+                >
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-brand">
+                      {c.name}
+                    </h3>
+                    {c.is_featured ? (
+                      <span className="rounded-full bg-brand/15 px-2 py-0.5 text-xs font-semibold text-brand">
+                        {t("featuredBadge")}
+                      </span>
+                    ) : null}
+                  </div>
+                  {excerpt ? (
+                    <p className="mb-3 line-clamp-3 text-sm text-muted-foreground">{excerpt}</p>
+                  ) : null}
+                  <span className="mt-auto text-sm font-semibold text-brand">
+                    {t("categoryArticleCount", { count })}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
         <BlogCategoriesFilter
           categories={categories}
-          activeCategoryId={activeCategoryId}
+          activeCategorySlug={null}
           allLabel={t("allCategories")}
           visibleCountByCategoryId={visibleCountByCategoryId}
-          activeCategoryVisibleTotal={activeCategoryId != null ? blogs.length : null}
+          activeCategoryVisibleTotal={null}
         />
 
-        {activeCategory?.descriptionRich ? (
-          <div
-            className="max-w-3xl rounded-2xl border border-border/60 bg-muted/20 px-6 py-5 text-foreground [&_a]:font-semibold [&_a]:text-brand [&_h2]:mt-4 [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:mt-3 [&_h3]:text-xl [&_h3]:font-semibold [&_img]:mx-auto [&_img]:my-3 [&_img]:max-h-[400px] [&_img]:max-w-full [&_img]:rounded-xl [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:ps-6"
-            dir={locale === "ar" ? "rtl" : "ltr"}
-            dangerouslySetInnerHTML={{ __html: activeCategory.descriptionRich }}
+        <form
+          method="get"
+          action={`/${locale}/blogs`}
+          className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center"
+        >
+          <label className="sr-only" htmlFor="blog-index-search">
+            {t("searchLabel")}
+          </label>
+          <input
+            id="blog-index-search"
+            name="search"
+            defaultValue={search}
+            placeholder={t("searchPlaceholder")}
+            className="flex h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none ring-brand/30 focus-visible:ring-2"
           />
-        ) : null}
+          <Button type="submit" className="h-11 shrink-0 rounded-xl px-6">
+            {t("searchSubmit")}
+          </Button>
+        </form>
 
-        {cards.length === 0 ? (
-          <p className="py-16 text-center text-muted-foreground text-lg">{t("empty")}</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-            {cards.map(({ article, key }, index) => (
-              <BlogCard
-                key={key}
-                article={article}
-                index={index}
-                isRtl={locale === "ar"}
-                isLight
-              />
-            ))}
-          </div>
-        )}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-bold text-foreground">{t("latestPostsHeading")}</h2>
+          {cards.length === 0 ? (
+            <p className="py-16 text-center text-muted-foreground text-lg">{t("empty")}</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+              {cards.map(({ article, key }, index) => (
+                <BlogCard
+                  key={key}
+                  article={article}
+                  index={index}
+                  isRtl={locale === "ar"}
+                  isLight
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <BlogListPagination
+          meta={meta}
+          variant="index"
+          search={search}
+          previousLabel={t("paginationPrevious")}
+          nextLabel={t("paginationNext")}
+          isRtl={locale === "ar"}
+        />
       </div>
     </div>
   );

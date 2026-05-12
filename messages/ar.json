@@ -1,5 +1,22 @@
 {
   "hello": "مرحبا",
+  "seo": {
+    "organizationDescription": "هوية — تسويق وحلول رقمية: السيو، الإعلانات، وسائل التواصل، الهوية البصرية، وتطوير المواقع.",
+    "breadcrumb": {
+      "home": "الرئيسية",
+      "about": "من نحن",
+      "clients": "نماذج العملاء",
+      "blogs": "المدونة",
+      "blog": "المقال",
+      "packages": "الباقات",
+      "courses": "الدورات",
+      "faq": "الأسئلة الشائعة",
+      "contact-us": "اتصل بنا",
+      "services": "الخدمات",
+      "login": "تسجيل الدخول",
+      "register": "إنشاء حساب"
+    }
+  },
   "socials": {
     "facebook": "فيسبوك",
     "twitter": "تويتر",
@@ -271,14 +288,33 @@
     "title": "أحدث مقالاتنا في التسويق الرقمي",
     "description": "تصفح مدونتنا لمقالات عملية حول التسويق، السيو، وبناء علامتك على الإنترنت.",
     "allCategories": "كل التصنيفات",
-    "empty": "لا توجد مقالات منشورة مطابقة لهذا التصنيف بعد."
+    "empty": "لا توجد مقالات منشورة مطابقة لهذا التصنيف بعد.",
+    "breadcrumbHome": "الرئيسية",
+    "breadcrumbBlog": "المدونة",
+    "categoriesHeading": "تصفح حسب التصنيف",
+    "featuredBadge": "مميز",
+    "categoryArticleCount": "{count, plural, zero {لا مقالات} one {مقال واحد} two {مقالان} few {# مقالات} many {# مقالاً} other {# مقال}}",
+    "latestPostsHeading": "أحدث المقالات",
+    "searchLabel": "البحث في المقالات",
+    "searchPlaceholder": "ابحث في العنوان أو المحتوى…",
+    "searchSubmit": "بحث",
+    "paginationPrevious": "السابق",
+    "paginationNext": "التالي",
+    "categoryNoIndexNotice": "تم وضع علامة بعدم الفهرسة على هذا التصنيف وقد لا يظهر في محركات البحث."
   },
   "blogDetail": {
     "notFoundTitle": "المقال غير موجود",
     "relatedTitle": "مقالات ذات صلة",
     "readingMinutes": "{count} دقيقة قراءة",
     "noIndexNotice": "تم وضع علامة بعدم الفهرسة على هذا المقال وقد لا يظهر في نتائج البحث.",
-    "shareArticle": "شارك المقال:"
+    "shareArticle": "شارك المقال:",
+    "copyLinkSuccess": "تم نسخ الرابط",
+    "copyLinkDescription": "يمكنك مشاركته الآن مع الآخرين.",
+    "shareOnAria": "مشاركة على {platform}",
+    "ratingTitle": "كيف كان هذا المحتوى؟",
+    "ratingHint": "انقر على النجوم للتقييم.",
+    "averageRating": "المتوسط: {average} / {max}",
+    "ratingsCount": "عدد التقييمات: {count}"
   },
   "contactSection": {
     "title": "تواصل معنا الآن",
@@ -700,8 +736,12 @@
     "submit": "تسجيل",
     "login": "تسجيل الدخول",
     "register": "تسجيل حساب جديد",
+    "toast": {
+      "submittedTitle": "تم الإرسال",
+      "submittedDescription": "تم استلام بياناتك بنجاح."
+    },
     "errors": {
-      "userOrEmail":"اسم المستخدم أو البريد الإلكتروني مطلوب",
+      "userOrEmail":"يجب أن يكون اسم المستخدم أو البريد 3 أحرف على الأقل",
       "username": "اسم المستخدم يجب أن يكون 3 أحرف على الأقل",
       "fullName": "الاسم بالكامل مطلوب",
       "email": "بريد إلكتروني غير صالح",

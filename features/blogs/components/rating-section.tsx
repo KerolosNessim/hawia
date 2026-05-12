@@ -2,29 +2,31 @@
 
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function RatingSection() {
+  const t = useTranslations("blogDetail");
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
-  const [count, setCount] = useState(1); // عدد التقييمات
-  const average = 5; // ثابت زي الصورة (غيره بالداتا الحقيقية)
-
+  const [count, setCount] = useState(1);
+  const average = 5;
+  const maxStars = 5;
+  
   return null;
 
   return (
     <div className="text-center py-10">
-      {/* Title */}
       <h2 className="text-2xl font-bold mb-3 text-gray-900">
-        كيف كان هذا المحتوى؟
+        {t("ratingTitle")}
       </h2>
 
-      <p className="mb-6 text-gray-600">انقر على النجوم للتقييم!</p>
+      <p className="mb-6 text-gray-600">{t("ratingHint")}</p>
 
-      {/* Stars */}
       <div className="flex justify-center gap-2 mb-6">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
+            type="button"
             onClick={() => {
               setRating(star);
               setCount((prev) => prev + 1);
@@ -44,10 +46,11 @@ export default function RatingSection() {
         ))}
       </div>
 
-      {/* Result */}
       <p className="text-gray-700">
-        متوسط التقييم: <span className="font-bold">{average} / 5</span> عدد
-        التقييمات: <span className="font-bold underline">{count}</span>
+        {t("averageRating", { average, max: maxStars })}{" "}
+        <span className="font-bold underline">
+          {t("ratingsCount", { count })}
+        </span>
       </p>
     </div>
   );

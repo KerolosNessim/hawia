@@ -142,10 +142,11 @@ export interface AdsResponse {
         singles: SolutionSingleItem[],
     }
 }
+/** After `getStepsData`, `data` is always a list (normalized from the API envelope). */
 export interface StepsResponse {
-    status: string | boolean,
-    message: string,
-    data:SolutionSingleItem[],
+  status: string | boolean;
+  message: string;
+  data: SolutionSingleItem[];
 }
 export interface TestimonialItem {
     id: number;

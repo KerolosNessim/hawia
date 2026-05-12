@@ -1,5 +1,22 @@
 {
   "hello": "hello",
+  "seo": {
+    "organizationDescription": "Howeyah — marketing and digital solutions: SEO, advertising, social media, branding, and web development.",
+    "breadcrumb": {
+      "home": "Home",
+      "about": "About",
+      "clients": "Clients",
+      "blogs": "Blog",
+      "blog": "Article",
+      "packages": "Packages",
+      "courses": "Courses",
+      "faq": "FAQ",
+      "contact-us": "Contact Us",
+      "services": "Services",
+      "login": "Login",
+      "register": "Register"
+    }
+  },
   "socials": {
     "facebook": "facebook",
     "twitter": "twitter",
@@ -271,14 +288,33 @@
     "title": "Latest Articles in Digital Marketing",
     "description": "Browse our blog for practical insights on marketing, SEO, and building your brand online.",
     "allCategories": "All categories",
-    "empty": "No published articles match this filter yet."
+    "empty": "No published articles match this filter yet.",
+    "breadcrumbHome": "Home",
+    "breadcrumbBlog": "Blog",
+    "categoriesHeading": "Browse by category",
+    "featuredBadge": "Featured",
+    "categoryArticleCount": "{count, plural, one {# article} other {# articles}}",
+    "latestPostsHeading": "Latest posts",
+    "searchLabel": "Search articles",
+    "searchPlaceholder": "Search by title or content…",
+    "searchSubmit": "Search",
+    "paginationPrevious": "Previous",
+    "paginationNext": "Next",
+    "categoryNoIndexNotice": "This category is marked noindex and may be hidden from search engines."
   },
   "blogDetail": {
     "notFoundTitle": "Article not found",
     "relatedTitle": "Related articles",
     "readingMinutes": "{count} min read",
     "noIndexNotice": "This article is marked noindex and may be hidden from search engines.",
-    "shareArticle": "Share this article:"
+    "shareArticle": "Share this article:",
+    "copyLinkSuccess": "Link copied",
+    "copyLinkDescription": "You can share it with others now.",
+    "shareOnAria": "Share on {platform}",
+    "ratingTitle": "How was this content?",
+    "ratingHint": "Click the stars to rate.",
+    "averageRating": "Average: {average} / {max}",
+    "ratingsCount": "Ratings: {count}"
   },
   "contactSection": {
     "title": "Contact Us Now",
@@ -692,10 +728,16 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "userOrEmail": "Username or email",
     "submit": "Register",
     "login": "Login",
     "register": "Create New Account",
+    "toast": {
+      "submittedTitle": "Submitted",
+      "submittedDescription": "Your details were received successfully."
+    },
     "errors": {
+      "userOrEmail": "Username or email must be at least 3 characters",
       "username": "Username must be at least 3 characters",
       "fullName": "Full name is required",
       "email": "Invalid email address",

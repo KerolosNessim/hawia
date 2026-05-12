@@ -25,25 +25,19 @@ export default function StepsSection() {
   const locale = useLocale();
   const isRTL = locale === "ar";
   const { data, isLoading } = useSteps();
-  console.log("data",data)
-  const apiItems = Array.isArray(data?.data)
-    ? data?.data?.map((single) => ({
-        title: single.content.title,
-        description: single.content.description,
-        image: single.image,
-      }))
+  const singles = Array.isArray(data?.data) ? data.data : [];
+  const apiItems = singles.map((single) => ({
+    title: single?.content?.title ?? "",
+    description: single?.content?.description ?? "",
+    image: single?.image ?? "",
+  }));
+
+  const rawFallback = t.raw("items");
+  const fallbackItems = Array.isArray(rawFallback)
+    ? (rawFallback as { title: string; description: string; image?: string }[])
     : [];
 
-
-  const staticItems = Array.isArray(t.raw("items"))
-    ? (t.raw("items") as {
-        title: string;
-        description: string;
-        image?: string;
-      }[])
-    : [];
-
-  const items = apiItems?.length > 0 ? apiItems : staticItems;
+  const items = apiItems.length > 0 ? apiItems : fallbackItems;
 
   if (isLoading) return null;
 
@@ -67,7 +61,7 @@ export default function StepsSection() {
                 stroke="currentColor"
                 strokeWidth="2"
               />
-            </pattern> pattern
+            </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#wavy)" />
         </svg>

@@ -1,6 +1,13 @@
 import RelatedBlogsSection from "@/features/blogs/components/related-blogs-section";
 import ShareSection from "@/features/blogs/components/share-sction";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { blogPostPath } from "@/features/blogs/lib/blog-routes";
+import {
+  blogExcerptPlain,
+  buildBlogPostingJsonLd,
+  buildBreadcrumbJsonLd,
+  jsonLdScript,
+} from "@/features/blogs/lib/json-ld";
 import RatingSection from "@/features/blogs/components/rating-section";
 import {
   blogToCardPayload,
@@ -24,7 +31,16 @@ async function absoluteBlogUrl(locale: string, slug: string): Promise<string | n
   const host = h.get("x-forwarded-host") ?? h.get("host");
   if (!host) return null;
   const proto = h.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}/${locale}/blogs/${encodeURIComponent(slug)}`;
+  return `${proto}://${host}/${locale}${blogPostPath(slug)}`;
+}
+
+async function absoluteFromPath(path: string): Promise<string | null> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return null;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  if (path.startsWith("http")) return path;
+  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export async function generateMetadata({
@@ -92,6 +108,7 @@ export default async function SingleBlogPage({
   if (!blog) notFound();
 
   const t = await getTranslations("blogDetail");
+  const tBlogs = await getTranslations("blogsPage");
 
   let publishedLabel = "";
   const dateSource = blog.published_at || blog.created_at;
@@ -107,8 +124,7 @@ export default async function SingleBlogPage({
     }
   }
 
-  const shareUrl =
-    blog.canonical_url?.trim() || (await absoluteBlogUrl(locale, slug)) || undefined;
+  const pageUrl = blog.canonical_url?.trim() || (await absoluteBlogUrl(locale, slug)) || undefined;
 
   const visibleLocale = (await getLocale()) as Locale;
   const articleLang = visibleLocale === "ar" ? "ar" : "en";
@@ -150,8 +166,37 @@ export default async function SingleBlogPage({
           .join("")
       : "";
 
+  const blogIndexAbs = (await absoluteFromPath(`/${locale}/blogs`)) ?? `/${locale}/blogs`;
+  const blogPostingAbs = pageUrl ?? (await absoluteBlogUrl(locale, slug)) ?? blogIndexAbs;
+  const heroAbs =
+    (await absoluteFromPath(heroImage)) ??
+    (heroImage.startsWith("http") ? heroImage : undefined);
+
+  const breadcrumbLd = buildBreadcrumbJsonLd([
+    { name: tBlogs("breadcrumbHome"), url: (await absoluteFromPath(`/${locale}`)) ?? `/${locale}` },
+    { name: tBlogs("breadcrumbBlog"), url: blogIndexAbs },
+    { name: localizedTitle, url: blogPostingAbs },
+  ]);
+
+  const postingLd = buildBlogPostingJsonLd({
+    url: blogPostingAbs,
+    headline: localizedTitle,
+    descriptionPlain: blogExcerptPlain(blog, localizedTitle),
+    datePublished: blog.published_at,
+    dateModified: blog.created_at,
+    imageUrl: heroAbs ?? null,
+    authorName: blog.publisher_name,
+    keywords: blog.tags,
+    articleSection: blog.category?.name ?? null,
+    inLanguage: articleLang === "ar" ? "ar" : "en",
+  });
+
+  const structuredData = jsonLdScript([breadcrumbLd, postingLd]);
+
   return (
     <div className="pb-16 space-y-16">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+
       <PageHeader
         image="/blogs-banner.jfif"
         title={localizedTitle}
@@ -240,7 +285,7 @@ export default async function SingleBlogPage({
 
       <RatingSection />
 
-      <ShareSection shareUrl={shareUrl ?? undefined} shareLabel={t("shareArticle")} />
+      <ShareSection shareUrl={pageUrl ?? undefined} shareLabel={t("shareArticle")} />
 
       <RelatedBlogsSection articles={related} />
     </div>
