@@ -22,10 +22,30 @@ export interface Service {
             created_at: string
         }
 
-        export interface GetServicesResponse {
-    status: "true",
-    message: string,
-    data: Service[]
+/** Paginated list payload inside API `data` for GET /v1/services */
+export interface ServicesListPayload {
+  data: Service[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
+/** Raw JSON from GET /v1/services */
+export interface GetServicesApiRaw {
+  status: string;
+  message: string;
+  data: ServicesListPayload;
+}
+
+/** Normalized response from `getServices()` (inner list unwrapped) */
+export interface GetServicesResponse {
+  status: string;
+  message: string;
+  data: Service[];
+  meta?: ServicesListPayload["meta"];
 }
         
  export type Benefits = {

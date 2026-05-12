@@ -11,6 +11,8 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
+import BreadcrumbJsonLd from "@/features/shared/components/seo/breadcrumb-json-ld";
+import OrganizationJsonLd from "@/features/shared/components/seo/organization-json-ld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,8 +51,10 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir} className={`${font.className} `} suppressHydrationWarning>
       <body className=" relative overflow-x-hidden ">
+        <OrganizationJsonLd locale={locale} />
         <QueryProvider>
           <NextIntlClientProvider messages={messages}>
+            <BreadcrumbJsonLd />
             <DirectionProvider direction={dir}>
               <Navbar/>
               {children}

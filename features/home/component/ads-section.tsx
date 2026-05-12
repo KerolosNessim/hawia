@@ -7,18 +7,10 @@ import { getAdsData } from '../services/ads'
 export default async function AdsSection() {
   const t = await getTranslations("adsSection")
 
-  let data;
-  try {
-    data = await getAdsData()
-    console.log(data)
-  } catch (error) {
-    console.error("AdsSection Error:", error)
-    return null
-  }
+  const data = await getAdsData()
+  if (!data?.data) return null
 
-  
-
-  const items = data?.data?.singles?.map((item) => {
+  const items = data.data.singles?.map((item) => {
     return {
       title: item?.content?.title,
       img: item?.image,

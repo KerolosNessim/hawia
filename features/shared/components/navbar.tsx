@@ -19,8 +19,8 @@ import { useGetServices } from "@/features/services/hooks/useGetServices";
 export default function Navbar() {
   const t = useTranslations("navbar");
   const path = usePathname();
-    const { data, isLoading, error } = useGetServices();
-  const services = data?.data ?? [];
+  const { data, isLoading, error } = useGetServices();
+  const services = Array.isArray(data?.data) ? data.data : [];
 
   const active = " bg-brand text-white  rounded-full";
   const hover =
@@ -42,7 +42,7 @@ export default function Navbar() {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="container fixed left-0 right-0 top-2 z-50 flex items-center justify-between max-xl:bg-white max-xl:top-0"
     >
-      <Link href={"/"} className="bg-white rounded-full px-6">
+      <Link href={"/"} className="">
         <Image
           src={logo}
           alt="logo"

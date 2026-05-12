@@ -55,9 +55,9 @@ export default function RegisterForm() {
     },
   });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    toast.success("Success", {
-      description: JSON.stringify(data, null, 2),
+  function onSubmit(_data: z.infer<typeof formSchema>) {
+    toast.success(t("toast.submittedTitle"), {
+      description: t("toast.submittedDescription"),
     });
   }
 

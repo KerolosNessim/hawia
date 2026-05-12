@@ -73,10 +73,18 @@ export function LaravelResourcePagination({
 
   const prevHref =
     linksProp?.prev ??
-    (canPrev ? buildLaravelPageUrl(meta.path, current_page - 1) : null);
+    (canPrev
+      ? getPageUrl
+        ? getPageUrl(current_page - 1)
+        : buildLaravelPageUrl(meta.path, current_page - 1)
+      : null);
   const nextHref =
     linksProp?.next ??
-    (canNext ? buildLaravelPageUrl(meta.path, current_page + 1) : null);
+    (canNext
+      ? getPageUrl
+        ? getPageUrl(current_page + 1)
+        : buildLaravelPageUrl(meta.path, current_page + 1)
+      : null);
 
   const resolvePageHref = (page: number) =>
     getPageUrl ? getPageUrl(page) : buildLaravelPageUrl(meta.path, page);

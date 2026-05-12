@@ -19,17 +19,19 @@ export default function WhyUsSection() {
   });
 
   const icons = [Handshake, Users, Target, TrendingUp, Lightbulb];
-  const apiFeatures = data?.data?.items?.map(item => ({
+  const items = Array.isArray(data?.data?.items) ? data.data.items : [];
+  const apiFeatures = items.map((item) => ({
     title: item.content.title,
     description: item.content.description,
     image: item.media.image,
-  })) || [];
+  }));
 
-  const features = apiFeatures.length > 0 ? apiFeatures : (t.raw("features") as {
-    title: string;
-    description: string;
-    image?: string;
-  }[]);
+  const rawFeatures = t.raw("features");
+  const fallbackFeatures = Array.isArray(rawFeatures)
+    ? (rawFeatures as { title: string; description: string; image?: string }[])
+    : [];
+
+  const features = apiFeatures.length > 0 ? apiFeatures : fallbackFeatures;
 
   return (
     <section ref={container} className="relative py-20 ">

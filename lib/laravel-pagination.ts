@@ -103,6 +103,54 @@ export function unwrapLaravelPaginated<T = unknown>(
 }
 
 /** Page numbers with ellipsis markers between gaps (for button rows). */
+/**
+ * Builds a full `LaravelPaginationMeta` when the API returns only the compact
+ * `meta` block (`current_page`, `last_page`, `per_page`, `total`) without `links` or `path`.
+ */
+export function completeLaravelPaginationMeta(
+  partial: Record<string, unknown>,
+  path: string
+): LaravelPaginationMeta | null {
+  const current_page =
+    typeof partial.current_page === "number" ? partial.current_page : Number(partial.current_page);
+  const last_page =
+    typeof partial.last_page === "number" ? partial.last_page : Number(partial.last_page);
+  const per_page =
+    typeof partial.per_page === "number" ? partial.per_page : Number(partial.per_page);
+  const total = typeof partial.total === "number" ? partial.total : Number(partial.total);
+  if (
+    !Number.isFinite(current_page) ||
+    !Number.isFinite(last_page) ||
+    !Number.isFinite(per_page) ||
+    !Number.isFinite(total)
+  ) {
+    return null;
+  }
+  const fromKnown = partial.from;
+  const toKnown = partial.to;
+  const from =
+    typeof fromKnown === "number" && Number.isFinite(fromKnown)
+      ? fromKnown
+      : total > 0
+        ? (current_page - 1) * per_page + 1
+        : null;
+  const to =
+    typeof toKnown === "number" && Number.isFinite(toKnown)
+      ? toKnown
+      : total > 0
+        ? Math.min(current_page * per_page, total)
+        : null;
+  return {
+    current_page,
+    last_page,
+    per_page,
+    total,
+    path,
+    from,
+    to,
+  };
+}
+
 export function getPaginationWindow(
   current: number,
   last: number,

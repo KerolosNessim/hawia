@@ -62,8 +62,13 @@ export default function BlogCard({
         </CardHeader>
 
         <CardContent className="p-6 flex-1 flex flex-col pt-8 ">
-          <h3 className={`text-xl font-bold mb-4  leading-snug line-clamp-2 hover:text-brand transition-colors cursor-pointer ${isLight ? "text-gray-900" : "text-white"}`}>
-            {article.title}
+          <h3 className={`mb-4 text-xl leading-snug line-clamp-2 ${isLight ? "text-gray-900" : "text-white"}`}>
+            <Link
+              href={article.link}
+              className={`block font-bold transition-colors hover:text-brand focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${isLight ? "text-gray-900" : "text-white"}`}
+            >
+              {article.title}
+            </Link>
           </h3>
           {article.description.trim() ? (
             <div

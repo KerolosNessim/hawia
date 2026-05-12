@@ -6,16 +6,25 @@ import Image from "next/image";
 
 import type { Partner } from "../types";
 
-export default function ClientsSection({ partners }: { partners?: Partner[] }) {
+function normalizePartners(partners: Partner[] | Partner | undefined | null): Partner[] {
+  if (partners == null) return [];
+  if (Array.isArray(partners)) return partners;
+  return [partners];
+}
+
+export default function ClientsSection({ partners }: { partners?: Partner[] | Partner | null }) {
   const t = useTranslations("clientsSection");
   const locale = useLocale();
 
-  const partnerImages = partners?.flatMap(partner => 
-    partner.images.map(img => ({
-      url: img.url,
-      title: partner.title
-    }))
-  ) || [];
+  const partnersList = normalizePartners(partners);
+
+  const partnerImages = partnersList.flatMap((partner) => {
+    const images = Array.isArray(partner.images) ? partner.images : [];
+    return images.map((img) => ({
+      url: typeof img === "object" && img != null && "url" in img ? img.url : String(img),
+      title: partner.title,
+    }));
+  });
 
   const card = (image: string, index: number, alt?: string) => (
     <div
@@ -36,7 +45,10 @@ export default function ClientsSection({ partners }: { partners?: Partner[] }) {
 
   return (
     <section className=" py-16 space-y-8 overflow-hidden bg-gray-900">
-      <SectionHeader title={ partners?.[0]?.title || t("title")} subtitle={ partners?.[0]?.description || t("subtitle")} />
+      <SectionHeader
+        title={partnersList[0]?.title || t("title")}
+        subtitle={partnersList[0]?.description || t("subtitle")}
+      />
 
       <div dir="ltr" className="space-y-8 relative">
         {/* Gradient Masks */}

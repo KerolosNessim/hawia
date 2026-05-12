@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   categories: PublicBlogCategory[];
-  activeCategoryId: number | null;
+  activeCategorySlug: string | null;
   allLabel: string;
   /**
    * Public-visible blogs per leaf `category.id` (same rules as `/v1/blogs` + `isPublicBlogVisible`).
@@ -17,7 +17,7 @@ type Props = {
 
 export default function BlogCategoriesFilter({
   categories,
-  activeCategoryId,
+  activeCategorySlug,
   allLabel,
   visibleCountByCategoryId,
   activeCategoryVisibleTotal,
@@ -28,7 +28,7 @@ export default function BlogCategoriesFilter({
         href="/blogs"
         className={cn(
           "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-          activeCategoryId == null
+          activeCategorySlug == null
             ? "border-brand bg-brand text-white"
             : "border-border bg-white text-foreground hover:border-brand/50",
         )}
@@ -36,14 +36,14 @@ export default function BlogCategoriesFilter({
         {allLabel}
       </Link>
       {categories.map((c) => {
-        const isActive = activeCategoryId === c.id;
+        const isActive = activeCategorySlug === c.slug;
         const badgeCount = isActive
           ? (activeCategoryVisibleTotal ?? visibleCountByCategoryId.get(c.id) ?? 0)
           : (visibleCountByCategoryId.get(c.id) ?? 0);
         return (
           <Link
             key={c.id}
-            href={{ pathname: "/blogs", query: { category: String(c.id) } }}
+            href={c.slug ? `/blogs/${encodeURIComponent(c.slug)}` : "/blogs"}
             className={cn(
               "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
               isActive

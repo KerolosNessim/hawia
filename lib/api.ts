@@ -17,6 +17,11 @@ export class ApiError extends Error {
   }
 }
 
+function toAcceptLanguageTag(locale: string | undefined): "ar" | "en" {
+  const raw = (locale ?? "ar").toLowerCase();
+  return raw.startsWith("ar") ? "ar" : "en";
+}
+
 export const api = ofetch.create({
 
   baseURL: process.env.NEXT_PUBLIC_API_URL || CONFIG.BACK_URL,
@@ -36,7 +41,10 @@ export const api = ofetch.create({
 
   async onResponseError({ response }) {
     const data = response._data;
-    throw new ApiError(data?.message || "An error occurred");
+    const { resolveRequestLocale } = await import("./api-locale");
+    const { getGenericApiErrorMessage } = await import("./api-messages");
+    const locale = await resolveRequestLocale();
+    throw new ApiError(data?.message || getGenericApiErrorMessage(locale));
   },
 
   async onRequest({ options }) {
@@ -62,9 +70,7 @@ export const api = ofetch.create({
         locale = document.documentElement.lang || "ar";
       }
 
-      if (locale) {
-        options.headers.set("Accept-Language", locale);
-      }
+      options.headers.set("Accept-Language", toAcceptLanguageTag(locale));
       
     } catch (err) {
       console.error("Failed to attach auth headers:", err);

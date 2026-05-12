@@ -1,6 +1,8 @@
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { blogPostPath } from "@/features/blogs/lib/blog-routes";
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
 import { apiClient } from "@/lib/api";
+import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import type { Locale } from "next-intl";
 
 export type PublicBlogCategory = {
@@ -10,7 +12,11 @@ export type PublicBlogCategory = {
   slug: string;
   is_active: boolean;
   is_searchable: boolean;
+  is_featured: boolean;
   blogs_count?: number;
+  meta_title: string | null;
+  meta_description: string | null;
+  created_at: string | null;
   /** Localized category description HTML from the API (rich text stored as string). */
   descriptionRich?: string;
 };
@@ -51,11 +57,20 @@ function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
 }
 
-function unwrapData<T = unknown>(payload: unknown): T | null {
-  if (!payload || typeof payload !== "object") return null;
+/**
+ * List endpoints may return `data: T[]` or a Laravel-style page `data: { data: T[], meta }`.
+ */
+function unwrapDataList(payload: unknown): unknown[] {
+  if (!payload || typeof payload !== "object") return [];
   const p = payload as Record<string, unknown>;
-  if (p.status === "false" || p.status === false) return null;
-  return (p.data as T) ?? null;
+  if (p.status === "false" || p.status === false) return [];
+  const d = p.data;
+  if (Array.isArray(d)) return d;
+  if (d && typeof d === "object" && !Array.isArray(d)) {
+    const inner = (d as Record<string, unknown>).data;
+    if (Array.isArray(inner)) return inner;
+  }
+  return [];
 }
 
 /** Whether this JSON payload is explicitly an ApiResponse failure envelope. */
@@ -117,11 +132,13 @@ export function normalizeBlogSlugFromRoute(routeSlug: string): string {
   return s;
 }
 
-/** Compare slugs tolerant of Unicode normalization (Arabic NFC/NFD mismatches vs API). */
+/** Compare slugs tolerant of encoding + Unicode normalization (Arabic NFC/NFD vs API). */
 function blogSlugsMatch(a: string, b: string): boolean {
-  if (a === b) return true;
+  const da = normalizeBlogSlugFromRoute(a);
+  const db = normalizeBlogSlugFromRoute(b);
+  if (da === db) return true;
   try {
-    return a.normalize("NFKC") === b.normalize("NFKC");
+    return da.normalize("NFKC") === db.normalize("NFKC");
   } catch {
     return false;
   }
@@ -189,6 +206,8 @@ function normalizeCategory(raw: Record<string, unknown>, locale: Locale): Public
         : Number(parentRaw);
   const lang = locale === "ar" ? "ar" : "en";
   const descriptionHtml = pickLocalizedDescription(raw.description, lang).trim();
+  const is_featured =
+    raw.is_featured === true || raw.is_featured === 1 || raw.is_featured === "1";
   return {
     id: numId,
     parent_id: parent_id != null && Number.isFinite(parent_id) ? parent_id : null,
@@ -196,6 +215,10 @@ function normalizeCategory(raw: Record<string, unknown>, locale: Locale): Public
     slug,
     is_active: raw.is_active !== false && raw.is_active !== 0 && raw.is_active !== "0",
     is_searchable: raw.is_searchable !== false && raw.is_searchable !== 0 && raw.is_searchable !== "0",
+    is_featured,
+    meta_title: typeof raw.meta_title === "string" ? raw.meta_title : null,
+    meta_description: typeof raw.meta_description === "string" ? raw.meta_description : null,
+    created_at: typeof raw.created_at === "string" ? raw.created_at : null,
     blogs_count:
       typeof raw.blogs_count === "number"
         ? raw.blogs_count
@@ -269,50 +292,216 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
   };
 }
 
+/**
+ * Gate for `/v1/blogs` and `/v1/blogs/{slug}` consumers.
+ * We only require `is_active`; **which** rows the public API returns (e.g. draft vs published)
+ * should be enforced by the backend. Requiring `status === "published"` here hid every post
+ * when the API still returned drafts with `is_active: true`.
+ */
 export function isPublicBlogVisible(b: PublicBlog): boolean {
-  return b.is_active && b.status === "published";
+  return b.is_active;
 }
 
+function dedupeCategoriesById(categories: PublicBlogCategory[]): PublicBlogCategory[] {
+  const byId = new Map<number, PublicBlogCategory>();
+  for (const c of categories) {
+    if (!byId.has(c.id)) byId.set(c.id, c);
+  }
+  return [...byId.values()];
+}
+
+/**
+ * Prefers flat paginated `/v1/blog-categories` (matches live API). Falls back to `tree=true` + flatten.
+ */
 export async function fetchPublicBlogCategories(locale: Locale): Promise<PublicBlogCategory[]> {
+  const tryPaginated = async (): Promise<PublicBlogCategory[] | null> => {
+    const merged: PublicBlogCategory[] = [];
+    let page = 1;
+    let lastPage = 1;
+    try {
+      do {
+        const raw = await apiClient.get<unknown>("/v1/blog-categories", {
+          query: { tree: "false", page: String(page), per_page: "100" },
+        });
+        const rec = asRecord(raw);
+        if (!rec || isApiEnvelopeFailure(rec)) return null;
+        const dataVal = rec.data;
+        let rows: unknown[] = [];
+        let metaRec: Record<string, unknown> = {
+          current_page: page,
+          last_page: page,
+          per_page: 100,
+          total: 0,
+        };
+        if (Array.isArray(dataVal)) {
+          rows = dataVal;
+        } else if (dataVal && typeof dataVal === "object" && !Array.isArray(dataVal)) {
+          const d = dataVal as Record<string, unknown>;
+          rows = Array.isArray(d.data) ? d.data : [];
+          const m = asRecord(d.meta);
+          if (m) metaRec = { ...metaRec, ...m };
+        }
+        const meta = completeLaravelPaginationMeta(metaRec, "/v1/blog-categories");
+        if (!meta) return null;
+        lastPage = meta.last_page;
+        for (const row of rows) {
+          const n = normalizeCategory(asRecord(row) ?? {}, locale);
+          if (n && n.is_active) merged.push(n);
+        }
+        page++;
+      } while (page <= lastPage);
+      return dedupeCategoriesById(merged);
+    } catch {
+      return null;
+    }
+  };
+
+  const paginated = await tryPaginated();
+  if (paginated !== null) return paginated;
+
   try {
     const raw = await apiClient.get<unknown>("/v1/blog-categories", {
       query: { tree: "true" },
     });
-    const data = unwrapData<unknown[]>(raw);
-    if (!Array.isArray(data)) return [];
+    const data = unwrapDataList(raw);
     const flat = flattenCategoryTree(data.filter(Boolean) as Record<string, unknown>[]);
-    return flat
-      .map((r) => normalizeCategory(r, locale))
-      .filter((c): c is PublicBlogCategory => c != null && c.is_active);
+    return dedupeCategoriesById(
+      flat
+        .map((r) => normalizeCategory(r, locale))
+        .filter((c): c is PublicBlogCategory => c != null && c.is_active),
+    );
   } catch {
     return [];
   }
+}
+
+export function findPublicBlogCategoryBySlug(
+  categories: PublicBlogCategory[],
+  slug: string,
+): PublicBlogCategory | undefined {
+  const s = normalizeBlogSlugFromRoute(slug);
+  if (!s) return undefined;
+  return categories.find((c) => blogSlugsMatch(c.slug, s));
 }
 
 export type FetchBlogsQuery = {
   blog_category_id?: string | number;
   category_slug?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
 };
 
-export async function fetchPublicBlogs(query?: FetchBlogsQuery): Promise<PublicBlog[]> {
-  try {
-    const q: Record<string, string> = {};
-    if (query?.blog_category_id != null && query.blog_category_id !== "")
-      q.blog_category_id = String(query.blog_category_id);
-    if (query?.category_slug) q.category_slug = query.category_slug;
+function parseBlogListEnvelope(raw: unknown): { rows: unknown[]; meta: Record<string, unknown> } {
+  const rec = asRecord(raw);
+  if (!rec || isApiEnvelopeFailure(rec)) return { rows: [], meta: {} };
+  const dataVal = rec.data;
+  if (Array.isArray(dataVal)) {
+    return {
+      rows: dataVal,
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: dataVal.length,
+        total: dataVal.length,
+      },
+    };
+  }
+  if (dataVal && typeof dataVal === "object" && !Array.isArray(dataVal)) {
+    const d = dataVal as Record<string, unknown>;
+    const rows = Array.isArray(d.data) ? d.data : [];
+    const meta = asRecord(d.meta) ?? {};
+    return { rows, meta };
+  }
+  return { rows: [], meta: {} };
+}
 
+export type FetchPublicBlogsPaginatedParams = {
+  paginationPath: string;
+  page?: number;
+  per_page?: number;
+  search?: string;
+  blog_category_id?: string | number;
+  category_slug?: string;
+};
+
+export async function fetchPublicBlogsPaginated(
+  params: FetchPublicBlogsPaginatedParams,
+): Promise<{ blogs: PublicBlog[]; meta: LaravelPaginationMeta }> {
+  const q: Record<string, string> = {};
+  if (params.page != null && params.page > 0) q.page = String(params.page);
+  if (params.per_page != null && params.per_page > 0) q.per_page = String(params.per_page);
+  if (params.search?.trim()) q.search = params.search.trim();
+  if (params.blog_category_id != null && params.blog_category_id !== "")
+    q.blog_category_id = String(params.blog_category_id);
+  if (params.category_slug?.trim()) q.category_slug = params.category_slug.trim();
+
+  try {
     const raw = await apiClient.get<unknown>("/v1/blogs", {
       query: Object.keys(q).length ? q : undefined,
     });
-    const data = unwrapData<unknown[]>(raw);
-    if (!Array.isArray(data)) return [];
-    return data
+    const { rows, meta: metaPartial } = parseBlogListEnvelope(raw);
+    const meta =
+      completeLaravelPaginationMeta(
+        Object.keys(metaPartial).length ? metaPartial : { current_page: 1, last_page: 1, per_page: 10, total: 0 },
+        params.paginationPath,
+      ) ??
+      completeLaravelPaginationMeta(
+        { current_page: 1, last_page: 1, per_page: 10, total: 0 },
+        params.paginationPath,
+      )!;
+
+    const blogs = rows
       .map((row) => normalizeBlog(asRecord(row) ?? {}))
       .filter((b): b is PublicBlog => b != null)
       .filter(isPublicBlogVisible);
+
+    return { blogs, meta };
   } catch {
-    return [];
+    const meta = completeLaravelPaginationMeta(
+      { current_page: 1, last_page: 1, per_page: 10, total: 0 },
+      params.paginationPath,
+    )!;
+    return { blogs: [], meta };
   }
+}
+
+export async function fetchPublicBlogs(query?: FetchBlogsQuery): Promise<PublicBlog[]> {
+  const { blogs } = await fetchPublicBlogsPaginated({
+    paginationPath: "/v1/blogs",
+    blog_category_id: query?.blog_category_id,
+    category_slug: query?.category_slug,
+    search: query?.search,
+    page: query?.page,
+    per_page: query?.per_page,
+  });
+  return blogs;
+}
+
+/** Counts **visible** blogs per category id by walking all list pages (public `/v1/blogs`). */
+export async function fetchVisibleBlogCountByCategoryId(): Promise<Map<number, number>> {
+  const map = new Map<number, number>();
+  let page = 1;
+  let lastPage = 1;
+  try {
+    do {
+      const { blogs, meta } = await fetchPublicBlogsPaginated({
+        paginationPath: "/v1/blogs",
+        page,
+        per_page: 100,
+      });
+      lastPage = Math.max(1, meta.last_page);
+      for (const b of blogs) {
+        const cid = b.category?.id;
+        if (cid == null || !Number.isFinite(cid)) continue;
+        map.set(cid, (map.get(cid) ?? 0) + 1);
+      }
+      page++;
+    } while (page <= lastPage);
+  } catch {
+    /* keep partial map */
+  }
+  return map;
 }
 
 export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBlog | null> {
@@ -327,8 +516,24 @@ export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBl
     /* try list fallback */
   }
 
-  const all = await fetchPublicBlogs();
-  return all.find((b) => blogSlugsMatch(b.slug, slug)) ?? null;
+  let page = 1;
+  let lastPage = 1;
+  try {
+    do {
+      const { blogs, meta } = await fetchPublicBlogsPaginated({
+        paginationPath: "/v1/blogs",
+        page,
+        per_page: 100,
+      });
+      lastPage = Math.max(1, meta.last_page);
+      const found = blogs.find((b) => blogSlugsMatch(b.slug, slug));
+      if (found) return found;
+      page++;
+    } while (page <= lastPage);
+  } catch {
+    /* */
+  }
+  return null;
 }
 
 export function blogToCardPayload(blog: PublicBlog, locale: Locale): BlogCardPayload {
@@ -358,6 +563,6 @@ export function blogToCardPayload(blog: PublicBlog, locale: Locale): BlogCardPay
     description: descHtml || blog.description || blog.subtitle,
     date: dateLabel,
     image: resolveMediaUrl(blog.image),
-    link: `/blogs/${blog.slug}`,
+    link: blogPostPath(blog.slug),
   };
 }
