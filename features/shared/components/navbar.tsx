@@ -21,8 +21,7 @@ export default function Navbar() {
   const path = usePathname();
     const { data, isLoading, error } = useGetServices();
   const services = data?.data ?? [];
-  console.log(services)
-  
+
   const active = " bg-brand text-white  rounded-full";
   const hover =
     " hover:bg-brand hover:text-white hover: hover:rounded-full transition-all duration-300 ease-in-out";
@@ -32,6 +31,7 @@ export default function Navbar() {
     { href: "/clients", label: t("clients") },
     { href: "/blogs", label: t("blog") },
     { href: "/courses", label: t("courses") },
+    { href: "/packages", label: t("packages") },
     { href: "/faq", label: t("faq") },
     { href: "/contact-us", label: t("contact-us") },
   ];
@@ -48,7 +48,9 @@ export default function Navbar() {
           alt="logo"
           width={100}
           height={100}
-          className="w-18 h-18 object-contain"
+          className="h-16 w-auto object-contain"
+          style={{ width: "auto", height: "auto" }}
+          priority
         />
       </Link>
       <div className="max-xl:hidden p-4 rounded-full backdrop-blur-2xl bg-white flex items-center justify-between">

@@ -1,21 +1,16 @@
 "use client";
 
+import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
 import SectionHeader from "@/features/shared/components/section-header";
 import { useLocale, useTranslations } from "next-intl";
 import BlogCard from "./blog-card";
 
-export default function RelatedBlogsSection() {
-  const t = useTranslations("articlesSection");
+export default function RelatedBlogsSection({ articles }: { articles: BlogCardPayload[] }) {
+  const tDetail = useTranslations("blogDetail");
   const locale = useLocale();
   const isRtl = locale === "ar";
 
-  const articles = t.raw("items") as {
-    title: string;
-    description: string;
-    date: string;
-    image: string;
-    link: string;
-  }[];
+  if (!articles.length) return null;
 
   return (
     <section className="py-16 bg-gray-900 relative overflow-hidden">
@@ -44,16 +39,15 @@ export default function RelatedBlogsSection() {
       </div>
 
       <div className="container  space-y-12">
-        <SectionHeader title={locale === "ar" ? "مقالات ذات صلة" : "Related Articles"}  />
+        <SectionHeader title={tDetail("relatedTitle")} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {articles.map((article, index) => (
             <BlogCard
-              key={index}
+              key={article.link}
               article={article}
               index={index}
               isRtl={isRtl}
-              t={t}
             />
           ))}
         </div>
