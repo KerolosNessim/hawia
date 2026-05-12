@@ -6,39 +6,44 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { MapPin, Mail, ArrowLeft, ArrowRight, MessageCircle, Phone } from "lucide-react";
-import { FaFacebook, FaInstagram, FaLinkedin, FaTiktok, FaTwitter } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaLinkedin, FaTiktok, FaTwitter, FaWhatsapp } from "react-icons/fa";
+import { useSettings } from "@/features/settings/hooks/use-settings";
 
 export default function Footer() {
   const t = useTranslations("footer");
   const locale = useLocale();
   const isRtl = locale === "ar";
+  const { data: settings } = useSettings();
 
-  const omanServices = t.raw("omanServices") as string[];
-  const turkeyServices = t.raw("turkeyServices") as string[];
-  const saudiServices = t.raw("saudiServices") as string[];
-  const offices = t.raw("offices") as string[];
-  const phones = t.raw("phones") as string[];
+  const omanServices = Array.isArray(t.raw("omanServices")) ? t.raw("omanServices") as string[] : [];
+  const turkeyServices = Array.isArray(t.raw("turkeyServices")) ? t.raw("turkeyServices") as string[] : [];
+  const saudiServices = Array.isArray(t.raw("saudiServices")) ? t.raw("saudiServices") as string[] : [];
+  
+  const offices = settings?.offices || [];
+  const phones = settings?.contact?.phones || [];
+  const email = settings?.contact?.email || "info@howeyah.com";
 
   // Define Social Icons Component mapping
   const SocialIcon = ({ name }: { name: string }) => {
-    switch (name) {
+    const iconName = name.toLowerCase();
+    switch (iconName) {
       case "linkedin": return <FaLinkedin className="w-5 h-5 text-white" />;
-      case "snapchat": return <MessageCircle className="w-5 h-5 text-white" />; // Placeholder for Snapchat
+      case "snapchat": return <MessageCircle className="w-5 h-5 text-white" />;
       case "tiktok": return <FaTiktok className="w-5 h-5 text-white" />;
+      case "twitter": 
       case "x": return <FaTwitter className="w-5 h-5 text-white" />;
       case "instagram": return <FaInstagram className="w-5 h-5 text-white" />;
       case "facebook": return <FaFacebook className="w-5 h-5 text-white" />;
+      case "whatsapp": return <FaWhatsapp className="w-5 h-5 text-white" />;
       default: return null;
     }
   };
 
-  const socialLinks = [
-    { name: "linkedin", url: "#" },
-    { name: "snapchat", url: "#" },
-    { name: "tiktok", url: "#" },
-    { name: "x", url: "#" },
-    { name: "instagram", url: "#" },
-    { name: "facebook", url: "#" },
+  const socialLinks = settings?.social_media || [
+    { platform: "facebook", link: "#" },
+    { platform: "twitter", link: "#" },
+    { platform: "instagram", link: "#" },
+    { platform: "linkedin", link: "#" },
   ];
 
   return (
@@ -52,8 +57,8 @@ export default function Footer() {
           <div className="flex flex-col items-center lg:items-start rtl:lg:items-start space-y-6">
             <Link href="/" className="inline-block">
               <Image
-                src="/logo.webp"
-                alt="Howeyah Logo"
+                src={settings?.general?.logo || "/logo.webp"}
+                alt={settings?.general?.site_name || "Howeyah Logo"}
                 width={160}
                 height={60}
                 className="rtl:ml-auto ltr:mr-auto h-auto w-auto max-w-[160px]"
@@ -61,7 +66,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-gray-700 font-bold text-lg max-w-[200px] leading-snug mx-auto lg:mx-0">
-              {t("brandDescription")}
+              {settings?.general?.site_description || t("brandDescription")}
             </p>
             <div className="text-brand font-bold space-y-1">
               <p>{t("registeredTrademark")}</p>
@@ -146,10 +151,10 @@ export default function Footer() {
           <div className="rtl:text-right ltr:text-left text-center md:text-start lg:text-start">
             <h3 className="text-2xl font-bold mb-6 text-gray-900 inline-block border-b-2 border-brand pb-2">{t("officesTitle")}</h3>
             <ul className="space-y-5">
-              {offices.map((office, idx) => (
+              {offices?.map((office, idx) => (
                 <li key={idx} className="flex items-start  md:justify-start lg:justify-start">
                   <MapPin className="w-5 h-5 text-brand me-3 mt-0.5 shrink-0" />
-                  <span className="text-gray-700 font-medium text-sm leading-relaxed max-w-md">{office}</span>
+                  <span className="text-gray-700 font-medium text-sm leading-relaxed max-w-md">{office.address || office}</span>
                 </li>
               ))}
             </ul>
@@ -160,11 +165,11 @@ export default function Footer() {
             <h3 className="text-2xl font-bold mb-6 text-gray-900 inline-block border-b-2 border-brand pb-2">{t("contactTitle")}</h3>
             
             <div className="rtl:text-right ltr:text-left space-y-3 mb-8 w-full max-w-[200px]">
-              {phones.map((phone, idx) => (
-                <p key={idx} className="text-brand font-bold text-lg dir-ltr w-full text-center md:text-end ltr:md:text-start" dir="ltr">{phone}</p>
+              {phones?.map((phone, idx) => (
+                <p key={idx} className="text-brand font-bold text-lg dir-ltr w-full text-center md:text-end ltr:md:text-start" dir="ltr">{phone.number || phone}</p>
               ))}
               <div className="flex items-center justify-center md:justify-end ltr:md:justify-start pt-2 mt-4 border-t border-gray-200">
-                <span className="text-gray-600 font-medium me-2">{t("email")}</span>
+                <span className="text-gray-600 font-medium me-2">{email}</span>
                 <Mail className="w-5 h-5 text-brand" />
               </div>
             </div>
@@ -173,10 +178,10 @@ export default function Footer() {
               {socialLinks.map((social, idx) => (
                 <Link
                   key={idx}
-                  href={social.url}
+                  href={social.link || social.url || "#"}
                   className="w-10 h-10 rounded-full bg-gray-800 hover:bg-brand flex items-center justify-center transition-colors shadow-sm"
                 >
-                  <SocialIcon name={social.name} />
+                  <SocialIcon name={social.platform || social.name} />
                 </Link>
               ))}
             </div>

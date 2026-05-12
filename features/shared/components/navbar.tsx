@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
 import { useGetServices } from "@/features/services/hooks/useGetServices";
+import { useSettings } from "@/features/settings/hooks/use-settings";
 
 export default function Navbar() {
   const t = useTranslations("navbar");
   const path = usePathname();
   const { data, isLoading, error } = useGetServices();
+  const { data: settings } = useSettings();
   const services = Array.isArray(data?.data) ? data.data : [];
 
   const active = " bg-brand text-white  rounded-full";
@@ -44,8 +46,8 @@ export default function Navbar() {
     >
       <Link href={"/"} className="">
         <Image
-          src={logo}
-          alt="logo"
+          src={settings?.general?.logo || logo}
+          alt={settings?.general?.site_name || "logo"}
           width={100}
           height={100}
           className="h-16 w-auto object-contain"

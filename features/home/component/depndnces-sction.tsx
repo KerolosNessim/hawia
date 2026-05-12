@@ -10,7 +10,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
   const t = useTranslations("dependenciesSection");
   const locale = useLocale();
 
-  const images = accreditation?.images.map(img => img.url) || [];
+  const images = accreditation?.images?.map(img => img.url) || [];
 
   const card = (image: string, index: number, alt?: string) => (
     <div
