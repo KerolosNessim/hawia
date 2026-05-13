@@ -8,16 +8,14 @@ import { useLocale } from "next-intl";
 import { MapPin, Mail, ArrowLeft, ArrowRight, MessageCircle, Phone } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaTiktok, FaTwitter, FaWhatsapp } from "react-icons/fa";
 import { useSettings } from "@/features/settings/hooks/use-settings";
+import { useFooterServices } from "@/features/services/hooks/useFooterServices";
 
 export default function Footer() {
   const t = useTranslations("footer");
   const locale = useLocale();
   const isRtl = locale === "ar";
   const { data: settings } = useSettings();
-
-  const omanServices = Array.isArray(t.raw("omanServices")) ? t.raw("omanServices") as string[] : [];
-  const turkeyServices = Array.isArray(t.raw("turkeyServices")) ? t.raw("turkeyServices") as string[] : [];
-  const saudiServices = Array.isArray(t.raw("saudiServices")) ? t.raw("saudiServices") as string[] : [];
+  const { countries, isLoading: footerLoading } = useFooterServices();
   
   const offices = settings?.offices || [];
   const phones = settings?.contact?.phones || [];
@@ -90,59 +88,46 @@ export default function Footer() {
             </div> */}
           </div>
 
-          {/* Oman Services */}
-          <div>
-            <h3 className="text-xl font-bold mb-4 text-gray-900 border-b-2 border-brand pb-2 inline-block">
-              {t("omanServicesTitle")}
-            </h3>
-            <p className="text-sm text-gray-600 mb-6 ">{t("omanServicesIntro")}</p>
-            <ul className="space-y-4">
-              {omanServices.map((service, idx) => (
-                <li key={idx} className="flex items-start">
-                  <span className="text-brand me-2 mt-1">
-                    {isRtl ? <ArrowLeft className="w-4 h-4 bg-brand/10 rounded-full p-0.5" /> : <ArrowRight className="w-4 h-4 bg-brand/10 rounded-full p-0.5" />}
-                  </span>
-                  <span className="text-gray-700 font-medium text-sm flex-1">{service}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Dynamic Country Services */}
+          {!footerLoading && countries.slice(0, 3).map((country) => (
+            <div key={country.id}>
+              <h3 className="text-xl font-bold mb-4 text-gray-900 border-b-2 border-brand pb-2 inline-block">
+                {country.name}
+              </h3>
+              {/* Optional: Add intro text here if available in API or keep empty */}
+              <ul className="space-y-4">
+                {country.services.map((service) => (
+                  <li key={service.id} className="flex items-start">
+                    <span className="text-brand me-2 mt-1">
+                      {isRtl ? (
+                        <ArrowLeft className="w-4 h-4 bg-brand/10 rounded-full p-0.5" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 bg-brand/10 rounded-full p-0.5" />
+                      )}
+                    </span>
+                    <Link
+                      href={`/services/${service.slug}`}
+                      className="text-gray-700 font-medium text-sm flex-1 hover:text-brand transition-colors"
+                    >
+                      {service.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
-          {/* Turkey Services */}
-          <div>
-            <h3 className="text-xl font-bold mb-4 text-gray-900 border-b-2 border-brand pb-2 inline-block">
-              {t("turkeyServicesTitle")}
-            </h3>
-            <p className="text-sm text-gray-600 mb-6 ">{t("turkeyServicesIntro")}</p>
-            <ul className="space-y-4">
-              {turkeyServices.map((service, idx) => (
-                <li key={idx} className="flex items-start">
-                  <span className="text-brand me-2 mt-1">
-                    {isRtl ? <ArrowLeft className="w-4 h-4 bg-brand/10 rounded-full p-0.5" /> : <ArrowRight className="w-4 h-4 bg-brand/10 rounded-full p-0.5" />}
-                  </span>
-                  <span className="text-gray-700 font-medium text-sm flex-1">{service}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Saudi Services */}
-          <div>
-            <h3 className="text-xl font-bold mb-4 text-gray-900 border-b-2 border-brand pb-2 inline-block">
-              {t("saudiServicesTitle")}
-            </h3>
-            <p className="text-sm text-gray-600 mb-6 ">{t("saudiServicesIntro")}</p>
-            <ul className="space-y-4">
-              {saudiServices.map((service, idx) => (
-                <li key={idx} className="flex items-start">
-                  <span className="text-brand me-2 mt-1">
-                    {isRtl ? <ArrowLeft className="w-4 h-4 bg-brand/10 rounded-full p-0.5" /> : <ArrowRight className="w-4 h-4 bg-brand/10 rounded-full p-0.5" />}
-                  </span>
-                  <span className="text-gray-700 font-medium text-sm flex-1">{service}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Loading state placeholders if needed */}
+          {footerLoading && [1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-32 mb-4"></div>
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((j) => (
+                  <div key={j} className="h-4 bg-gray-200 rounded w-full"></div>
+                ))}
+              </div>
+            </div>
+          ))}
 
         </div>
 
