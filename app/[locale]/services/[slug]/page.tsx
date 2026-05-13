@@ -35,6 +35,7 @@ export default async function ServicePage({
   const whySeo = t.raw("why_seo.items") as string[];
   const res = await getSingleService(slug);
   const service = res?.data ?? {};
+  console.log(service);
   return (
     <div>
       <PageHeader
@@ -110,7 +111,7 @@ export default async function ServicePage({
         {service?.faqs && <SeoFaq faq={service?.faqs} />}
 
         {/* seo packages */}
-        <SeoPackages />
+        {/* <SeoPackages /> */}
 
         {/* contact */}
         {service?.ctas && (

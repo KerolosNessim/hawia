@@ -22,6 +22,7 @@ export default async function Home() {
 
   const locale = (await getLocale()) as Locale;
   const latestBlogs = (await fetchPublicBlogs()).slice(0, 3).map((b) => blogToCardPayload(b, locale));
+  console.log("partners",data?.data?.partners?.data[0])
 
   return (
     <main>
@@ -37,7 +38,7 @@ export default async function Home() {
       <DependenciesSection accreditation={data?.data?.accreditation} />
       <AdsSection />
       <TestimonialsSection />
-      <ClientsSection partners={data?.data?.partners} />
+      <ClientsSection partners={data?.data?.partners?.data} />
       <PackagesSection />
       <ArticlesSection items={latestBlogs} />
       <ContactSection />
