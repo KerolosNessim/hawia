@@ -8,11 +8,12 @@ import { Link } from "@/i18n/navigation";
 type Props = {
   href: string;
   title: string;
+  description?: string;
   priceLabel: string;
   imageSrc: string;
 };
 
-export function CourseCard({ href, title, priceLabel, imageSrc }: Props) {
+export function CourseCard({ href, title, description, priceLabel, imageSrc }: Props) {
   return (
     <Link href={href} className="block transition-transform duration-300 hover:scale-[1.02]">
       <Card className="h-full overflow-hidden rounded-2xl border bg-white p-0 shadow-md">
@@ -26,8 +27,11 @@ export function CourseCard({ href, title, priceLabel, imageSrc }: Props) {
             unoptimized={imageSrc.startsWith("http")}
           />
         </div>
-        <CardContent className="py-6 text-center">
+        <CardContent className="space-y-3 py-6 text-center">
           <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+          {description?.trim() ? (
+            <p className="line-clamp-2 text-sm leading-relaxed text-gray-500">{description}</p>
+          ) : null}
         </CardContent>
         <CardFooter className="flex items-center justify-between px-6 pb-6">
           <span className="flex h-10 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-white">

@@ -4,14 +4,66 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { buildBreadcrumbJsonLd, buildPackageProductJsonLd, jsonLdScript } from "@/features/packages/lib/json-ld";
 
 type Props = Readonly<{ params: Promise<{ locale: string; slug: string }> }>;
 
+async function absolutePath(path: string): Promise<string | null> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return null;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  if (path.startsWith("http")) return path;
+  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function packageDescription(pkg: { description: string; title: string }) {
+  const text = pkg.description?.trim() || pkg.title;
+  return text.slice(0, 160);
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug, locale } = await params;
+  const decoded = decodeURIComponent(slug);
+  const pkg = await fetchPublicPackageDetail(decoded, locale);
+  const t = await getTranslations("packageDetail");
+
+  if (!pkg) {
+    return { title: t("notFound"), robots: { index: false, follow: false } };
+  }
+
+  const title = pkg.metaTitle?.trim() || pkg.title;
+  const description = pkg.metaDescription?.trim() || packageDescription(pkg);
+  const canonical =
+    pkg.canonicalUrl?.trim() ||
+    (await absolutePath(`/${locale}/packages/${encodeURIComponent(pkg.slug)}`)) ||
+    undefined;
+  const images = pkg.imageUrl ? [{ url: pkg.imageUrl, alt: pkg.title }] : undefined;
+
+  return {
+    title,
+    description,
+    robots: { index: true, follow: true },
+    alternates: canonical ? { canonical } : undefined,
+    keywords: pkg.metaKeywords?.trim() || undefined,
+    openGraph: {
+      title,
+      description,
+      locale: locale === "ar" ? "ar_SA" : "en_US",
+      type: "website",
+      ...(images ? { images } : {}),
+    },
+  };
+}
+
 export default async function PackageDetailPage({ params }: Props) {
-  const { slug } = await params;
+  const { slug, locale: routeLocale } = await params;
   const locale = await getLocale();
   const t = await getTranslations("packageDetail");
+  const packagesT = await getTranslations("packagesPage");
   const decoded = decodeURIComponent(slug);
 
   const pkg = await fetchPublicPackageDetail(decoded, locale);
@@ -23,9 +75,36 @@ export default async function PackageDetailPage({ params }: Props) {
         ? `${pkg.currency.trim()} ${pkg.price}`
         : String(pkg.price)
       : pkg.priceLabel;
+  const pageUrl =
+    pkg.canonicalUrl?.trim() ||
+    (await absolutePath(`/${routeLocale}/packages/${encodeURIComponent(pkg.slug)}`)) ||
+    `/${routeLocale}/packages/${encodeURIComponent(pkg.slug)}`;
+  const packagesUrl = (await absolutePath(`/${routeLocale}/packages`)) ?? `/${routeLocale}/packages`;
+  const breadcrumbItems = [
+    { name: packagesT("breadcrumbHome"), url: (await absolutePath(`/${routeLocale}`)) ?? `/${routeLocale}` },
+    { name: packagesT("breadcrumbPackages"), url: packagesUrl },
+  ];
+  if (pkg.category?.slug) {
+    breadcrumbItems.push({
+      name: pkg.category.title,
+      url:
+        (await absolutePath(`/${routeLocale}/packages/categories/${encodeURIComponent(pkg.category.slug)}`)) ??
+        `/${routeLocale}/packages/categories/${encodeURIComponent(pkg.category.slug)}`,
+    });
+  }
+  breadcrumbItems.push({ name: pkg.title, url: pageUrl });
+  const breadcrumbLd = buildBreadcrumbJsonLd(breadcrumbItems);
+  const productLd = buildPackageProductJsonLd({
+    pkg,
+    url: pageUrl,
+    description: pkg.metaDescription?.trim() || packageDescription(pkg),
+    inLanguage: routeLocale === "ar" ? "ar" : "en",
+  });
+  const structuredData = jsonLdScript([breadcrumbLd, productLd]);
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-3xl">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
       <Button variant="ghost" asChild className="mb-8 rounded-full gap-2">
         <Link href="/packages">
           <ArrowLeft className="size-4" />

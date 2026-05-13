@@ -246,7 +246,13 @@
   "packagesPage": {
     "title": "Our Packages",
     "description": "Explore pricing and service bundles tailored for your goals.",
-    "empty": "No packages are available at the moment."
+    "empty": "No packages are available at the moment.",
+    "metaTitle": "Marketing Packages and Service Bundles | Howeyah",
+    "metaDescription": "Explore Howeyah marketing packages, compare service bundles, pricing, and included features, and choose the right package for your growth goals.",
+    "categoriesHeading": "Browse packages by category",
+    "breadcrumbHome": "Home",
+    "breadcrumbPackages": "Packages",
+    "allPackages": "All packages"
   },
   "packageDetail": {
     "back": "All packages",
@@ -748,6 +754,13 @@
   "clients":{
     "title":"Models of our clients",
     "description":"We are always here to achieve your brand's success",
+    "metaTitle":"Client Work | Howeyah",
+    "metaDescription":"Explore Howeyah client work and digital solution examples.",
+    "breadcrumbHome":"Home",
+    "breadcrumbClients":"Clients",
+    "empty":"No client work is available yet.",
+    "back":"Back to clients",
+    "not_found":"This client work could not be found.",
     "tabs":[
       "All",
       "seo",
