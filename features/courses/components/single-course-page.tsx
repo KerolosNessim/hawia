@@ -124,6 +124,8 @@ export default function SingleCoursePage({ courseParam }: { courseParam: string 
 
 function CourseDetailBody({ course }: { course: ResolvedPublicCourse }) {
   const t = useTranslations("courses");
+  const richTextClassName =
+    "space-y-3 text-sm leading-relaxed text-gray-600 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_li]:my-1";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -134,7 +136,10 @@ function CourseDetailBody({ course }: { course: ResolvedPublicCourse }) {
           <div className="space-y-10 lg:col-span-2">
             <section className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
               <h2 className="mb-4 text-xl font-bold text-gray-900">{t("about_title")}</h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">{course.description}</p>
+              <div
+                className={richTextClassName}
+                dangerouslySetInnerHTML={{ __html: course.description }}
+              />
             </section>
 
             {course.objectives.length > 0 && (
@@ -144,7 +149,10 @@ function CourseDetailBody({ course }: { course: ResolvedPublicCourse }) {
                   {course.objectives.map((obj, i) => (
                     <div key={i} className="flex items-start gap-2.5">
                       <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-brand" />
-                      <span className="text-sm text-gray-700">{obj}</span>
+                      <div
+                        className="min-w-0 flex-1 space-y-2 text-sm text-gray-700 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5"
+                        dangerouslySetInnerHTML={{ __html: obj }}
+                      />
                     </div>
                   ))}
                 </div>

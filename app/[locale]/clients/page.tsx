@@ -1,89 +1,96 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageHeader from "@/features/shared/components/page-header";
-import { useTranslations } from "next-intl";
 import ClientCard from "@/features/clients/components/client-card";
+import {
+  fetchPublicClientsPageData,
+} from "@/features/clients/services/clients-public-api";
+import {
+  buildBreadcrumbJsonLd,
+  buildClientsCollectionJsonLd,
+  jsonLdScript,
+} from "@/features/clients/lib/json-ld";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 
-export default function ClientsPage() {
-  const t = useTranslations("clients");
-  const tabs = t.raw("tabs") as string[];
+type Props = Readonly<{ params: Promise<{ locale: string }> }>;
 
-  const clientsData = [
-    {
-      title: "تطبيق أهديك",
-      category: "تطبيقات جوال",
-      logo: "/logo.png",
-      phoneImage: "/clients/phone-bicycle.png",
-      flowerImage: "/clients/flowers.png",
-      categoryKey: "الكل",
+async function absolutePath(path: string): Promise<string | null> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return null;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  if (path.startsWith("http")) return path;
+  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function metaDescription(value: string, fallback: string): string {
+  return (value.trim() || fallback).slice(0, 160);
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations("clients");
+  const pageData = await fetchPublicClientsPageData(locale);
+  const title = pageData.title ? `${pageData.title} | Howeyah` : t("metaTitle");
+  const description = metaDescription(pageData.description, t("metaDescription"));
+  const canonical = (await absolutePath(`/${locale}/clients`)) ?? undefined;
+
+  return {
+    title,
+    description,
+    robots: { index: true, follow: true },
+    alternates: canonical ? { canonical } : undefined,
+    openGraph: {
+      title,
+      description,
+      locale: locale === "ar" ? "ar_SA" : "en_US",
+      type: "website",
     },
-    {
-      title: "متجر الدراجات",
-      category: "تجارة إلكترونية",
-      logo: "/logo.png",
-      phoneImage: "/clients/phone-bicycle.png",
-      flowerImage: "/clients/flowers.png",
-      categoryKey: "تصميم المواقع",
-    },
-    {
-      title: "خدمة توصيل",
-      category: "تطبيقات جوال",
-      logo: "/logo.png",
-      phoneImage: "/clients/phone-bicycle.png",
-      flowerImage: "/clients/flowers.png",
-      categoryKey: "التسويق الالكتروني",
-    },
-    {
-      title: "نظام إدارة",
-      category: "برمجيات",
-      logo: "/logo.png",
-      phoneImage: "/clients/phone-bicycle.png",
-      flowerImage: "/clients/flowers.png",
-      categoryKey: "seo",
-    },
-  ];
+  };
+}
+
+export default async function ClientsPage({ params }: Props) {
+  const { locale } = await params;
+  const t = await getTranslations("clients");
+  const pageData = await fetchPublicClientsPageData(locale);
+  const title = pageData.title || t("title");
+  const description = pageData.description || t("description");
+  const pageUrl = (await absolutePath(`/${locale}/clients`)) ?? `/${locale}/clients`;
+  const breadcrumbLd = buildBreadcrumbJsonLd([
+    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
+    { name: t("breadcrumbClients"), url: pageUrl },
+  ]);
+  const collectionLd = buildClientsCollectionJsonLd({
+    name: title,
+    description: metaDescription(description, t("metaDescription")),
+    url: pageUrl,
+    clients: pageData.clients,
+    clientUrl: (client) => `${pageUrl}/${encodeURIComponent(client.slug)}`,
+  });
+  const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);
 
   return (
     <div className="space-y-16 pb-16">
-      <PageHeader
-        title={t("title")}
-        description={t("description")}
-        image="/hero-bg.webp"
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageHeader title={title} description={description} image="/hero-bg.webp" />
       <div className="container mx-auto px-4">
-        <Tabs
-          defaultValue="tab-0"
-          className="static flex w-full flex-col items-center max-md:gap-12"
-        >
-          <TabsList className="mb-26 md:mb-12 flex h-auto flex-wrap justify-center gap-2 bg-transparent">
-            {tabs.map((tab, index) => (
-              <TabsTrigger
-                key={index}
-                value={`tab-${index}`}
-                className="rounded-full bg-gray-900 px-6 h-12 text-sm text-white transition duration-300 hover:bg-brand hover:text-white data-[state=active]:bg-brand data-[state=active]:text-white shadow-sm md:text-base"
-              >
-                {tab}
-              </TabsTrigger>
+        {pageData.clients.length ? (
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {pageData.clients.map((client) => (
+              <ClientCard
+                key={client.id}
+                slug={client.slug}
+                title={client.title}
+                description={client.descriptionPlain}
+                image={client.imageUrl}
+              />
             ))}
-          </TabsList>
-
-          {tabs.map((tab, index) => (
-            <TabsContent key={index} value={`tab-${index}`} className="w-full">
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 ">
-                {clientsData
-                  .filter((client) => index === 0 || client.categoryKey === tab)
-                  .map((client, clientIndex) => (
-                    <ClientCard
-                      key={clientIndex}
-                      title={client.title}
-                      category={client.category}
-                      logo={client.logo}
-                      phoneImage={client.phoneImage}
-                    />
-                  ))}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+          </div>
+        ) : (
+          <p className="rounded-3xl border border-dashed border-gray-200 bg-white p-10 text-center text-muted-foreground">
+            {t("empty")}
+          </p>
+        )}
       </div>
     </div>
   );

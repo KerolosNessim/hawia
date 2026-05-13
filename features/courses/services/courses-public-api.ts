@@ -5,6 +5,7 @@ export type CatalogCourseSummary = {
   id: string;
   slug: string | null;
   title: string;
+  description: string;
   priceLabel: string;
   imageSrc: string;
 };
@@ -37,6 +38,11 @@ function unwrapArray(body: unknown): Record<string, unknown>[] {
     const p = body as Record<string, unknown>;
     const inner = p.data ?? p.courses ?? p.results;
     if (Array.isArray(inner)) return inner as Record<string, unknown>[];
+    if (inner && typeof inner === "object") {
+      const nested = inner as Record<string, unknown>;
+      const nestedRows = nested.data ?? nested.courses ?? nested.results;
+      if (Array.isArray(nestedRows)) return nestedRows as Record<string, unknown>[];
+    }
   }
   return [];
 }
@@ -159,11 +165,14 @@ export async function fetchCoursesCatalog(locale: string): Promise<CatalogCourse
     .map((r) => {
       const id = readId(r);
       if (!id) return null;
+      const active = r.is_active ?? r.isActive;
+      if (active === false || active === 0 || active === "0") return null;
       const slug = readSlug(r);
       return {
         id,
         slug,
         title: pickLoc(r.title, locale),
+        description: parseDescription(r.description, locale),
         priceLabel: priceLabelFromRecord(r) || "—",
         imageSrc: coverFromRecord(r),
       };

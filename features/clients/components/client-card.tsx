@@ -6,18 +6,18 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 
 interface ClientCardProps {
+  slug: string;
   title: string;
-  category: string;
-  logo: string;
-  phoneImage: string;
+  description?: string;
+  image: string;
   className?: string;
 }
 
 export default function ClientCard({
+  slug,
   title,
-  category,
-  logo,
-  phoneImage,
+  description,
+  image,
   className,
 }: ClientCardProps) {
   const router = useRouter();
@@ -28,9 +28,10 @@ export default function ClientCard({
       viewport={{ once: true }}
       className={cn(
         "relative aspect-4/5 w-full overflow-hidden rounded-[2.5rem]  p-8 shadow-2xl transition-all duration-500 hover:scale-[1.02]",
+        "cursor-pointer",
         className
       )}
-      onClick={() => router.push(`/clients/${title}`)}
+      onClick={() => router.push(`/clients/${encodeURIComponent(slug)}`)}
     >
       {/* Background Glow Effect */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -38,50 +39,34 @@ export default function ClientCard({
         <div className="absolute top-0 h-full w-full bg-linear-to-b from-brand  to-white" />
       </div>
 
-      {/* Top Logo */}
-      <div className="relative z-20 flex justify-center pt-2">
-        <div className="relative h-16 w-16 bg-white overflow-hidden rounded-full ">
-          <Image
-            src={logo}
-            alt="Client Logo"
-            fill
-            className="object-contain p-2"
-          />
-        </div>
-      </div>
-
-      {/* Main Visuals (Phone & Flowers) */}
-      <div className="relative z-10 mt-4 flex h-[65%] w-full flex-col items-center justify-center">
-        {/* Phone Mockup */}
+      {/* Main Visual */}
+      <div className="relative z-10 flex h-[70%] w-full flex-col items-center justify-center">
         <motion.div 
           className="relative h-full w-full"
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
           <Image
-            src={phoneImage}
-            alt="App Interface"
+            src={image}
+            alt={title}
             fill
-            className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+            className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
           />
         </motion.div>
 
       </div>
 
       {/* Bottom Labels */}
-      <div className="absolute bottom-6 left-6 right-6 z-30 flex items-end justify-between">
-        {/* Category Label */}
-        <div className="rounded-full bg-gray-950 px-6 py-3 backdrop-blur-xl border border-white/5">
-          <p className="text-sm font-medium text-[#ccff00] lg:text-base">
-            {category}
-          </p>
-        </div>
-
-        {/* Title Label */}
-        <div className="pb-2">
+      <div className="absolute bottom-6 left-6 right-6 z-30">
+        <div className="rounded-3xl border border-white/10 bg-white/85 px-5 py-4 shadow-lg backdrop-blur">
           <h3 className="text-lg font-bold text-gray-900 lg:text-xl">
              {title}
           </h3>
+          {description ? (
+            <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-gray-600">
+              {description}
+            </p>
+          ) : null}
         </div>
       </div>
 
