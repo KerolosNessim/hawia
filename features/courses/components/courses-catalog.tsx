@@ -1,31 +1,15 @@
-"use client";
-
 import { fetchCoursesCatalog } from "@/features/courses/services/courses-public-api";
 import { CourseCard } from "@/features/courses/components/course-card";
-import { useQuery } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 
-export function CoursesCatalog() {
-  const locale = useLocale();
-  const t = useTranslations("courses");
+export async function CoursesCatalog() {
+  const locale = await getLocale();
+  const t = await getTranslations("courses");
+  let items = [];
 
-  const { data: items = [], isLoading, isError } = useQuery({
-    queryKey: ["courses-catalog", locale],
-    queryFn: () => fetchCoursesCatalog(locale),
-    staleTime: 60_000,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="container grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-[360px] animate-pulse rounded-2xl bg-muted/40" />
-        ))}
-      </div>
-    );
-  }
-
-  if (isError) {
+  try {
+    items = await fetchCoursesCatalog(locale);
+  } catch {
     return <p className="container text-center text-muted-foreground">{t("catalog_error")}</p>;
   }
 
@@ -40,6 +24,7 @@ export function CoursesCatalog() {
           key={c.id}
           href={`/courses/${c.slug ?? c.id}`}
           title={c.title}
+          description={c.description}
           priceLabel={c.priceLabel}
           imageSrc={c.imageSrc}
         />
