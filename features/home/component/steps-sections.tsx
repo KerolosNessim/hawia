@@ -25,7 +25,7 @@ export default function StepsSection() {
   const locale = useLocale();
   const isRTL = locale === "ar";
   const { data, isLoading } = useSteps();
-  console.log("data steps", data);
+  console.log("data steps", data?.data?.data);
   const apiItems = Array.isArray(data?.data?.data)
     ? data?.data?.data?.map((single) => ({
         title: single?.title,

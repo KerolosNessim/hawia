@@ -13,7 +13,7 @@ export async function getStepsData(): Promise<StepsResponse> {
     return {
       status: raw.status,
       message: raw.message,
-      data: normalizeHelpYouSteps(raw.data),
+      data: raw.data,
     };
   } catch (e) {
     if (e instanceof ApiError) return empty;
