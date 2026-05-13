@@ -15,6 +15,7 @@ function normalizePartners(partners: Partner[] | Partner | undefined | null): Pa
 export default function ClientsSection({ partners }: { partners?: Partner[] | Partner | null }) {
   const t = useTranslations("clientsSection");
   const locale = useLocale();
+  console.log("partners",partners)
 
   const partnersList = normalizePartners(partners);
 

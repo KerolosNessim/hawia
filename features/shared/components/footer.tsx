@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { MapPin, Mail, ArrowLeft, ArrowRight, MessageCircle, Phone } from "lucide-react";
@@ -199,11 +199,11 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium">
-            <Link href="#" className="hover:text-white transition-colors">{t("privacy")}</Link>
+            <Link href="/privacy-policy" className="hover:text-white transition-colors">{t("privacy")}</Link>
             <span className="text-gray-600">-</span>
-            <Link href="#" className="hover:text-white transition-colors">{t("terms")}</Link>
+            <Link href="/terms-of-use" className="hover:text-white transition-colors">{t("terms")}</Link>
             <span className="text-gray-600">-</span>
-            <Link href="#" className="hover:text-white transition-colors">{t("refund")}</Link>
+            <Link href="/refund-policy" className="hover:text-white transition-colors">{t("refund")}</Link>
           </div>
 
           {/* Payment Icons Mock */}

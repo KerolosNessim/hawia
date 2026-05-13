@@ -55,8 +55,8 @@ export default async function AboutPage() {
     <div className="space-y-16 pb-16">
       <PageHeader
         title={data?.title || t("title")}
-        description={data?.description || t("description")}
         image={data?.image || "/hero-bg.webp"}
+        descriptionHtml={data?.description || t("description")}
       />
       {/* video */}
       <Dialog>

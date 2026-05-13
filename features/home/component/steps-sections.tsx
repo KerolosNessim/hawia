@@ -25,17 +25,20 @@ export default function StepsSection() {
   const locale = useLocale();
   const isRTL = locale === "ar";
   const { data, isLoading } = useSteps();
-  const singles = Array.isArray(data?.data) ? data.data : [];
-  const apiItems = singles.map((single) => ({
-    title: single?.content?.title ?? "",
-    description: single?.content?.description ?? "",
-    image: single?.image ?? "",
-  }));
+  console.log("data steps", data?.data?.data);
+  const apiItems = Array.isArray(data?.data?.data)
+    ? data?.data?.data?.map((single) => ({
+        title: single?.title,
+        description: single?.description,
+        image: single?.image,
+      }))
+    : [];
 
   const rawFallback = t.raw("items");
   const fallbackItems = Array.isArray(rawFallback)
     ? (rawFallback as { title: string; description: string; image?: string }[])
     : [];
+  
 
   const items = apiItems.length > 0 ? apiItems : fallbackItems;
 

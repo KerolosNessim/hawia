@@ -22,7 +22,7 @@ export default function Navbar() {
   const path = usePathname();
   const { data, isLoading, error } = useGetServices();
   const { data: settings } = useSettings();
-  const services = Array.isArray(data?.data) ? data.data : [];
+  const services = Array.isArray(data?.data?.data) ? data?.data?.data : [];
 
   const active = " bg-brand text-white  rounded-full";
   const hover =
