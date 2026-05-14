@@ -26,7 +26,7 @@ export type SitemapEntry = {
 };
 
 export function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://howeyah.subcodeco.com";
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://hawia.vercel.app";
 }
 
 export function getApiUrl(): string {

@@ -19,7 +19,7 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-import { getSettings } from "@/features/settings/services/settings-service";
+import { getScripts, getSettings } from "@/features/settings/services/settings-service";
 
 export async function generateMetadata({
   params,
@@ -71,8 +71,18 @@ export default async function RootLayout({
 
   const dir = locale === "ar" ? "rtl" : "ltr";
 
+  const scriptsResponse = await getScripts().catch(() => null);
+  const scripts = scriptsResponse?.data;
+
   return (
     <html lang={locale} dir={dir} className={`${font.className} `} suppressHydrationWarning>
+      <head>
+        {scripts?.custom_head_scripts && (
+          <script
+            dangerouslySetInnerHTML={{ __html: scripts.custom_head_scripts }}
+          />
+        )}
+      </head>
       <body className=" relative overflow-x-hidden ">
         <OrganizationJsonLd locale={locale} />
         <QueryProvider>
@@ -88,6 +98,11 @@ export default async function RootLayout({
           </NextIntlClientProvider>
         </QueryProvider>
 
+        {scripts?.custom_body_scripts && (
+          <div
+            dangerouslySetInnerHTML={{ __html: scripts.custom_body_scripts }}
+          />
+        )}
       </body>
     </html>
   );
