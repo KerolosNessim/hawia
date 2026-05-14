@@ -83,7 +83,7 @@ export default async function RootLayout({
               {children}
               <Footer />
               <FloatingSocials />
-              <Toaster richColors position="top-right"/>
+              <Toaster  position="top-right"/>
             </DirectionProvider>
           </NextIntlClientProvider>
         </QueryProvider>

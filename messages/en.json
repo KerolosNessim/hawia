@@ -1,5 +1,25 @@
 {
   "hello": "hello",
+  "booking": {
+    "dialogTitle": "Book Your Service Now",
+    "form": {
+      "name": "Name",
+      "phone": "Phone Number",
+      "email": "Email Address",
+      "selectService": "Select Your Service",
+      "selectServicePlaceholder": "Choose from available services",
+      "message": "Message",
+      "submit": "Send",
+      "nameError": "Name is required and must be at least 2 characters",
+      "phoneError": "Phone number must be at least 10 characters",
+      "emailError": "Invalid email address",
+      "serviceError": "Please select a service",
+      "messageError": "Message must be at least 10 characters"
+    },
+    "successTitle": "Successfully Sent",
+    "successDescription": "Your request has been received, we will contact you soon."
+  },
+
   "seo": {
     "organizationDescription": "Howeyah — marketing and digital solutions: SEO, advertising, social media, branding, and web development.",
     "breadcrumb": {
@@ -36,6 +56,8 @@
     "faq": "faq",
     "contact-us": "contact-us",
     "login": "login",
+    "profile": "profile",
+    "logout": "logout",
     "servicesLinks": [
     "Search Engine Optimization (SEO)",
     "Ads Campaign Management (ADS)",
@@ -58,6 +80,8 @@
     "subDescription": "We study your brand to set you on the fastest path to achieving your goals ahead of competitors.",
     "contactUs": "Contact Us",
     "viewServices": "Book your services now",
+    "bookNow": "Book Now",
+
     "stats": {
       "leadership": {
         "title": "Years of Leadership",
@@ -144,7 +168,15 @@
   "searchDialog": {
     "title": "Know About Howeyah",
     "description": "Search for services, products, or any other information on our website.",
-    "placeholder": ["Who is Howeyah ?", "What are Howeyah's services ?", "What are Howeyah's projects ?"]
+    "placeholder": ["Who is Howeyah ?", "What are Howeyah's services ?", "What are Howeyah's projects ?"],
+    "noResults": "No results found for your search.",
+    "results": {
+      "blogs": "Blogs",
+      "services": "Services",
+      "solutions": "Solutions",
+      "courses": "Courses",
+      "faqs": "FAQs"
+    }
   },
   "stepsSection": {
     "title": "How do we help your business grow?",
@@ -336,7 +368,9 @@
       "email": "Email",
       "phone": "Mobile Number",
       "message": "Your Message",
-      "submit": "Send"
+      "submit": "Send",
+      "phoneError": "Phone number must be at least 10 characters",
+      "messageError": "Message must be at least 10 characters"
     }
   },
   "footer": {

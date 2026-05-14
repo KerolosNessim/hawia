@@ -9,6 +9,8 @@ import { Clock, Mail, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { FaLocationDot } from "react-icons/fa6";
 
+import ContactForm from "@/features/contact/components/contact-form";
+
 export default function ContactSection({
   withLocation = false,
 }: {
@@ -110,54 +112,11 @@ export default function ContactSection({
               {t("leaveMessage")}
             </h3>
 
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-              <div className="space-y-2 text-start">
-                <label className="text-sm font-medium text-gray-700 mx-1 block">
-                  {t("form.name")}
-                </label>
-                <Input
-                  type="text"
-                  className="h-12 rounded-xl  focus-visible:ring-brand/30"
-                />
-              </div>
-
-              <div className="space-y-2 text-start">
-                <label className="text-sm font-medium text-gray-700 mx-1 block">
-                  {t("form.email")}
-                </label>
-                <Input
-                  type="email"
-                  className="h-12 rounded-xl  focus-visible:ring-brand/30"
-                />
-              </div>
-
-              <div className="space-y-2 text-start">
-                <label className="text-sm font-medium text-gray-700 mx-1 block">
-                  {t("form.phone")}
-                </label>
-                <Input
-                  type="tel"
-                  className="h-12 rounded-xl  focus-visible:ring-brand/30"
-                />
-              </div>
-
-              <div className="space-y-2 text-start">
-                <label className="text-sm font-medium text-gray-700 mx-1 block">
-                  {t("form.message")}
-                </label>
-                <Textarea className="min-h-40 rounded-xl  focus-visible:ring-brand/30 resize-none" />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-12 rounded-xl bg-brand text-white hover:bg-brand/90 font-bold text-lg transition-all shadow-md hover:shadow-xl mt-4"
-              >
-                {t("form.submit")}
-              </Button>
-            </form>
+            <ContactForm />
           </div>
         </div>
       </div>
     </section>
   );
 }
+

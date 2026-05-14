@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { TypingAnimation } from "@/components/ui/typing-animation";
 import * as motion from "framer-motion/client";
-import { File, Phone } from "lucide-react";
+import { FileText, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Hero } from "../types";
+import BookingDialog from "@/features/booking/components/booking-dialog";
 export default function HeroSection({heroData}:{heroData:Hero}) {
   const t = useTranslations("hero");
   return (
@@ -60,10 +61,15 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
                 {t("contactUs")}
               </a>
             </Button>
-            <Button className=" rounded-full bg-brand text-white px-10 py-6 text-lg">
-              <File className="size-6 rtl:rotate-y-180" />
-              {t("viewServices")}
-            </Button>
+            <BookingDialog
+              trigger={
+                <Button className=" rounded-full bg-brand text-white px-10 py-6 text-lg">
+                  <FileText className="size-6 rtl:rotate-y-180" />
+                  {t("bookNow") || "Book Now"}
+                </Button>
+              }
+            />
+
           </motion.div>
         </div>
       </div>

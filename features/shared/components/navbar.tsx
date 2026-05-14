@@ -16,6 +16,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useGetServices } from "@/features/services/hooks/useGetServices";
 import { useSettings } from "@/features/settings/hooks/use-settings";
+import { useAuthStore } from "@/features/auth/store/auth-store";
+import { useLogoutMutation } from "@/features/auth/hooks/use-auth-mutation";
+import React from "react";
 
 export default function Navbar() {
   const t = useTranslations("navbar");
@@ -23,6 +26,16 @@ export default function Navbar() {
   const { data, isLoading, error } = useGetServices();
   const { data: settings } = useSettings();
   const services = Array.isArray(data?.data) ? data?.data : [];
+  
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const { isAuthenticated, user } = useAuthStore();
+
+
+  const { mutate: logout } = useLogoutMutation();
 
   const active = " bg-brand text-white  rounded-full";
   const hover =
@@ -103,15 +116,33 @@ export default function Navbar() {
       <div className="flex items-center gap-2">
         <LocaleSwitcher />
         <SearchDialog />
-        <Link
-          href={"/login"}
-          className=" px-4 h-14! rounded-full bg-brand text-white flex items-center gap-2"
-        >
-          <LucideUserRound className="size-6" />
-          <p className="font-semibold ">{t("login")}</p>
-        </Link>
+        
+        {mounted && (
+          isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => logout()} 
+                variant="destructive" 
+                className="h-14! rounded-full "
+              >
+                {t("logout") || "Logout"}
+              </Button>
+            </div>
+          ) : (
+            <Link
+              href={"/login"}
+              className=" px-4 h-14! rounded-full bg-brand text-white flex items-center gap-2"
+            >
+              <LucideUserRound className="size-6" />
+              <p className="font-semibold ">{t("login")}</p>
+            </Link>
+          )
+        )}
+
+        
         <NavbarSheet />
       </div>
+
     </motion.header>
   );
 }

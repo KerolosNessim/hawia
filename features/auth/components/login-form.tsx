@@ -26,31 +26,32 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+import { useLoginMutation } from "../hooks/use-auth-mutation";
+import { Loader2 } from "lucide-react";
+
 export default function LoginForm() {
   const t = useTranslations("auth");
+  const { mutate, isPending } = useLoginMutation();
   const inputStyle =
     "h-12! focus-visible:ring-brand focus-visible:ring-offset-0";
 
-  const formSchema = z
-    .object({
-      userOrEmail: z.string().min(3, t("errors.userOrEmail")),
-      password: z.string().min(6, t("errors.password")),
-    })
-
+  const formSchema = z.object({
+    email: z.string().email(t("errors.email")),
+    password: z.string().min(6, t("errors.password")),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      userOrEmail: "",
+      email: "",
       password: "",
     },
   });
 
-  function onSubmit(_data: z.infer<typeof formSchema>) {
-    toast.success(t("toast.submittedTitle"), {
-      description: t("toast.submittedDescription"),
-    });
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    mutate(data);
   }
+
 
   return (
     <div className="flex items-center justify-center   px-4">
@@ -63,20 +64,21 @@ export default function LoginForm() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FieldGroup>
-              {/* Username */}
+              {/* Email */}
               <Controller
-                name="userOrEmail"
+                name="email"
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>{t("userOrEmail")}</FieldLabel>
-                    <Input {...field} className={inputStyle} />
+                   <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel>{t("email")}</FieldLabel>
+                    <Input {...field} className={inputStyle} type="email" />
                     {fieldState.error && (
                       <FieldError errors={[fieldState.error]} />
                     )}
                   </Field>
                 )}
               />
+
 
 
 
@@ -103,10 +105,12 @@ export default function LoginForm() {
             <div className="flex items-center   gap-2 w-full ">
               <Button
                 type="submit"
+                disabled={isPending}
                 className="h-12!  bg-gray-900 hover:bg-brand"
               >
-                {t("login")}
+                {isPending ? <Loader2 className="animate-spin" /> : t("login")}
               </Button>
+
               <Button
                 type="button"
                 variant="outline"

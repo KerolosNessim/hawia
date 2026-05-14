@@ -41,11 +41,25 @@ export const api = ofetch.create({
 
   async onResponseError({ response }) {
     const data = response._data;
+    
+    // Handle 401 Unauthorized
+    if (response.status === 401) {
+      if (typeof window !== "undefined") {
+        const { useAuthStore } = await import("@/features/auth/store/auth-store");
+        const { removeAuthToken } = await import("./cookies");
+        useAuthStore.getState().logout();
+        removeAuthToken();
+        // Optional: redirect to login
+        // window.location.href = "/login";
+      }
+    }
+
     const { resolveRequestLocale } = await import("./api-locale");
     const { getGenericApiErrorMessage } = await import("./api-messages");
     const locale = await resolveRequestLocale();
     throw new ApiError(data?.message || getGenericApiErrorMessage(locale));
   },
+
 
   async onRequest({ options }) {
     try {

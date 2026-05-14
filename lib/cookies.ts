@@ -24,3 +24,19 @@ export async function getAuthToken(): Promise<string | undefined> {
 
   return undefined;
 }
+
+export function setAuthToken(token: string, expires: number) {
+  if (typeof document !== "undefined") {
+    // expires is in seconds, convert to date
+    const date = new Date();
+    date.setTime(date.getTime() + expires * 1000);
+    document.cookie = `auth_token=${token}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
+  }
+}
+
+export function removeAuthToken() {
+  if (typeof document !== "undefined") {
+    document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
+  }
+}
+

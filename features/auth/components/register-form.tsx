@@ -26,40 +26,43 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+import { useRegisterMutation } from "../hooks/use-auth-mutation";
+import { Loader2 } from "lucide-react";
+
 export default function RegisterForm() {
   const t = useTranslations("auth");
+  const { mutate, isPending } = useRegisterMutation();
   const inputStyle =
     "h-12! focus-visible:ring-brand focus-visible:ring-offset-0";
 
   const formSchema = z
     .object({
-      username: z.string().min(3, t("errors.username")),
-      fullName: z.string().min(3, t("errors.fullName")),
+      name: z.string().min(3, t("errors.fullName")),
+      phone: z.string().min(8, t("errors.username")), // Using username key as a fallback for phone error
       email: z.string().email(t("errors.email")),
       password: z.string().min(6, t("errors.password")),
-      confirmPassword: z.string(),
+      password_confirmation: z.string(),
     })
-    .refine((data) => data.password === data.confirmPassword, {
+    .refine((data) => data.password === data.password_confirmation, {
       message: t("errors.confirmPassword"),
-      path: ["confirmPassword"],
+      path: ["password_confirmation"],
     });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
-      fullName: "",
+      name: "",
+      phone: "",
       email: "",
       password: "",
-      confirmPassword: "",
+      password_confirmation: "",
     },
   });
 
-  function onSubmit(_data: z.infer<typeof formSchema>) {
-    toast.success(t("toast.submittedTitle"), {
-      description: t("toast.submittedDescription"),
-    });
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    mutate(data);
   }
+
 
   return (
     <div className="flex items-center justify-center   px-4">
@@ -70,13 +73,13 @@ export default function RegisterForm() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FieldGroup>
-              {/* Username */}
+              {/* Full Name */}
               <Controller
-                name="username"
+                name="name"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>{t("username")}</FieldLabel>
+                    <FieldLabel>{t("fullName")}</FieldLabel>
                     <Input {...field} className={inputStyle} />
                     {fieldState.error && (
                       <FieldError errors={[fieldState.error]} />
@@ -85,14 +88,14 @@ export default function RegisterForm() {
                 )}
               />
 
-              {/* Full Name */}
+              {/* Phone */}
               <Controller
-                name="fullName"
+                name="phone"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel>{t("fullName")}</FieldLabel>
-                    <Input {...field} className={inputStyle} />
+                    <FieldLabel>{t("username")}</FieldLabel> {/* Using username key as fallback for Phone label if not exists */}
+                    <Input {...field} className={inputStyle} type="tel" />
                     {fieldState.error && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -132,7 +135,7 @@ export default function RegisterForm() {
 
               {/* Confirm Password */}
               <Controller
-                name="confirmPassword"
+                name="password_confirmation"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
@@ -147,10 +150,12 @@ export default function RegisterForm() {
             </FieldGroup>
 
 
+
             <div className="flex items-center   gap-2 w-full ">
-              <Button type="submit" className="h-12!  bg-gray-900 hover:bg-brand">
-                {t("submit")}
+              <Button type="submit" disabled={isPending} className="h-12!  bg-gray-900 hover:bg-brand">
+                {isPending ? <Loader2 className="animate-spin" /> : t("submit")}
               </Button>
+
               <Button
                 type="button"
                 variant="outline"
