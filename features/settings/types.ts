@@ -52,3 +52,15 @@ export interface SettingsResponse {
   message: string;
   data: SettingsData;
 }
+
+export interface ScriptsData {
+  custom_head_scripts: string | null;
+  custom_body_scripts: string | null;
+  robots_txt: string | null;
+}
+
+export interface ScriptsResponse {
+  status: string;
+  message: string;
+  data: ScriptsData;
+}

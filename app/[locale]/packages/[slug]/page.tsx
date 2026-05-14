@@ -123,7 +123,7 @@ export default async function PackageDetailPage({ params }: Props) {
               <p className="text-lg font-semibold text-brand">{priceUi}</p>
             ) : null}
             <p className="text-muted-foreground leading-relaxed">{pkg.description}</p>
-            <DetailsButton pkg={pkg} fallbackLabel={t("order")} />
+            {/* <DetailsButton pkg={pkg} fallbackLabel={t("order")} /> */}
           </div>
         </div>
 

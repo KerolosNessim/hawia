@@ -15,8 +15,8 @@ type Props = {
 
 export function CourseCard({ href, title, description, priceLabel, imageSrc }: Props) {
   return (
-    <Link href={href} className="block transition-transform duration-300 hover:scale-[1.02]">
-      <Card className="h-full overflow-hidden rounded-2xl border bg-white p-0 shadow-md">
+    <Link href={href} className="block h-full transition-transform duration-300 hover:scale-[1.02]">
+      <Card className="h-full flex flex-col overflow-hidden rounded-2xl border bg-white p-0 shadow-md">
         <div className="relative">
           <Image
             src={imageSrc}
@@ -27,13 +27,16 @@ export function CourseCard({ href, title, description, priceLabel, imageSrc }: P
             unoptimized={imageSrc.startsWith("http")}
           />
         </div>
-        <CardContent className="space-y-3 py-6 text-center">
+        <CardContent className="flex-1 flex flex-col space-y-3 py-6 text-center">
           <h3 className="text-lg font-bold text-gray-900">{title}</h3>
           {description?.trim() ? (
-            <p className="line-clamp-2 text-sm leading-relaxed text-gray-500">{description}</p>
+            <div
+              className="line-clamp-2 min-h-[3rem] text-sm leading-relaxed text-gray-500 [&_p]:mb-0 [&_p+_p]:mt-1 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           ) : null}
         </CardContent>
-        <CardFooter className="flex items-center justify-between px-6 pb-6">
+        <CardFooter className="mt-auto flex items-center justify-between px-6 pb-6">
           <span className="flex h-10 items-center gap-2 rounded-xl bg-brand px-4 text-sm font-bold text-white">
             <ShoppingCart size={18} />
           </span>

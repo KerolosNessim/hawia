@@ -17,7 +17,9 @@ export default function BookingDialog({ trigger }: { trigger: ReactNode }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger asChild>
+        <span className="inline-block cursor-pointer">{trigger}</span>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] rounded-[32px] p-6 overflow-hidden border-none shadow-2xl">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-3xl font-bold text-center text-gray-900">
