@@ -13,9 +13,10 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGetServices } from "../hooks/useGetServices";
 import ServicesCard from "./services-card";
+import { useCountry } from "@/hooks/use-country";
 
 export default function ServicesSection() {
   const t = useTranslations("servicesSection");
@@ -33,14 +34,45 @@ export default function ServicesSection() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const countriesData = Array.isArray(countries?.data) ? countries?.data : [];
 
+  const userCountryCode = useCountry();
   const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
+  // Tracks whether we have already done the initial auto-selection.
+  // Using a ref means changing it won't trigger a re-render, and it
+  // also survives re-renders without resetting, so the user's manual
+  // country selection is never overridden by the auto-select logic.
+  const hasAutoSelected = useRef(false);
 
   useEffect(() => {
-    if (countriesData?.length > 0 && !selectedCountry) {
+    // Only auto-select once, and only when both the countries list
+    // and the real country code (from cookie, not the default) are ready.
+    if (countriesData?.length > 0 && !hasAutoSelected.current) {
+      const aliases: Record<string, string[]> = {
+        'SA': ['سعود', 'saud', 'ksa'],
+        'OM': ['عمان', 'oman'],
+        'EG': ['مصر', 'egypt'],
+        'AE': ['امارات', 'إمارات', 'uae'],
+        'QA': ['قطر', 'qatar'],
+        'KW': ['كويت', 'kuwait'],
+        'BH': ['بحرين', 'bahrain'],
+      };
+
+      const currentAliases = aliases[userCountryCode] || [];
+      let matchedCountry = countriesData.find((c) =>
+        currentAliases.some((alias) => c.name.toLowerCase().includes(alias))
+      );
+
+      // Fallback to Oman if the user's country is not in the list
+      if (!matchedCountry) {
+        matchedCountry = countriesData.find((c) =>
+          ['عمان', 'oman'].some((alias) => c.name.toLowerCase().includes(alias))
+        );
+      }
+
+      hasAutoSelected.current = true;
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedCountry(countriesData[0].id);
+      setSelectedCountry(matchedCountry ? matchedCountry.id : countriesData[0].id);
     }
-  }, [countriesData, selectedCountry]);
+  }, [countriesData, userCountryCode]);
 
   const filteredServices = services?.filter((service) =>
     selectedCountry

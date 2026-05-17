@@ -33,7 +33,7 @@ export default async function Home() {
         </div>
         <WhyUsSection />
       </div>
-      <ServicesSection />
+      <ServicesSection /> 
       <StepsSection />
       <DependenciesSection accreditation={data?.data?.accreditation} />
       <AdsSection />

@@ -35,7 +35,21 @@ export default function middleware(req: NextRequest) {
   }
 
   // Fallback to intlMiddleware for localization
-  return intlMiddleware(req);
+  const response = intlMiddleware(req);
+
+  // Detect user country from headers (Cloudflare, Vercel, etc)
+  // Note: On localhost, these headers are empty, so it defaults to 'EG'
+  const country = req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || 'EG';
+  
+  // Set the country as a cookie so it can be easily accessed on client and server
+  response.cookies.set('user_country', country, {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  });
+
+  return response;
 }
 
 export const config = {
