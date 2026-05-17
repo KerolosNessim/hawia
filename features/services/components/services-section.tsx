@@ -47,42 +47,40 @@ export default function ServicesSection() {
     // and the real country code (from cookie, not the default) are ready.
     if (countriesData?.length > 0 && !hasAutoSelected.current) {
       const aliases: Record<string, string[]> = {
-        'SA': ['saudi', 'ksa', 'السعودي'],
-        'OM': ['oman', 'عمان'],
-        'EG': ['egypt', 'مصر'],
-        'AE': ['uae', 'emirates', 'امارات', 'إمارات'],
-        'QA': ['qatar', 'قطر'],
-        'KW': ['kuwait', 'كويت'],
-        'BH': ['bahrain', 'بحرين'],
+        SA: ["saudi", "ksa", "سعود"],
+        OM: ["oman", "عمان"],
+        EG: ["egypt", "مصر"],
+        AE: ["uae", "emirates", "امارات", "إمارات"],
+        QA: ["qatar", "قطر"],
+        KW: ["kuwait", "كويت"],
+        BH: ["bahrain", "بحرين"],
       };
 
       const currentAliases = aliases[userCountryCode] || [];
-      // Match against both the English and Arabic name fields
+      // country.name is a plain localized string from /v1/countries
       let matchedCountry = countriesData.find((c) =>
-        currentAliases.some(
-          (alias) =>
-            c.name.en?.toLowerCase().includes(alias) ||
-            c.name.ar?.toLowerCase().includes(alias)
-        )
+        currentAliases.some((alias) => c.name.toLowerCase().includes(alias)),
       );
 
       // Fallback to Oman if the user's country is not in the list
       if (!matchedCountry) {
-        matchedCountry = countriesData.find(
-          (c) => c.name.en?.toLowerCase().includes('oman') || c.name.ar?.includes('عمان')
+        matchedCountry = countriesData.find((c) =>
+          c.name.toLowerCase().includes("oman") || c.name.includes("عمان"),
         );
       }
 
       hasAutoSelected.current = true;
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSelectedCountry(matchedCountry ? matchedCountry.id : countriesData[0].id);
+      setSelectedCountry(
+        matchedCountry ? matchedCountry.id : countriesData[0].id,
+      );
     }
   }, [countriesData, userCountryCode]);
 
   const filteredServices = services?.filter((service) =>
     selectedCountry
       ? service.countries?.some((c) => c.id === selectedCountry)
-      : true
+      : true,
   );
 
   if (isLoading || countriesLoading) {
@@ -134,8 +132,10 @@ export default function ServicesSection() {
                 className="object-cover"
               />
             </div>
-            <span className={`font-bold ${selectedCountry === country.id ? "text-brand" : "text-gray-600"}`}>
-              {country.name.ar || country.name.en}
+            <span
+              className={`font-bold ${selectedCountry === country.id ? "text-brand" : "text-gray-600"}`}
+            >
+              {country.name}
             </span>
           </button>
         ))}

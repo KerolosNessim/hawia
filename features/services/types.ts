@@ -1,26 +1,35 @@
-
+/** Country as returned by GET /v1/countries — name is already a localized plain string */
 export interface Country {
+  id: number;
+  name: string;
+  image: string;
+  is_active: boolean;
+}
+
+/** Country as embedded inside a Service or SingleService — name is a localized object */
+export interface ServiceCountry {
   id: number;
   name: { ar: string; en: string };
   image: string;
   is_active: boolean;
 }
+
 export interface Service {
-            id: number,
-            slug: string,
-            image: string,
-            title: string,
-            description: string,
-            sort_order: number,
-            is_active: boolean,
-            highlight_description: string,
-            media_url: string,
-            media_type: string,
-            meta_title: string,
-            meta_description: string,
-            countries : Country[],
-            created_at: string
-        }
+  id: number;
+  slug: string;
+  image: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  highlight_description: string;
+  media_url: string;
+  media_type: string;
+  meta_title: string;
+  meta_description: string;
+  countries: ServiceCountry[];
+  created_at: string;
+}
 
 /** Paginated list payload inside API `data` for GET /v1/services */
 export interface ServicesListPayload {
@@ -127,7 +136,7 @@ export type SingleService = {
   packages: unknown | null
   ctas: Cta | null
 
-  countries: Country[]
+  countries: ServiceCountry[]
 
   created_at: string
 }
