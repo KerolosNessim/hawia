@@ -18,6 +18,7 @@ import { useGetServices } from "@/features/services/hooks/useGetServices";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { useLogoutMutation } from "@/features/auth/hooks/use-auth-mutation";
+import { useCountry } from "@/hooks/use-country";
 import React from "react";
 
 export default function Navbar() {
@@ -25,15 +26,40 @@ export default function Navbar() {
   const path = usePathname();
   const { data, isLoading, error } = useGetServices();
   const { data: settings } = useSettings();
-  const services = Array.isArray(data?.data) ? data?.data : [];
-  
+  const userCountryCode = useCountry();
+  const allServices = Array.isArray(data?.data) ? data?.data : [];
+
+  // Filter services by the user's detected country
+  const countryAliases: Record<string, string[]> = {
+    'SA': ['saudi', 'ksa', 'السعودي'],
+    'OM': ['oman', 'عمان'],
+    'EG': ['egypt', 'مصر'],
+    'AE': ['uae', 'emirates', 'امارات', 'إمارات'],
+    'QA': ['qatar', 'قطر'],
+    'KW': ['kuwait', 'كويت'],
+    'BH': ['bahrain', 'بحرين'],
+  };
+  const currentAliases = countryAliases[userCountryCode] || [];
+  const userServices = allServices.filter((s) =>
+    s.countries?.some((c) =>
+      currentAliases.some(
+        (alias) => c.name.en?.toLowerCase().includes(alias) || c.name.ar?.toLowerCase().includes(alias)
+      )
+    )
+  );
+  // Fallback to Oman services if no match
+  const omanServices = allServices.filter((s) =>
+    s.countries?.some(
+      (c) => c.name.en?.toLowerCase().includes('oman') || c.name.ar?.includes('عمان')
+    )
+  );
+  const services = userServices.length > 0 ? userServices : omanServices;
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
   const { isAuthenticated, user } = useAuthStore();
-
 
   const { mutate: logout } = useLogoutMutation();
 
@@ -87,7 +113,7 @@ export default function Navbar() {
                 <ChevronDown className="size-4 group-hover/btn:rotate-180 transition-all duration-300 ease-in-out" />
               </Button>
             </HoverCardTrigger>
-            <HoverCardContent >
+            <HoverCardContent>
               <div className="flex flex-col gap-2">
                 {services?.map((link) => (
                   <Link
@@ -116,13 +142,13 @@ export default function Navbar() {
       <div className="flex items-center gap-2">
         <LocaleSwitcher />
         <SearchDialog />
-        
-        {mounted && (
-          isAuthenticated ? (
+
+        {mounted &&
+          (isAuthenticated ? (
             <div className="flex items-center gap-2">
-              <Button 
-                onClick={() => logout()} 
-                variant="destructive" 
+              <Button
+                onClick={() => logout()}
+                variant="destructive"
                 className="h-14! rounded-full "
               >
                 {t("logout") || "Logout"}
@@ -136,13 +162,10 @@ export default function Navbar() {
               <LucideUserRound className="size-6" />
               <p className="font-semibold ">{t("login")}</p>
             </Link>
-          )
-        )}
+          ))}
 
-        
         <NavbarSheet />
       </div>
-
     </motion.header>
   );
 }

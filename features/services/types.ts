@@ -1,7 +1,7 @@
 
 export interface Country {
   id: number;
-  name: string;
+  name: { ar: string; en: string };
   image: string;
   is_active: boolean;
 }
