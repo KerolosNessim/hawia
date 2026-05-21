@@ -281,6 +281,7 @@ function recordToResolved(
     typeof descriptionRaw === "string" && descriptionRaw.trim()
       ? descriptionRaw
       : parseDescription(descriptionRaw, locale);
+
   return {
     id: readId(r),
     slug,
