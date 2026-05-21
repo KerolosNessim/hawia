@@ -2,10 +2,12 @@
 import React, { useRef } from "react";
 import { useScroll } from "motion/react";
 import { useTranslations } from "next-intl";
-import { Handshake, Users, Target, TrendingUp, Lightbulb, Loader2 } from "lucide-react";
+import { Handshake, Users, Target, TrendingUp, Lightbulb, Loader2, ArrowRight } from "lucide-react";
 import { WhyUsCard } from "@/features/home/component/why-us-card";
 import SectionHeader from "@/features/shared/components/section-header";
 import { useWhyUs } from "../hooks/useWhyUs";
+import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function WhyUsSection() {
   const t = useTranslations("why-choose-us");
@@ -69,6 +71,12 @@ export default function WhyUsSection() {
             subtitle={data?.data?.content?.description || t("description")}
             align="center"
           />
+          <Link href="/about" className="flex justify-center items-center mt-10">
+            <Button className="bg-brand text-white hover:bg-brand/80 text-base px-6 py-4 rounded-full">
+              {t("about")}
+              <ArrowRight className="w-4 h-4 rtl:rotate-y-180" />
+            </Button>
+          </Link>
 
           <div className="container mx-auto px-4 relative">
             {features.map((feature, i) => {

@@ -27,24 +27,28 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
               __html: heroData?.content?.title || t("title"),
             }}
           ></motion.div>
-          <div className=" w-fit mx-auto xl:py-3 py-1">
-            <TypingAnimation
-              delay={1000}
-              loop
-              className="xl:text-2xl text-lg font-bold text-gray-900 "
-            >
-              {heroData?.content?.description || t("description")}
-            </TypingAnimation>
-          </div>
-          <motion.p
+          <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1, delay: 1 }}
+                      className="xl:text-2xl text-lg font-bold text-gray-900 mt-4 "
+
+          dangerouslySetInnerHTML={{
+            __html: heroData?.content?.description || t("description"),
+          }}>
+
+          </motion.div>
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 1 }}
             className="xl:text-2xl text-lg font-bold text-gray-900 "
-          >
-            {heroData?.content?.sub_description || t("subDescription")}
-          </motion.p>
+            dangerouslySetInnerHTML={{
+              __html: heroData?.content?.sub_description || t("subDescription"),
+            }}
+          ></motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import * as motion from "motion/react-client"
 import { getAdsData } from '../services/ads'
+import { Link } from '@/i18n/navigation';
 export default async function AdsSection() {
   const t = await getTranslations("adsSection")
 
@@ -14,6 +15,7 @@ export default async function AdsSection() {
     return {
       title: item?.content?.title,
       img: item?.image,
+      slug: item?.slug,
     }
   }) || []
   return (
@@ -50,11 +52,13 @@ export default async function AdsSection() {
       <div className="container px-4 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {items.map((item, index) => (
+              <Link href={"/clients/" + item.slug} key={index}>
+            
+            
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: index * 0.2 }}
-              key={index}
               className="text-gray-900 bg-linear-to-b from-brand to-white rounded-lg p-6  text-center hover:from-white hover:to-brand hover:text-white transition-all  duration-300 "
             >
               <Image
@@ -68,6 +72,7 @@ export default async function AdsSection() {
                 {item.title}
               </h3>
             </motion.div>
+            </Link>
           ))}
         </div>
       </div>
