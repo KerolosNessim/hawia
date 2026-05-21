@@ -1,7 +1,8 @@
 import RelatedBlogsSection from "@/features/blogs/components/related-blogs-section";
 import ShareSection from "@/features/blogs/components/share-sction";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import { blogPostAbsoluteUrl, localePath } from "@/features/blogs/lib/blog-routes";
+import { blogPostAbsoluteUrl, blogTagPath, localePath } from "@/features/blogs/lib/blog-routes";
+import { Link } from "@/i18n/navigation";
 import {
   blogExcerptPlain,
   buildBlogPostingJsonLd,
@@ -266,12 +267,13 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
         {blog.tags.length ? (
           <div className="flex flex-wrap gap-2 pt-6">
             {blog.tags.map((tag) => (
-              <span
+              <Link
                 key={tag}
-                className="rounded-full border border-brand/30 bg-brand/5 px-3 py-1 text-sm font-semibold text-brand"
+                href={blogTagPath(tag)}
+                className="rounded-full border border-brand bg-white px-3 py-1 text-sm font-semibold text-brand transition-colors hover:bg-brand/5"
               >
                 {tag}
-              </span>
+              </Link>
             ))}
           </div>
         ) : null}

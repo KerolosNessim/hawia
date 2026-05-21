@@ -388,9 +388,20 @@ export type FetchBlogsQuery = {
   blog_category_id?: string | number;
   category_slug?: string;
   search?: string;
+  /** Filter by article tag label (CMS `tags[]` on blog posts). */
+  tag?: string;
   page?: number;
   per_page?: number;
 };
+
+/** Case-insensitive match for blog tag labels. */
+export function blogTagMatches(blogTag: string, filterTag: string): boolean {
+  return blogTag.trim().toLowerCase() === filterTag.trim().toLowerCase();
+}
+
+export function blogHasTag(blog: PublicBlog, tag: string): boolean {
+  return blog.tags.some((t) => blogTagMatches(t, tag));
+}
 
 function parseBlogListEnvelope(raw: unknown): { rows: unknown[]; meta: Record<string, unknown> } {
   const rec = asRecord(raw);
@@ -421,6 +432,7 @@ export type FetchPublicBlogsPaginatedParams = {
   page?: number;
   per_page?: number;
   search?: string;
+  tag?: string;
   blog_category_id?: string | number;
   category_slug?: string;
 };
@@ -435,6 +447,7 @@ export async function fetchPublicBlogsPaginated(
   if (params.blog_category_id != null && params.blog_category_id !== "")
     q.blog_category_id = String(params.blog_category_id);
   if (params.category_slug?.trim()) q.category_slug = params.category_slug.trim();
+  if (params.tag?.trim()) q.tag = params.tag.trim();
 
   try {
     const raw = await apiClient.get<unknown>("/v1/blogs", {
@@ -464,6 +477,68 @@ export async function fetchPublicBlogsPaginated(
     )!;
     return { blogs: [], meta };
   }
+}
+
+/** Lists visible blogs that include the given tag (API filter with client-side fallback). */
+export async function fetchPublicBlogsByTag(
+  tag: string,
+  params: { paginationPath: string; page?: number; per_page?: number },
+): Promise<{ blogs: PublicBlog[]; meta: LaravelPaginationMeta }> {
+  const tagLabel = decodeURIComponent(tag).trim();
+  const page = params.page ?? 1;
+  const perPage = params.per_page ?? 9;
+
+  const apiResult = await fetchPublicBlogsPaginated({
+    paginationPath: params.paginationPath,
+    page,
+    per_page: perPage,
+    tag: tagLabel,
+  });
+
+  const apiFilteredPage =
+    apiResult.blogs.length > 0 && apiResult.blogs.every((b) => blogHasTag(b, tagLabel));
+
+  if (apiFilteredPage) return apiResult;
+
+  const all: PublicBlog[] = [];
+  let currentPage = 1;
+  let lastPage = 1;
+  do {
+    const { blogs, meta } = await fetchPublicBlogsPaginated({
+      paginationPath: "/v1/blogs",
+      page: currentPage,
+      per_page: 50,
+    });
+    all.push(...blogs);
+    lastPage = meta.last_page;
+    currentPage++;
+  } while (currentPage <= lastPage);
+
+  const filtered = all.filter((b) => blogHasTag(b, tagLabel));
+  const total = filtered.length;
+  const last = Math.max(1, Math.ceil(total / perPage));
+  const safePage = Math.min(Math.max(1, page), last);
+  const start = (safePage - 1) * perPage;
+  const pageRows = filtered.slice(start, start + perPage);
+
+  const meta =
+    completeLaravelPaginationMeta(
+      {
+        current_page: safePage,
+        last_page: last,
+        per_page: perPage,
+        total,
+        from: total === 0 ? 0 : start + 1,
+        to: Math.min(start + perPage, total),
+      },
+      params.paginationPath,
+    ) ??
+    completeLaravelPaginationMeta(
+      { current_page: 1, last_page: 1, per_page: perPage, total: 0 },
+      params.paginationPath,
+    )!;
+
+  return { blogs: pageRows, meta };
 }
 
 export async function fetchPublicBlogs(query?: FetchBlogsQuery): Promise<PublicBlog[]> {

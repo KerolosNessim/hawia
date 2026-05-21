@@ -2,7 +2,7 @@ import { routing } from "@/i18n/routing";
 import type { Locale } from "next-intl";
 
 /** Segments reserved under `/blogs/*` so they never map to a category or post slug route. */
-export const RESERVED_BLOG_CATEGORY_SLUGS = new Set(["blog"]);
+export const RESERVED_BLOG_CATEGORY_SLUGS = new Set(["blog", "tag"]);
 
 /** Path without locale prefix (for `@/i18n/navigation` `Link` and pathname helpers). */
 export function blogPostPath(slug: string): string {
@@ -11,6 +11,19 @@ export function blogPostPath(slug: string): string {
 
 export function blogCategoryPath(slug: string): string {
   return `/blogs/${encodeURIComponent(slug)}`;
+}
+
+/** Articles filtered by CMS tag label. */
+export function blogTagPath(tag: string): string {
+  return `/blogs/tag/${encodeURIComponent(tag)}`;
+}
+
+export function blogTagHref(locale: Locale, tag: string, page: number): string {
+  const p = new URLSearchParams();
+  if (page > 1) p.set("page", String(page));
+  const q = p.toString();
+  const base = localePath(locale, blogTagPath(tag));
+  return q ? `${base}?${q}` : base;
 }
 
 /** Prefixes pathname with locale when required (`as-needed` omits prefix for default locale). */

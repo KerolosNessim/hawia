@@ -72,7 +72,10 @@
   "not-found": {
     "title": "404 - Page Not Found",
     "description": "Sorry, the page you are looking for does not exist or has been moved.",
-    "backHome": "Back to Home"
+    "subtitle": "This page could not be found",
+    "hint": "Check the link or return to the homepage to continue browsing Howeyah.",
+    "backHome": "Back to Home",
+    "contactUs": "Contact Us"
   },
   "hero": {
     "title": "Howeyah",
@@ -104,6 +107,7 @@
   "why-choose-us": {
     "title": "Why Choose Howeyah Marketing?",
     "description": "At Howeyah, we believe that every success begins with an innovative idea and precise execution. We turn your vision into a tangible reality through innovative marketing strategies and exclusive content, backed by accurate market research, to provide customized solutions that ensure your marketing goals are achieved efficiently and confidently.",
+    "about": "About Us",
     "features": [
       {
         "title": "Leading Local and International Experience:",
@@ -338,7 +342,12 @@
     "searchSubmit": "Search",
     "paginationPrevious": "Previous",
     "paginationNext": "Next",
-    "categoryNoIndexNotice": "This category is marked noindex and may be hidden from search engines."
+    "categoryNoIndexNotice": "This category is marked noindex and may be hidden from search engines.",
+    "tagMetaTitle": "Articles tagged: {tag} | Howeyah",
+    "tagMetaDescription": "Browse published articles tagged “{tag}” on the Howeyah blog.",
+    "tagTitle": "Articles: {tag}",
+    "tagDescription": "All published articles linked to this tag.",
+    "tagEmpty": "No published articles are tagged “{tag}” yet."
   },
   "blogDetail": {
     "notFoundTitle": "Article not found",
@@ -425,6 +434,7 @@
   "singleService": {
     "title": "Search Engine Optimization (SEO) Services",
     "description": "Let your customers find you first",
+    "articleTagsHeading": "Related article tags",
       "seo_section": {
     "description_top": "Making your website easy to use and understand for both visitors and Google search engines enhances your visibility and ranking in search results. It increases the number of targeted visitors based on using the most relevant and commonly searched keywords. لذلك، many business owners and website operators seek the best SEO companies to achieve their goals and increase their profits.",
     "title": "Optimize your website and improve its ranking among the top pages on global search engines",
@@ -655,6 +665,10 @@
   },
     "seoPackages": {
     "title": "SEO Packages",
+    "detailsBtn": "Details",
+    "pricesFrom": "Prices start from",
+    "orderNow": "Order now",
+    "close": "Close",
         "seoPackages": [
       {
         "title": "Basic SEO Package",

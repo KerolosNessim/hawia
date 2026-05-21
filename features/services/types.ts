@@ -57,22 +57,68 @@ export interface GetServicesResponse {
   meta?: ServicesListPayload["meta"];
 }
         
- export type Benefits = {
-  id: number
-  title: string
-  description: string
-  image: string
-  is_active: boolean
-}
+export type Benefits = {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  image_alt?: string | null;
+  is_active: boolean;
+};
 
-// 🔹 Offerings / Steps (نفس الشكل)
+export type SectionItem = {
+  title: string;
+  description: string;
+  sort_order?: string;
+};
+
+// 🔹 Offerings / Steps
 export type Section = {
-  id: number
-  title: string
-  description: string
-  image: string | null
-  items: unknown[] | null
-}
+  id: number;
+  title: string;
+  description: string;
+  image: string | null;
+  image_alt?: string | null;
+  items: SectionItem[] | null;
+};
+
+export type ServicePackageItem = {
+  title: string;
+  descriptionHtml: string;
+  descriptionPlain: string;
+  features: string[];
+  price: string | null;
+  currency: string | null;
+  sortOrder: number;
+  icon: "rocket" | "gem" | "target";
+  isFeatured: boolean;
+  imageAlt?: string | null;
+};
+
+export type ServicePackagesSection = {
+  id: number;
+  title: string;
+  description: string;
+  image: string | null;
+  image_alt?: string | null;
+  items: ServicePackageItem[];
+};
+
+export type ServiceSocial = {
+  open_graph?: {
+    title?: string;
+    description?: string;
+    image?: string;
+    type?: string;
+    site_name?: string;
+  };
+  twitter?: {
+    card?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+  };
+};
 
 // 🔹 Tools
 export type Tools = {
@@ -98,6 +144,11 @@ export type Faqs = {
   items: FaqItem[]
 }
 
+/** Tag label linked to blog articles (CMS `tags` on service). */
+export type ServiceArticleTag = {
+  label: string;
+};
+
 // 🔹 CTA
 export type Cta = {
   id: number
@@ -109,37 +160,44 @@ export type Cta = {
 
 // 🔹 Main Service Type
 export type SingleService = {
-  id: number
-  slug: string
-  image: string
-  title: string
-  description: string
-  sort_order: number
-  is_active: boolean
-  highlight_description: string
+  id: number;
+  slug: string;
+  slug_local?: { ar?: string; en?: string };
+  image: string;
+  image_alt?: string | null;
+  title: string;
+  description: string;
+  inside_desc: string;
+  sort_order: number;
+  show_footer?: boolean;
+  highlight_description: string;
 
-  media_url: string | null
-  media_type: string
+  media_url: string | null;
+  media_type: string;
 
-  meta_title: string
-  meta_description: string
+  meta_title: string;
+  meta_description: string;
+  social?: ServiceSocial | null;
 
-  benefits: Benefits | null
-  audits: unknown | null
+  benefits: Benefits | null;
+  audits: unknown | null;
 
-  offerings: Section | null
-  steps: Section | null
+  offerings: Section | null;
+  steps: Section | null;
 
-  tools: Tools | null
-  faqs: Faqs | null
+  tools: Tools | null;
+  faqs: Faqs | null;
 
-  packages: unknown | null
-  ctas: Cta | null
+  packages: ServicePackagesSection | null;
+  ctas: Cta | null;
 
-  countries: ServiceCountry[]
+  /** Article tags — each links to `/blogs/tag/{label}`. */
+  articleTags: ServiceArticleTag[];
 
-  created_at: string
-}
+  countries: ServiceCountry[];
+
+  created_at: string;
+};
 
 
 export interface GetSingleServiceResponse {
