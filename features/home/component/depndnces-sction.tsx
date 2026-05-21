@@ -10,7 +10,11 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
   const t = useTranslations("dependenciesSection");
   const locale = useLocale();
 
-  const images = accreditation?.images?.map(img => img.url) || [];
+  const images =
+    accreditation?.images?.map((img) => ({
+      url: img.url,
+      alt: img.image_alt?.trim() || undefined,
+    })) ?? [];
 
   const card = (image: string, index: number, alt?: string) => (
     <div
@@ -49,7 +53,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
           pauseOnHover
           autoFill
         >
-          {images.map((image, index) => card(image, index))}
+          {images.map((image, index) => card(image.url, index, image.alt))}
         </Marquee>
 
         {/* Row 2: opposite direction */}
@@ -59,7 +63,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
           pauseOnHover
           autoFill
         >
-          {images.map((image, index) => card(image, index))}
+          {images.map((image, index) => card(image.url, index, image.alt))}
         </Marquee>
       </div>
     </section>

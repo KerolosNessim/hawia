@@ -44,6 +44,7 @@ export interface Hero {
 export interface AccreditationImage {
   id: number;
   url: string;
+  image_alt?: string | null;
 }
 
 export interface Accreditation {
@@ -51,6 +52,12 @@ export interface Accreditation {
   title: string;
   description: string;
   images: AccreditationImage[];
+}
+
+export interface AccreditationResponse {
+  status: string | boolean;
+  message: string;
+  data: Accreditation;
 }
 
 export interface PartnerImage {
@@ -69,8 +76,8 @@ export interface Partner {
 
 export interface LandingPageData {
   hero: Hero;
-  accreditation: Accreditation;
-  partners: Partner[];
+  accreditation?: Accreditation;
+  partners: Partner[] | { data?: Partner[] };
 }
 
 export interface LandingPageResponse {
