@@ -1,7 +1,7 @@
 import BlogCard from "@/features/blogs/components/blog-card";
 import BlogCategoriesFilter from "@/features/blogs/components/blog-categories-filter";
 import { BlogListPagination } from "@/features/blogs/components/blog-list-pagination";
-import { blogCategoryPath, blogIndexHref } from "@/features/blogs/lib/blog-routes";
+import { blogCategoryPath, blogIndexHref, localePath } from "@/features/blogs/lib/blog-routes";
 import { buildBreadcrumbJsonLd, jsonLdScript } from "@/features/blogs/lib/json-ld";
 import {
   blogToCardPayload,
@@ -90,7 +90,7 @@ export default async function BlogPage(props: {
     fetchPublicBlogCategories(locale),
     fetchVisibleBlogCountByCategoryId(),
     fetchPublicBlogsPaginated({
-      paginationPath: `/${locale}/blogs`,
+      paginationPath: localePath(locale, "/blogs"),
       page,
       per_page: BLOG_LIST_PER_PAGE,
       search: search || undefined,
@@ -107,12 +107,16 @@ export default async function BlogPage(props: {
     key: String(b.id),
   }));
 
-  const blogIndexAbs = (await absolutePath(`/${locale}/blogs`)) ?? `/${locale}/blogs`;
+  const blogIndexAbs =
+    (await absolutePath(localePath(locale, "/blogs"))) ?? localePath(locale, "/blogs");
   const listAbs =
     (await absolutePath(blogIndexHref(locale, page, { search }))) ?? blogIndexAbs;
 
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
+    {
+      name: t("breadcrumbHome"),
+      url: (await absolutePath(localePath(locale, "/"))) ?? localePath(locale, "/"),
+    },
     { name: t("breadcrumbBlog"), url: blogIndexAbs },
   ]);
 
@@ -183,7 +187,7 @@ export default async function BlogPage(props: {
 
         <form
           method="get"
-          action={`/${locale}/blogs`}
+          action={localePath(locale, "/blogs")}
           className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center"
         >
           <label className="sr-only" htmlFor="blog-index-search">

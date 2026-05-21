@@ -1,14 +1,29 @@
+import { routing } from "@/i18n/routing";
 import type { Locale } from "next-intl";
 
-/** Segments reserved under `/blogs/*` so they never map to a category slug route. */
+/** Segments reserved under `/blogs/*` so they never map to a category or post slug route. */
 export const RESERVED_BLOG_CATEGORY_SLUGS = new Set(["blog"]);
 
+/** Path without locale prefix (for `@/i18n/navigation` `Link` and pathname helpers). */
 export function blogPostPath(slug: string): string {
-  return `/blogs/blog/${encodeURIComponent(slug)}`;
+  return `/blogs/${encodeURIComponent(slug)}`;
 }
 
 export function blogCategoryPath(slug: string): string {
   return `/blogs/${encodeURIComponent(slug)}`;
+}
+
+/** Prefixes pathname with locale when required (`as-needed` omits prefix for default locale). */
+export function localePath(locale: Locale, pathname: string): string {
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (locale === routing.defaultLocale) {
+    return path;
+  }
+  return `/${locale}${path}`;
+}
+
+export function blogPostHref(locale: Locale, slug: string): string {
+  return localePath(locale, blogPostPath(slug));
 }
 
 export function blogIndexHref(locale: Locale, page: number, opts?: { search?: string }): string {
@@ -17,7 +32,8 @@ export function blogIndexHref(locale: Locale, page: number, opts?: { search?: st
   if (s) p.set("search", s);
   if (page > 1) p.set("page", String(page));
   const q = p.toString();
-  return q ? `/${locale}/blogs?${q}` : `/${locale}/blogs`;
+  const base = localePath(locale, "/blogs");
+  return q ? `${base}?${q}` : base;
 }
 
 export function blogCategoryHref(
@@ -31,11 +47,20 @@ export function blogCategoryHref(
   if (s) p.set("search", s);
   if (page > 1) p.set("page", String(page));
   const q = p.toString();
-  const base = `/${locale}/blogs/${encodeURIComponent(categorySlug)}`;
+  const base = localePath(locale, `/blogs/${encodeURIComponent(categorySlug)}`);
   return q ? `${base}?${q}` : base;
 }
 
 export function blogPostAbsoluteUrl(origin: string, locale: Locale, slug: string): string {
-  const path = blogPostPath(slug);
-  return `${origin.replace(/\/$/, "")}/${locale}${path}`;
+  const path = localePath(locale, blogPostPath(slug));
+  return `${origin.replace(/\/$/, "")}${path}`;
+}
+
+/** Legacy `/blogs/blog/{slug}` — kept for permanent redirects. */
+export function legacyBlogPostPath(slug: string): string {
+  return `/blogs/blog/${encodeURIComponent(slug)}`;
+}
+
+export function legacyBlogPostHref(locale: Locale, slug: string): string {
+  return localePath(locale, legacyBlogPostPath(slug));
 }
