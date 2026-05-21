@@ -3,6 +3,7 @@ import SectionHeader from "@/features/shared/components/section-header";
 import { useTranslations, useLocale } from "next-intl";
 import Marquee from "react-fast-marquee";
 import Image from "next/image";
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 
 import type { Accreditation } from "../types";
 
@@ -26,6 +27,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
         alt={alt ?? `${t("title")} ${index}`}
         width={180}
         height={80}
+        unoptimized={isRemoteMediaUrl(image)}
         className="h-full w-full object-contain  transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0"
       />
     </div>

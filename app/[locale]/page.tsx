@@ -14,17 +14,9 @@ import ServicesSection from "@/features/services/components/services-section";
 import { getAccreditations } from "@/features/home/services/accreditations";
 import { getLandingPageData } from "@/features/home/services/hero";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import type { Accreditation, LandingPageData, Partner } from "@/features/home/types";
+import type { Accreditation } from "@/features/home/types";
 import type { Locale } from "next-intl";
 import { getLocale } from "next-intl/server";
-
-function normalizePartners(
-  partners: LandingPageData["partners"] | undefined,
-): Partner[] | undefined {
-  if (partners == null) return undefined;
-  if (Array.isArray(partners)) return partners;
-  return partners.data;
-}
 
 function normalizeAccreditation(raw: Accreditation | undefined): Accreditation | undefined {
   if (!raw?.images?.length) return undefined;
@@ -65,7 +57,7 @@ export default async function Home() {
       <DependenciesSection accreditation={accreditation} />
       <AdsSection />
       <TestimonialsSection />
-      <ClientsSection partners={normalizePartners(data.data.partners)} />
+      <ClientsSection />
       <PackagesSection />
       <ArticlesSection items={latestBlogs} />
       <ContactSection />
