@@ -3,11 +3,10 @@
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/features/shared/components/page-header";
 import type { ResolvedCourseLesson, ResolvedPublicCourse } from "@/features/courses/services/courses-public-api";
-import { resolvePublicCourse } from "@/features/courses/services/courses-public-api";
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { CheckCircle2, ChevronDown, ChevronUp, PlayCircle, ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useLocale, useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 function CurriculumFlat({ lessons }: { lessons: ResolvedCourseLesson[] }) {
@@ -62,11 +61,11 @@ function CourseSidebar({ course }: { course: ResolvedPublicCourse }) {
       <div className="relative overflow-hidden rounded-2xl border border-gray-100 shadow-lg">
         <Image
           src={course.imageSrc}
-          alt=""
+          alt={course.title}
           width={600}
           height={340}
           className="aspect-video w-full object-cover"
-          unoptimized={course.imageSrc.startsWith("http")}
+          unoptimized={isRemoteMediaUrl(course.imageSrc)}
         />
       </div>
 
@@ -87,42 +86,7 @@ function CourseSidebar({ course }: { course: ResolvedPublicCourse }) {
   );
 }
 
-export default function SingleCoursePage({ courseParam }: { courseParam: string }) {
-  const locale = useLocale();
-  const t = useTranslations("courses");
-
-  const { data: course, isLoading, isError } = useQuery({
-    queryKey: ["course-detail", courseParam, locale],
-    queryFn: () => resolvePublicCourse(courseParam, locale),
-    staleTime: 30_000,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="h-[40vh] animate-pulse bg-muted" />
-        <div className="container py-12">
-          <div className="grid gap-8 lg:grid-cols-3">
-            <div className="h-80 animate-pulse rounded-2xl bg-muted lg:col-span-2" />
-            <div className="h-64 animate-pulse rounded-2xl bg-muted" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !course) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center bg-gray-50 px-4 text-center">
-        <p className="text-lg text-gray-600">{t("not_found")}</p>
-      </div>
-    );
-  }
-
-  return <CourseDetailBody course={course} />;
-}
-
-function CourseDetailBody({ course }: { course: ResolvedPublicCourse }) {
+export default function SingleCoursePage({ course }: { course: ResolvedPublicCourse }) {
   const t = useTranslations("courses");
   const richTextClassName =
     "space-y-3 text-sm leading-relaxed text-gray-600 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_li]:my-1";
@@ -134,13 +98,15 @@ function CourseDetailBody({ course }: { course: ResolvedPublicCourse }) {
       <div className="container py-12">
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
           <div className="space-y-10 lg:col-span-2">
-            <section className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
-              <h2 className="mb-4 text-xl font-bold text-gray-900">{t("about_title")}</h2>
-              <div
-                className={richTextClassName}
-                dangerouslySetInnerHTML={{ __html: course.description }}
-              />
-            </section>
+            {course.description.trim() ? (
+              <section className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
+                <h2 className="mb-4 text-xl font-bold text-gray-900">{t("about_title")}</h2>
+                <div
+                  className={richTextClassName}
+                  dangerouslySetInnerHTML={{ __html: course.description }}
+                />
+              </section>
+            ) : null}
 
             {course.objectives.length > 0 && (
               <section className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
@@ -159,9 +125,11 @@ function CourseDetailBody({ course }: { course: ResolvedPublicCourse }) {
               </section>
             )}
 
-            <section className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
-              <CurriculumFlat lessons={course.lessons} />
-            </section>
+            {course.lessons.length > 0 ? (
+              <section className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
+                <CurriculumFlat lessons={course.lessons} />
+              </section>
+            ) : null}
           </div>
 
           <div className="lg:col-span-1">
