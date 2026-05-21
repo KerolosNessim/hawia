@@ -34,8 +34,6 @@ export async function GET() {
   addDynamicEntries(slugData.packages, "packages", 0.8, "weekly");
   addDynamicEntries(slugData.package_categories, "packages/categories", 0.8, "weekly");
   addDynamicEntries(slugData.courses, "courses", 0.8, "weekly");
-  addDynamicEntries(slugData.blogs, "blogs", 0.7, "weekly");
-  addDynamicEntries(slugData.blog_categories, "blogs", 0.7, "weekly");
   addDynamicEntries(slugData.solutions, "clients", 0.8, "weekly");
 
   const xml = generateUrlsetXml(entries);
