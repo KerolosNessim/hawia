@@ -431,6 +431,16 @@
     "terms": "Terms of Use",
     "refund": "Refund Policy"
   },
+  "trademarkCertificatePage": {
+    "metaTitle": "Trademark Certificate | Howeyah",
+    "metaDescription": "Howeyah registered trademark certificate No. 181546, authenticated by the Ministry of Commerce and Investment.",
+    "title": "Trademark Certificate",
+    "description": "View the official registered trademark certificate for Howeyah.",
+    "authenticatedBy": "Authenticated by the Ministry of Commerce & Investment",
+    "registeredNote": "Registered trademark No. {number}",
+    "pdfTitle": "Trademark certificate",
+    "openPdf": "Open certificate (PDF)"
+  },
   "singleService": {
     "title": "Search Engine Optimization (SEO) Services",
     "description": "Let your customers find you first",

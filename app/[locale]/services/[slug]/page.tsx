@@ -14,7 +14,7 @@ import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
 
@@ -30,7 +30,7 @@ export default async function ServicePage({ params }: Props) {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("singleService");
   const res = await getSingleService(slug, locale);
-  if (!res?.data) notFound();
+  if (!res?.data) redirectToNotFound();
   const service = res.data;
 
   return (

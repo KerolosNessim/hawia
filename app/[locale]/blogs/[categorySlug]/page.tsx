@@ -31,7 +31,7 @@ import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 
 const BLOG_LIST_PER_PAGE = 9;
 
@@ -118,7 +118,7 @@ export default async function BlogCategoryPage(props: {
   const search = parseSearch(sp);
 
   if (RESERVED_BLOG_CATEGORY_SLUGS.has(categorySlug)) {
-    notFound();
+    redirectToNotFound();
   }
 
   const categories = await fetchPublicBlogCategories(locale);
@@ -129,7 +129,7 @@ export default async function BlogCategoryPage(props: {
     if (blog) {
       return <SingleBlogPage locale={locale} slug={blog.slug} />;
     }
-    notFound();
+    redirectToNotFound();
   }
 
   const t = await getTranslations("blogsPage");

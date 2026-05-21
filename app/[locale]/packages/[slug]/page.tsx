@@ -6,7 +6,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { buildBreadcrumbJsonLd, buildPackageProductJsonLd, jsonLdScript } from "@/features/packages/lib/json-ld";
 
 type Props = Readonly<{ params: Promise<{ locale: string; slug: string }> }>;
@@ -67,7 +67,7 @@ export default async function PackageDetailPage({ params }: Props) {
   const decoded = decodeURIComponent(slug);
 
   const pkg = await fetchPublicPackageDetail(decoded, locale);
-  if (!pkg) notFound();
+  if (!pkg) redirectToNotFound();
 
   const priceUi =
     pkg.price != null && String(pkg.price).trim() !== ""

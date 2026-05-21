@@ -24,7 +24,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { FaStar } from "react-icons/fa";
 
 async function absoluteFromPath(path: string): Promise<string | null> {
@@ -97,7 +97,7 @@ export async function generateSingleBlogMetadata(
 
 export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: string }) {
   const blog = await fetchPublicBlogBySlug(slug);
-  if (!blog) notFound();
+  if (!blog) redirectToNotFound();
 
   const t = await getTranslations("blogDetail");
   const tBlogs = await getTranslations("blogsPage");

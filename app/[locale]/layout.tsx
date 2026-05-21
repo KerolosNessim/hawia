@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { Cairo, Geist } from "next/font/google";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
@@ -62,7 +62,7 @@ export default async function RootLayout({
 }>) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
-    return notFound();
+    redirect("/");
   }
   setRequestLocale(locale);
   const messages = await getMessages();

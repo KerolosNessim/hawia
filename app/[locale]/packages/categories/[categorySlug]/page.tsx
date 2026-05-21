@@ -7,7 +7,7 @@ import { buildBreadcrumbJsonLd, buildPackageCollectionJsonLd, jsonLdScript } fro
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { getTranslations } from "next-intl/server";
 
 type Props = Readonly<{ params: Promise<{ locale: string; categorySlug: string }> }>;
@@ -69,7 +69,7 @@ export default async function PackageCategoryPage({ params }: Props) {
   const detail = await getTranslations("packagesSection");
   const { category, packages } = await fetchPublicPackagesByCategorySlug(categorySlug, locale);
 
-  if (!category) notFound();
+  if (!category) redirectToNotFound();
 
   const packagesUrl = (await absolutePath(`/${locale}/packages`)) ?? `/${locale}/packages`;
   const categoryUrl =
