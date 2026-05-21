@@ -19,6 +19,12 @@ export async function GET() {
   <sitemap>
     <loc>${baseUrl}/products-en.xml</loc>
   </sitemap>
+  <sitemap>
+    <loc>${baseUrl}/posts-ar.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>${baseUrl}/posts-en.xml</loc>
+  </sitemap>
 </sitemapindex>`;
 
   return new Response(xml, {

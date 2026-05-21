@@ -24,7 +24,7 @@ export function CourseCard({ href, title, description, priceLabel, imageSrc }: P
             width={600}
             height={300}
             className="h-[220px] w-full object-cover"
-            unoptimized={imageSrc.startsWith("http")}
+            unoptimized={imageSrc.startsWith("http") || imageSrc.startsWith("https")}
           />
         </div>
         <CardContent className="flex-1 flex flex-col space-y-3 py-6 text-center">

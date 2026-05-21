@@ -39,7 +39,7 @@ const SECTION_CONFIG: Record<
   blogs: {
     labelKey: "results.blogs",
     icon: BookOpen,
-    buildHref: (slug) => `/blogs/blog/${slug}`,
+    buildHref: (slug) => `/blogs/${slug}`,
   },
   services: {
     labelKey: "results.services",

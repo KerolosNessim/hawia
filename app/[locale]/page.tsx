@@ -11,18 +11,37 @@ import StepsSection from "@/features/home/component/steps-sections";
 import TestimonialsSection from "@/features/home/component/testimonials-section";
 import WhyUsSection from "@/features/home/component/why-us-section";
 import ServicesSection from "@/features/services/components/services-section";
+import { getAccreditations } from "@/features/home/services/accreditations";
 import { getLandingPageData } from "@/features/home/services/hero";
+import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import type { Accreditation } from "@/features/home/types";
 import type { Locale } from "next-intl";
 import { getLocale } from "next-intl/server";
 
+function normalizeAccreditation(raw: Accreditation | undefined): Accreditation | undefined {
+  if (!raw?.images?.length) return undefined;
+  return {
+    ...raw,
+    images: raw.images.map((img) => ({
+      ...img,
+      url: resolveMediaUrl(img.url),
+    })),
+  };
+}
+
 export default async function Home() {
-  const data = await getLandingPageData();
+  const [data, accreditationsRes] = await Promise.all([
+    getLandingPageData(),
+    getAccreditations().catch(() => null),
+  ]);
 
   if (!data.data) return null;
 
   const locale = (await getLocale()) as Locale;
   const latestBlogs = (await fetchPublicBlogs()).slice(0, 3).map((b) => blogToCardPayload(b, locale));
-  console.log("partners",data?.data?.partners?.data[0])
+  const accreditation = normalizeAccreditation(
+    accreditationsRes?.data ?? data.data.accreditation,
+  );
 
   return (
     <main>
@@ -35,10 +54,10 @@ export default async function Home() {
       </div>
       <ServicesSection /> 
       <StepsSection />
-      <DependenciesSection accreditation={data?.data?.accreditation} />
+      <DependenciesSection accreditation={accreditation} />
       <AdsSection />
       <TestimonialsSection />
-      <ClientsSection partners={data?.data?.partners?.data} />
+      <ClientsSection />
       <PackagesSection />
       <ArticlesSection items={latestBlogs} />
       <ContactSection />

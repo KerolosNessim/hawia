@@ -13,7 +13,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { getTranslations } from "next-intl/server";
 
 type Props = Readonly<{ params: Promise<{ locale: string; slug: string }> }>;
@@ -66,7 +66,7 @@ export default async function SingleClientPage({ params }: Props) {
   const t = await getTranslations("clients");
   const client = await fetchPublicClientDetail(slug, locale);
 
-  if (!client) notFound();
+  if (!client) redirectToNotFound();
 
   const isRtl = locale.startsWith("ar");
   const pageUrl =

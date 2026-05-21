@@ -44,6 +44,7 @@ export interface Hero {
 export interface AccreditationImage {
   id: number;
   url: string;
+  image_alt?: string | null;
 }
 
 export interface Accreditation {
@@ -53,9 +54,16 @@ export interface Accreditation {
   images: AccreditationImage[];
 }
 
+export interface AccreditationResponse {
+  status: string | boolean;
+  message: string;
+  data: Accreditation;
+}
+
 export interface PartnerImage {
   id: number;
   url: string;
+  image_alt?: string | null;
 }
 
 export interface Partner {
@@ -67,10 +75,26 @@ export interface Partner {
   seo: HeroSEO;
 }
 
+export interface PartnersPaginatedMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface PartnersResponse {
+  status: string | boolean;
+  message: string;
+  data: {
+    data: Partner[];
+    meta: PartnersPaginatedMeta;
+  };
+}
+
 export interface LandingPageData {
   hero: Hero;
-  accreditation: Accreditation;
-  partners: Partner[];
+  accreditation?: Accreditation;
+  partners?: Partner[] | { data?: Partner[] };
 }
 
 export interface LandingPageResponse {

@@ -1,7 +1,16 @@
 import BlogCard from "@/features/blogs/components/blog-card";
 import BlogCategoriesFilter from "@/features/blogs/components/blog-categories-filter";
 import { BlogListPagination } from "@/features/blogs/components/blog-list-pagination";
-import { blogCategoryHref, RESERVED_BLOG_CATEGORY_SLUGS } from "@/features/blogs/lib/blog-routes";
+import {
+  blogCategoryHref,
+  blogPostHref,
+  localePath,
+  RESERVED_BLOG_CATEGORY_SLUGS,
+} from "@/features/blogs/lib/blog-routes";
+import {
+  generateSingleBlogMetadata,
+  SingleBlogPage,
+} from "@/features/blogs/single-blog-page";
 import {
   buildBlogCategoryCollectionJsonLd,
   buildBreadcrumbJsonLd,
@@ -22,7 +31,7 @@ import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound, permanentRedirect } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 
 const BLOG_LIST_PER_PAGE = 9;
 
@@ -65,7 +74,7 @@ export async function generateMetadata({
   const category = findPublicBlogCategoryBySlug(categories, categorySlug);
   if (!category) {
     const blog = await fetchPublicBlogBySlug(categorySlug);
-    if (blog) return { title: "—", robots: { index: false, follow: false } };
+    if (blog) return generateSingleBlogMetadata(locale, categorySlug);
     return { title: "—", robots: { index: false, follow: false } };
   }
 
@@ -109,7 +118,7 @@ export default async function BlogCategoryPage(props: {
   const search = parseSearch(sp);
 
   if (RESERVED_BLOG_CATEGORY_SLUGS.has(categorySlug)) {
-    notFound();
+    redirectToNotFound();
   }
 
   const categories = await fetchPublicBlogCategories(locale);
@@ -118,15 +127,15 @@ export default async function BlogCategoryPage(props: {
   if (!category) {
     const blog = await fetchPublicBlogBySlug(categorySlug);
     if (blog) {
-      permanentRedirect(`/${locale}/blogs/blog/${encodeURIComponent(blog.slug)}`);
+      return <SingleBlogPage locale={locale} slug={blog.slug} />;
     }
-    notFound();
+    redirectToNotFound();
   }
 
   const t = await getTranslations("blogsPage");
   const visibleLocale = (await getLocale()) as Locale;
 
-  const paginationBase = `/${locale}/blogs/${encodeURIComponent(category.slug)}`;
+  const paginationBase = localePath(locale, `/blogs/${encodeURIComponent(category.slug)}`);
   /** Prefer numeric id: avoids query-string issues with Unicode slugs; matches Postman `blog_category_id`. */
   const { blogs, meta } = await fetchPublicBlogsPaginated({
     paginationPath: paginationBase,
@@ -143,7 +152,8 @@ export default async function BlogCategoryPage(props: {
     key: String(b.id),
   }));
 
-  const blogIndexAbs = (await absolutePath(`/${locale}/blogs`)) ?? `/${locale}/blogs`;
+  const blogIndexAbs =
+    (await absolutePath(localePath(locale, "/blogs"))) ?? localePath(locale, "/blogs");
   const categoryAbs =
     (await absolutePath(blogCategoryHref(locale, category.slug, page, { search }))) ?? blogIndexAbs;
 
@@ -151,15 +161,17 @@ export default async function BlogCategoryPage(props: {
     blogs.map(async (b) => ({
       title: blogToCardPayload(b, visibleLocale).title,
       url:
-        (await absolutePath(`/${locale}/blogs/blog/${encodeURIComponent(b.slug)}`)) ??
-        `/${locale}/blogs/blog/${encodeURIComponent(b.slug)}`,
+        (await absolutePath(blogPostHref(locale, b.slug))) ?? blogPostHref(locale, b.slug),
       image: b.image,
       datePublished: b.published_at,
     })),
   );
 
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
+    {
+      name: t("breadcrumbHome"),
+      url: (await absolutePath(localePath(locale, "/"))) ?? localePath(locale, "/"),
+    },
     { name: t("breadcrumbBlog"), url: blogIndexAbs },
     { name: category.name, url: categoryAbs },
   ]);
@@ -194,7 +206,7 @@ export default async function BlogCategoryPage(props: {
 
         <form
           method="get"
-          action={`/${locale}/blogs/${encodeURIComponent(category.slug)}`}
+          action={localePath(locale, `/blogs/${encodeURIComponent(category.slug)}`)}
           className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center"
         >
           <label className="sr-only" htmlFor="blog-cat-search">

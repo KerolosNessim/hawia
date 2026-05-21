@@ -3,6 +3,7 @@ import SectionHeader from "@/features/shared/components/section-header";
 import { useTranslations, useLocale } from "next-intl";
 import Marquee from "react-fast-marquee";
 import Image from "next/image";
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 
 import type { Accreditation } from "../types";
 
@@ -10,7 +11,11 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
   const t = useTranslations("dependenciesSection");
   const locale = useLocale();
 
-  const images = accreditation?.images?.map(img => img.url) || [];
+  const images =
+    accreditation?.images?.map((img) => ({
+      url: img.url,
+      alt: img.image_alt?.trim() || undefined,
+    })) ?? [];
 
   const card = (image: string, index: number, alt?: string) => (
     <div
@@ -22,6 +27,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
         alt={alt ?? `${t("title")} ${index}`}
         width={180}
         height={80}
+        unoptimized={isRemoteMediaUrl(image)}
         className="h-full w-full object-contain  transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0"
       />
     </div>
@@ -49,7 +55,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
           pauseOnHover
           autoFill
         >
-          {images.map((image, index) => card(image, index))}
+          {images.map((image, index) => card(image.url, index, image.alt))}
         </Marquee>
 
         {/* Row 2: opposite direction */}
@@ -59,7 +65,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
           pauseOnHover
           autoFill
         >
-          {images.map((image, index) => card(image, index))}
+          {images.map((image, index) => card(image.url, index, image.alt))}
         </Marquee>
       </div>
     </section>

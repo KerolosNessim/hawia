@@ -9,6 +9,10 @@ import { MapPin, Mail, ArrowLeft, ArrowRight, MessageCircle, Phone } from "lucid
 import { FaFacebook, FaInstagram, FaLinkedin, FaTiktok, FaTwitter, FaWhatsapp } from "react-icons/fa";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useFooterServices } from "@/features/services/hooks/useFooterServices";
+import {
+  TRADEMARK_CERTIFICATE_PATH,
+  TRADEMARK_REGISTRATION_PDF,
+} from "@/features/trademark/constants";
 
 export default function Footer() {
   const t = useTranslations("footer");
@@ -66,12 +70,29 @@ export default function Footer() {
             <p className="text-gray-700 font-bold text-lg max-w-[200px] leading-snug mx-auto lg:mx-0">
               {settings?.general?.site_description || t("brandDescription")}
             </p>
-            <div className="text-brand font-bold space-y-1">
-              <p>{t("registeredTrademark")}</p>
-              <div className="flex items-center justify-center lg:justify-start">
-                 <span>{t("trademarkCertificate")}</span>
-                 <span className="inline-flex max-w-[20px] ms-2 text-brand">▶</span>
-              </div>
+            <div className="text-brand font-bold space-y-2">
+              <a
+                href={TRADEMARK_REGISTRATION_PDF}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                {t("registeredTrademark")}
+              </a>
+              <Link
+                href={TRADEMARK_CERTIFICATE_PATH}
+                className="inline-flex items-center justify-center gap-2 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand lg:justify-start"
+              >
+                <span>{t("trademarkCertificate")}</span>
+                <span className="inline-flex text-brand" aria-hidden>
+                  {isRtl ? (
+                    <ArrowLeft className="h-4 w-4 bg-brand/10 rounded-full p-0.5" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4 bg-brand/10 rounded-full p-0.5" />
+                  )}
+                </span>
+              </Link>
+              <p className="text-sm font-bold text-gray-900">{t("authenticatedBy")}</p>
             </div>
             
             {/* Ministry Badge Mock (You may replace with real image) */}

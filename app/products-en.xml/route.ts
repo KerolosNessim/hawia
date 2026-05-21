@@ -1,4 +1,6 @@
+import { localePath } from "@/features/blogs/lib/blog-routes";
 import { getBaseUrl, fetchAllSlugs, generateUrlsetXml, SitemapEntry } from "@/lib/sitemap-utils";
+import type { Locale } from "next-intl";
 
 export const revalidate = 3600;
 
@@ -20,7 +22,7 @@ export async function GET() {
     for (const slug of slugs) {
       if (!slug) continue;
       entries.push({
-        url: `${baseUrl}/${locale}/${routePrefix}/${encodeURIComponent(slug)}`,
+        url: `${baseUrl}${localePath(locale as Locale, `/${routePrefix}/${encodeURIComponent(slug)}`)}`,
         lastModified: now,
         changeFrequency,
         priority,
@@ -32,8 +34,6 @@ export async function GET() {
   addDynamicEntries(slugData.packages, "packages", 0.8, "weekly");
   addDynamicEntries(slugData.package_categories, "packages/categories", 0.8, "weekly");
   addDynamicEntries(slugData.courses, "courses", 0.8, "weekly");
-  addDynamicEntries(slugData.blogs, "blogs/blog", 0.7, "weekly");
-  addDynamicEntries(slugData.blog_categories, "blogs", 0.7, "weekly");
   addDynamicEntries(slugData.solutions, "clients", 0.8, "weekly");
 
   const xml = generateUrlsetXml(entries);

@@ -14,7 +14,6 @@ export async function GET() {
     { url: `${baseUrl}/${locale}/faq`, priority: 0.8, changeFrequency: "weekly", lastModified: now },
     { url: `${baseUrl}/${locale}/courses`, priority: 0.9, changeFrequency: "daily", lastModified: now },
     { url: `${baseUrl}/${locale}/packages`, priority: 0.9, changeFrequency: "daily", lastModified: now },
-    { url: `${baseUrl}/${locale}/blogs`, priority: 0.9, changeFrequency: "daily", lastModified: now },
     { url: `${baseUrl}/${locale}/clients`, priority: 0.9, changeFrequency: "daily", lastModified: now },
     { url: `${baseUrl}/${locale}/privacy-policy`, priority: 0.5, changeFrequency: "yearly", lastModified: now },
     { url: `${baseUrl}/${locale}/refund-policy`, priority: 0.5, changeFrequency: "yearly", lastModified: now },
