@@ -1,7 +1,7 @@
 import { withSecurityHeaders } from "@/lib/security-headers";
 import { getBaseUrl } from "@/lib/sitemap-utils";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const baseUrl = getBaseUrl();

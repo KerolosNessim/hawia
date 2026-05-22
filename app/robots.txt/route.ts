@@ -1,7 +1,7 @@
 import { getScripts } from "@/features/settings/services/settings-service";
 import { withSecurityHeaders } from "@/lib/security-headers";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const scriptsResponse = await getScripts().catch(() => null);

@@ -43,7 +43,7 @@ export function getApiUrl(): string {
 export async function fetchAllSlugs(): Promise<AllSlugsResponse["data"]> {
   try {
     const res = await fetch(`${getApiUrl()}/v1/all-slugs`, {
-      next: { revalidate: 3600 },
+      cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (res.ok) {

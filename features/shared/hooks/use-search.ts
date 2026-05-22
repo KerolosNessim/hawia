@@ -9,6 +9,5 @@ export const useSearch = (query: string) => {
     queryKey: ["search", debouncedQuery],
     queryFn: () => searchAction(debouncedQuery),
     enabled: debouncedQuery.length >= 2,
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

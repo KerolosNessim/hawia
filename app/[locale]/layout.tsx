@@ -20,6 +20,9 @@ import { SITE_REFERRER_POLICY } from "@/lib/seo/metadata-helpers";
 
 import { getSettings, scriptsFromSettings } from "@/features/settings/services/settings-service";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export async function generateMetadata({
   params,
 }: {

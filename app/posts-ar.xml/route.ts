@@ -1,7 +1,7 @@
 import { buildPostsSitemapEntries, generateUrlsetXml } from "@/lib/sitemap-utils";
 import { withSecurityHeaders } from "@/lib/security-headers";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const entries = await buildPostsSitemapEntries("ar");
