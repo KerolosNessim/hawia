@@ -44,6 +44,7 @@ export async function fetchAllSlugs(): Promise<AllSlugsResponse["data"]> {
   try {
     const res = await fetch(`${getApiUrl()}/v1/all-slugs`, {
       cache: "no-store",
+      next: { revalidate: 0 },
       headers: { Accept: "application/json" },
     });
     if (res.ok) {

@@ -1,10 +1,12 @@
 import type { NextResponse } from "next/server";
+import { NO_CACHE_HEADER_ENTRIES } from "./no-cache-headers";
 
 /** Response headers applied on every HTML/static response (SEO / security audits). */
 export const SECURITY_RESPONSE_HEADERS: ReadonlyArray<{ key: string; value: string }> = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   /** Prevents clickjacking; allows framing only from the same origin. */
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  ...NO_CACHE_HEADER_ENTRIES,
 ];
 
 export function applySecurityHeadersToHeaders(headers: Headers): void {

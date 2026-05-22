@@ -25,6 +25,7 @@ function toAcceptLanguageTag(locale: string | undefined): "ar" | "en" {
 export const api = ofetch.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || CONFIG.BACK_URL,
   cache: "no-store",
+  next: { revalidate: 0 },
 
   headers: {
     "Content-Type": "application/json",
