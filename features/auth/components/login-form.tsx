@@ -24,7 +24,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 import { useLoginMutation } from "../hooks/use-auth-mutation";
 import { Loader2 } from "lucide-react";

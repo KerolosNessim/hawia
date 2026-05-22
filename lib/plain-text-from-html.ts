@@ -1,0 +1,5 @@
+/** Strip tags for metadata, alt text, and compact UI labels. */
+export function plainTextFromHtml(html: string | null | undefined): string {
+  if (!html) return "";
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
 import ReactCountryFlag from "react-country-flag";
@@ -19,11 +19,8 @@ export default function LocaleSwitcher() {
   const [isPending, startTransition] = useTransition();
 
   const handleChange = (newLocale: string) => {
-    // استخدم startTransition لتأخير التبديل حتى ينتهي التفاعل مع اللغة
     startTransition(() => {
-      const segments = pathname.split("/");
-      segments[1] = newLocale; // أول segment هو اللغة
-      router.push(segments.join("/"));
+      router.replace(pathname, { locale: newLocale });
     });
   };
 
@@ -31,7 +28,7 @@ export default function LocaleSwitcher() {
     <Select
       dir={locale === "ar" ? "rtl" : "ltr"}
       onValueChange={handleChange}
-      defaultValue={locale}
+      value={locale}
       disabled={isPending}
     >
       <SelectTrigger

@@ -15,11 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { buildPageMetadata, getAbsoluteUrl } from "@/lib/seo/metadata-helpers";
+import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { cn } from "@/lib/utils";
-
-const BLOG_LIST_PER_PAGE = 9;
 
 type SearchParamsType = Record<string, string | string[] | undefined>;
 
@@ -35,15 +34,6 @@ function parseSearch(sp: SearchParamsType): string {
   return raw.trim();
 }
 
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
-
 export async function generateMetadata({
   params,
   searchParams,
@@ -57,21 +47,26 @@ export async function generateMetadata({
   const sp = searchParams ? await searchParams : {};
   const page = parsePage(sp);
   const search = parseSearch(sp);
-  const canonicalPath = blogIndexHref(locale, page > 1 ? page : 1, { search });
-  const canonical = (await absolutePath(canonicalPath)) ?? undefined;
+  const pathname = blogIndexHref(locale, page > 1 ? page : 1, { search });
 
-  return {
+  const { meta } = await fetchPublicBlogsPaginated({
+    paginationPath: localePath(locale, "/blogs"),
+    page,
+    per_page: BLOG_LIST_PER_PAGE,
+    search: search || undefined,
+  });
+
+  return buildPageMetadata({
+    locale,
+    pathname,
     title: t("metaTitle"),
     description: t("metaDescription"),
-    robots: { index: true, follow: true },
-    alternates: canonical ? { canonical } : undefined,
-    openGraph: {
-      title: t("metaTitle"),
-      description: t("metaDescription"),
-      locale: locale === "ar" ? "ar_SA" : "en_US",
-      type: "website",
+    pagination: {
+      currentPage: meta.current_page,
+      lastPage: meta.last_page,
+      hrefForPage: (p) => blogIndexHref(locale, p > 1 ? p : 1, { search }),
     },
-  };
+  });
 }
 
 export default async function BlogPage(props: {
@@ -107,15 +102,13 @@ export default async function BlogPage(props: {
     key: String(b.id),
   }));
 
-  const blogIndexAbs =
-    (await absolutePath(localePath(locale, "/blogs"))) ?? localePath(locale, "/blogs");
-  const listAbs =
-    (await absolutePath(blogIndexHref(locale, page, { search }))) ?? blogIndexAbs;
+  const blogIndexAbs = await getAbsoluteUrl(localePath(locale, "/blogs"));
+  const listAbs = await getAbsoluteUrl(blogIndexHref(locale, page, { search }));
 
   const breadcrumbLd = buildBreadcrumbJsonLd([
     {
       name: t("breadcrumbHome"),
-      url: (await absolutePath(localePath(locale, "/"))) ?? localePath(locale, "/"),
+      url: await getAbsoluteUrl(localePath(locale, "/")),
     },
     { name: t("breadcrumbBlog"), url: blogIndexAbs },
   ]);

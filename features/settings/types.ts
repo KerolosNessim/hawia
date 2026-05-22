@@ -45,6 +45,7 @@ export interface SettingsData {
   };
   social_media: SettingSocialMedia[];
   seo: SettingSeo[];
+  scripts?: ScriptsData;
 }
 
 export interface SettingsResponse {

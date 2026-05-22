@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import Marquee from "react-fast-marquee";
 import Image from "next/image";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { pickImageAlt } from "@/lib/image-alt";
 import { usePartners } from "../hooks/usePartners";
 
 export default function ClientsSection() {
@@ -16,7 +17,7 @@ export default function ClientsSection() {
     const images = Array.isArray(partner.images) ? partner.images : [];
     return images.map((img) => ({
       url: img.url,
-      alt: img.image_alt?.trim() || undefined,
+      alt: pickImageAlt(img.image_alt, locale, partner.title) || undefined,
     }));
   });
 
@@ -43,7 +44,7 @@ export default function ClientsSection() {
 
   return (
     <section className="space-y-8 overflow-hidden bg-gray-900 py-16">
-      <SectionHeader title={sectionTitle} subtitle={sectionSubtitle} />
+      <SectionHeader title={sectionTitle} subtitleHtml={sectionSubtitle} />
 
       <div dir="ltr" className="relative space-y-8">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32 bg-linear-to-r from-gray-900 to-transparent" />

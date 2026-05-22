@@ -10,22 +10,19 @@ import {
 import PageHeader from "@/features/shared/components/page-header";
 import { Link } from "@/i18n/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  buildPageMetadata,
+  getAbsoluteUrl,
+  localePathname,
+} from "@/lib/seo/metadata-helpers";
+import type { Locale } from "next-intl";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Image from "next/image";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { getTranslations } from "next-intl/server";
 
 type Props = Readonly<{ params: Promise<{ locale: string; slug: string }> }>;
-
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
 
 function metaDescription(value: string, fallback: string): string {
   return (value.trim() || fallback).slice(0, 160);
@@ -40,17 +37,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: t("not_found"), robots: { index: false, follow: false } };
   }
 
+  const loc = locale as Locale;
   const title = client.metaTitle?.trim() || `${client.title} | Howeyah`;
-  const description = client.metaDescription?.trim() || metaDescription(client.descriptionPlain, t("metaDescription"));
-  const canonical =
-    (await absolutePath(`/${locale}/clients/${encodeURIComponent(client.slug)}`)) ?? undefined;
+  const description =
+    client.metaDescription?.trim() ||
+    metaDescription(client.descriptionPlain, t("metaDescription"));
   const images = client.imageUrl ? [{ url: client.imageUrl, alt: client.title }] : undefined;
 
-  return {
+  return buildPageMetadata({
+    locale: loc,
+    pathname: localePathname(loc, `/clients/${encodeURIComponent(client.slug)}`),
     title,
     description,
-    robots: { index: true, follow: true },
-    alternates: canonical ? { canonical } : undefined,
     openGraph: {
       title,
       description,
@@ -58,7 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       ...(images ? { images } : {}),
     },
-  };
+  });
 }
 
 export default async function SingleClientPage({ params }: Props) {
@@ -69,13 +67,14 @@ export default async function SingleClientPage({ params }: Props) {
   if (!client) redirectToNotFound();
 
   const isRtl = locale.startsWith("ar");
-  const pageUrl =
-    (await absolutePath(`/${locale}/clients/${encodeURIComponent(client.slug)}`)) ??
-    `/${locale}/clients/${encodeURIComponent(client.slug)}`;
-  const clientsUrl = (await absolutePath(`/${locale}/clients`)) ?? `/${locale}/clients`;
+  const loc = locale as Locale;
+  const pageUrl = await getAbsoluteUrl(
+    localePathname(loc, `/clients/${encodeURIComponent(client.slug)}`),
+  );
+  const clientsUrl = await getAbsoluteUrl(localePathname(loc, "/clients"));
   const description = client.metaDescription?.trim() || metaDescription(client.descriptionPlain, t("metaDescription"));
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
+    { name: t("breadcrumbHome"), url: await getAbsoluteUrl(localePathname(loc, "/")) },
     { name: t("breadcrumbClients"), url: clientsUrl },
     { name: client.title, url: pageUrl },
   ]);
@@ -107,15 +106,16 @@ export default async function SingleClientPage({ params }: Props) {
               alt={client.title}
               fill
               priority
+              sizes="(max-width: 768px) 100vw, 960px"
               className="object-cover"
             />
           </div>
           <div className="space-y-6 p-6 md:p-10">
             <h1 className="text-3xl font-black text-gray-900 md:text-5xl">{client.title}</h1>
             {client.descriptionHtml ? (
-              <div
-                className="max-w-none text-lg leading-9 text-muted-foreground [&_a]:text-brand [&_a]:underline [&_h1]:text-3xl [&_h1]:font-black [&_h2]:text-2xl [&_h2]:font-black [&_h3]:text-xl [&_h3]:font-bold [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:ps-6 [&_p]:mb-4 [&_strong]:font-bold [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:ps-6"
-                dangerouslySetInnerHTML={{ __html: client.descriptionHtml }}
+              <RichHtml
+                html={client.descriptionHtml}
+                className="max-w-none text-lg leading-9 text-muted-foreground [&_h1]:text-3xl [&_h1]:font-black [&_h2]:text-2xl [&_h2]:font-black [&_h3]:text-xl [&_h3]:font-bold"
               />
             ) : null}
           </div>
@@ -125,7 +125,13 @@ export default async function SingleClientPage({ params }: Props) {
           <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {client.imageUrls.slice(1).map((image, index) => (
               <div key={image} className="relative aspect-video overflow-hidden rounded-3xl bg-gray-100 shadow-sm">
-                <Image src={image} alt={`${client.title} ${index + 2}`} fill className="object-cover" />
+                <Image
+                  src={image}
+                  alt={`${client.title} ${index + 2}`}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+                  className="object-cover"
+                />
               </div>
             ))}
           </section>

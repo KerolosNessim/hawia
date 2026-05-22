@@ -108,7 +108,7 @@ export default function TestimonialsSection() {
     <section className="container py-16 space-y-8">
       <SectionHeader
         title={data?.data?.content?.title || t("title")}
-        subtitle={data?.data?.content?.description || t("subtitle")}
+        subtitleHtml={data?.data?.content?.description || t("subtitle")}
         subtitleColor="text-gray-500"
       />
 

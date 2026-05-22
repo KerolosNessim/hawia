@@ -7,7 +7,8 @@ import {
 } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import * as motion from "framer-motion/client";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { Service } from "../types";
 export default function ServicesCard({
   item,
@@ -33,14 +34,16 @@ export default function ServicesCard({
               <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand/20 flex items-center justify-center text-brand group-hover:bg-brand group-hover:text-white transition-all duration-300">
                 <Icon className="w-8 h-8 md:w-10 md:h-10" />
               </div>
-              <p className="text-xl  font-bold text-center group-hover:text-white transition-all duration-300">
-                {item?.title}
-              </p>
+              <RichHtml
+                html={item?.title}
+                as="p"
+                className="text-xl font-bold text-center group-hover:text-white transition-all duration-300"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <CardDescription className=" text-base font-semibold leading-relaxed text-center group-hover:text-gray-200 transition-all duration-300">
-              {item?.description}
+            <CardDescription className="text-base font-semibold leading-relaxed text-center group-hover:text-gray-200 transition-all duration-300 [&_p]:mb-2 [&_p:last-child]:mb-0">
+              <RichHtml html={item?.description} as="span" className="block" />
             </CardDescription>
           </CardContent>
         </Card>

@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api";
+import { pickImageAlt } from "@/lib/image-alt";
 
 export type PublicPackageCategory = {
   id: string;
@@ -18,7 +19,9 @@ export type PublicPackageCard = {
   detailsUrl: string | null;
   isFeatured: boolean;
   iconPreset: "target" | "gem" | "rocket" | null;
-  iconImageUrl: string | null;
+  /** Package image from API `image` (falls back to legacy icon fields). */
+  imageUrl: string | null;
+  imageAlt: string;
   priceLabel: string;
   categoryId: string | null;
   categorySlug: string | null;
@@ -29,7 +32,6 @@ export type PublicPackageDetail = PublicPackageCard & {
   features: { title: string; isIncluded: boolean }[];
   currency: string | null;
   price: string | null;
-  imageUrl: string | null;
   metaTitle: string | null;
   metaDescription: string | null;
   metaKeywords: string | null;
@@ -67,7 +69,10 @@ function unwrapArray(body: unknown): Record<string, unknown>[] {
     const innerRecord = asRecord(inner);
     if (innerRecord) {
       const nested =
-        innerRecord.data ?? innerRecord.packages ?? innerRecord.results ?? innerRecord.items;
+        innerRecord.data ??
+        innerRecord.packages ??
+        innerRecord.results ??
+        innerRecord.items;
       if (Array.isArray(nested)) return nested as Record<string, unknown>[];
     }
   }
@@ -112,10 +117,7 @@ async function fetchAllRows(url: string): Promise<Record<string, unknown>[]> {
     ),
   );
 
-  return rest.reduce(
-    (rows, page) => rows.concat(unwrapArray(page)),
-    firstRows,
-  );
+  return rest.reduce((rows, page) => rows.concat(unwrapArray(page)), firstRows);
 }
 
 function pickLoc(field: unknown, locale: string): string {
@@ -145,23 +147,54 @@ function readId(r: Record<string, unknown>): string {
   return v != null ? String(v) : "";
 }
 
-function contentRecordFromPackage(r: Record<string, unknown>): Record<string, unknown> | null {
+function contentRecordFromPackage(
+  r: Record<string, unknown>,
+): Record<string, unknown> | null {
   return asRecord(r.content);
 }
 
-function seoRecordFromPackage(r: Record<string, unknown>): Record<string, unknown> | null {
+function seoRecordFromPackage(
+  r: Record<string, unknown>,
+): Record<string, unknown> | null {
   return asRecord(r.seo);
 }
 
 function seoString(r: Record<string, unknown>, key: string): string | null {
-  return pickString(r[key]) || pickString(seoRecordFromPackage(r)?.[key]) || null;
+  return (
+    pickString(r[key]) || pickString(seoRecordFromPackage(r)?.[key]) || null
+  );
 }
 
 function readSlug(r: Record<string, unknown>, locale: string): string {
   const s = r.slug;
   if (typeof s === "string" && s.trim()) return s.trim();
-  if (s && typeof s === "object" && !Array.isArray(s)) return pickLoc(s, locale);
+  if (s && typeof s === "object" && !Array.isArray(s))
+    return pickLoc(s, locale);
   return "";
+}
+
+function slugObjectMatches(
+  slugOrId: string,
+  r: Record<string, unknown>,
+): boolean {
+  const decoded = decodeURIComponent(slugOrId).trim();
+  if (!decoded) return false;
+  if (readId(r) === decoded) return true;
+  const s = r.slug;
+  if (typeof s === "string" && s.trim() === decoded) return true;
+  const slugObj = asRecord(s);
+  if (slugObj) {
+    const ar = pickString(slugObj.ar);
+    const en = pickString(slugObj.en);
+    if (ar === decoded || en === decoded) return true;
+  }
+  const local = asRecord(r.slug_local);
+  if (local) {
+    const ar = pickString(local.ar);
+    const en = pickString(local.en);
+    if (ar === decoded || en === decoded) return true;
+  }
+  return false;
 }
 
 function mediaUrlFromApi(path: string): string {
@@ -174,7 +207,9 @@ function mediaUrlFromApi(path: string): string {
   return `${origin}/${t}`;
 }
 
-function iconImageFromRecord(r: Record<string, unknown>): string | null {
+function packageImageUrlFromRecord(r: Record<string, unknown>): string | null {
+  const topLevel = pickString(r.image);
+  if (topLevel) return mediaUrlFromApi(topLevel);
   const raw = r.icon_url ?? r.icon ?? r.thumbnail;
   if (typeof raw === "string" && raw.trim()) return mediaUrlFromApi(raw);
   if (raw && typeof raw === "object") {
@@ -185,7 +220,9 @@ function iconImageFromRecord(r: Record<string, unknown>): string | null {
   return null;
 }
 
-function iconPresetFromRecord(r: Record<string, unknown>): "target" | "gem" | "rocket" | null {
+function iconPresetFromRecord(
+  r: Record<string, unknown>,
+): "target" | "gem" | "rocket" | null {
   const p = r.icon_preset;
   if (p === "target" || p === "gem" || p === "rocket") return p;
   return null;
@@ -211,12 +248,17 @@ function categoryIdFromPackage(r: Record<string, unknown>): string | null {
   return null;
 }
 
-function categoryRecordFromPackage(r: Record<string, unknown>): Record<string, unknown> | null {
+function categoryRecordFromPackage(
+  r: Record<string, unknown>,
+): Record<string, unknown> | null {
   const cat = r.package_category ?? r.category;
   return asRecord(cat);
 }
 
-function recordToCategory(r: Record<string, unknown>, locale: string): PublicPackageCategory | null {
+function recordToCategory(
+  r: Record<string, unknown>,
+  locale: string,
+): PublicPackageCategory | null {
   const id = readId(r);
   if (!id) return null;
   const active = r.is_active ?? r.isActive;
@@ -244,21 +286,33 @@ function recordToCard(
   const category = categoryRecordFromPackage(r);
   const content = contentRecordFromPackage(r);
   const categoryId = categoryIdFromPackage(r) ?? fallbackCategory?.id ?? null;
-  const categorySlug = category ? readSlug(category, locale) || null : fallbackCategory?.slug ?? null;
+  const categorySlug = category
+    ? readSlug(category, locale) || null
+    : (fallbackCategory?.slug ?? null);
   const categoryTitle = category
     ? pickLoc(category.title ?? category.name, locale) || null
-    : fallbackCategory?.title ?? null;
+    : (fallbackCategory?.title ?? null);
+  const title = pickLoc(r.title ?? content?.title, locale);
+  const imageUrl = packageImageUrlFromRecord(r);
   return {
     id,
     slug: slug || id,
-    title: pickLoc(r.title ?? content?.title, locale),
-    description: pickLoc(r.description ?? content?.description ?? content?.content, locale),
-    buttonText: pickLoc(r.button_text ?? r.cta_label ?? content?.button_text, locale) || "—",
+    title,
+    description: pickLoc(
+      r.description ?? content?.description ?? content?.content,
+      locale,
+    ),
+    buttonText:
+      pickLoc(r.button_text ?? r.cta_label ?? content?.button_text, locale) ||
+      "—",
     detailsUrl:
-      typeof r.details_url === "string" && r.details_url.trim() ? r.details_url.trim() : null,
+      typeof r.details_url === "string" && r.details_url.trim()
+        ? r.details_url.trim()
+        : null,
     isFeatured: Boolean(r.is_featured ?? r.is_popular ?? false),
     iconPreset: iconPresetFromRecord(r),
-    iconImageUrl: iconImageFromRecord(r),
+    imageUrl,
+    imageAlt: pickImageAlt(r.image_alt, locale, title),
     priceLabel: priceLabelFromRecord(r),
     categoryId,
     categorySlug,
@@ -266,7 +320,9 @@ function recordToCard(
   };
 }
 
-export async function fetchPublicPackageCategories(locale: string): Promise<PublicPackageCategory[]> {
+export async function fetchPublicPackageCategories(
+  locale: string,
+): Promise<PublicPackageCategory[]> {
   try {
     const rows = await fetchAllRows("/v1/packages/categories");
     return rows
@@ -278,7 +334,9 @@ export async function fetchPublicPackageCategories(locale: string): Promise<Publ
   }
 }
 
-export async function fetchPublicPackages(locale: string): Promise<PublicPackageCard[]> {
+export async function fetchPublicPackages(
+  locale: string,
+): Promise<PublicPackageCard[]> {
   try {
     const rows = await fetchAllRows("/v1/packages");
     return rows
@@ -302,7 +360,9 @@ export async function fetchPublicPackageCategoryById(
   locale: string,
 ): Promise<PublicPackageCategory | null> {
   try {
-    const body = await apiClient.get<unknown>(`/v1/packages/categories/${encodeURIComponent(id)}`);
+    const body = await apiClient.get<unknown>(
+      `/v1/packages/categories/${encodeURIComponent(id)}`,
+    );
     const row = unwrapObject(body);
     return row ? recordToCategory(row, locale) : null;
   } catch {
@@ -313,7 +373,11 @@ export async function fetchPublicPackageCategoryById(
 function recordToCategoryWithPackages(
   raw: unknown,
   locale: string,
-): { category: PublicPackageCategory | null; packages: PublicPackageCard[]; hasPackagesKey: boolean } {
+): {
+  category: PublicPackageCategory | null;
+  packages: PublicPackageCard[];
+  hasPackagesKey: boolean;
+} {
   const row = asRecord(raw);
   if (!row) return { category: null, packages: [], hasPackagesKey: false };
   const category = recordToCategory(row, locale);
@@ -328,13 +392,19 @@ function recordToCategoryWithPackages(
 export async function fetchPublicPackagesByCategorySlug(
   categorySlug: string,
   locale: string,
-): Promise<{ category: PublicPackageCategory | null; packages: PublicPackageCard[] }> {
+): Promise<{
+  category: PublicPackageCategory | null;
+  packages: PublicPackageCard[];
+}> {
   const decoded = decodeURIComponent(categorySlug);
   try {
     const directBody = await apiClient.get<unknown>(
       `/v1/packages/categories/${encodeURIComponent(decoded)}`,
     );
-    const direct = recordToCategoryWithPackages(unwrapObject(directBody), locale);
+    const direct = recordToCategoryWithPackages(
+      unwrapObject(directBody),
+      locale,
+    );
     if (direct.category && direct.hasPackagesKey) {
       return { category: direct.category, packages: direct.packages };
     }
@@ -346,7 +416,10 @@ export async function fetchPublicPackagesByCategorySlug(
   const category = findPublicPackageCategoryBySlug(categories, categorySlug);
   if (!category) return { category: null, packages: [] };
 
-  const detailedCategory = await fetchPublicPackageCategoryById(category.id, locale);
+  const detailedCategory = await fetchPublicPackageCategoryById(
+    category.id,
+    locale,
+  );
   const packages = (await fetchPublicPackages(locale)).filter(
     (pkg) => pkg.categoryId === category.id,
   );
@@ -354,7 +427,9 @@ export async function fetchPublicPackagesByCategorySlug(
   return { category: detailedCategory ?? category, packages };
 }
 
-export async function fetchPackagesSectionData(locale: string): Promise<PackagesSectionPayload> {
+export async function fetchPackagesSectionData(
+  locale: string,
+): Promise<PackagesSectionPayload> {
   const [categories, packages] = await Promise.all([
     fetchPublicPackageCategories(locale),
     fetchPublicPackages(locale),
@@ -369,7 +444,10 @@ export async function fetchPackagesSectionData(locale: string): Promise<Packages
 
   for (const pkg of packages) {
     const cid = pkg.categoryId;
-    if (cid && Object.prototype.hasOwnProperty.call(packagesByCategoryId, cid)) {
+    if (
+      cid &&
+      Object.prototype.hasOwnProperty.call(packagesByCategoryId, cid)
+    ) {
       packagesByCategoryId[cid].push(pkg);
     } else {
       uncategorized.push(pkg);
@@ -404,46 +482,71 @@ function parseFeatures(
     .filter((f) => f.title.length > 0);
 }
 
+function recordToDetail(
+  row: Record<string, unknown>,
+  locale: string,
+): PublicPackageDetail | null {
+  const card = recordToCard(row, locale);
+  if (!card) return null;
+  const price = row.price != null ? String(row.price) : null;
+  const currency = typeof row.currency === "string" ? row.currency : null;
+  const category = categoryRecordFromPackage(row);
+  return {
+    ...card,
+    currency,
+    price,
+    imageUrl: card.imageUrl,
+    imageAlt: card.imageAlt,
+    metaTitle: seoString(row, "meta_title"),
+    metaDescription: seoString(row, "meta_description"),
+    metaKeywords: seoString(row, "meta_keywords"),
+    canonicalUrl: pickString(row.canonical_url) || null,
+    createdAt: typeof row.created_at === "string" ? row.created_at : null,
+    updatedAt: typeof row.updated_at === "string" ? row.updated_at : null,
+    category: category ? recordToCategory(category, locale) : null,
+    features: parseFeatures(row.features, locale),
+  };
+}
+
+async function findPackageDetailByAnySlug(
+  slugOrId: string,
+  locale: string,
+): Promise<PublicPackageDetail | null> {
+  const decoded = decodeURIComponent(slugOrId).trim();
+  try {
+    const rows = await fetchAllRows("/v1/packages");
+    const row = rows.find((r) => slugObjectMatches(decoded, r));
+    return row ? recordToDetail(row, locale) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPublicPackageDetail(
   slugOrId: string,
   locale: string,
 ): Promise<PublicPackageDetail | null> {
-  const key = encodeURIComponent(slugOrId);
+  const decoded = decodeURIComponent(slugOrId).trim();
+  const key = encodeURIComponent(decoded);
   try {
     const body = await apiClient.get<unknown>(`/v1/packages/${key}`);
+
     const row = unwrapObject(body);
-    if (!row) return null;
-    const card = recordToCard(row, locale);
-    if (!card) return null;
-    const price = row.price != null ? String(row.price) : null;
-    const currency = typeof row.currency === "string" ? row.currency : null;
-    const category = categoryRecordFromPackage(row);
-    return {
-      ...card,
-      currency,
-      price,
-      imageUrl:
-        typeof row.image === "string" && row.image.trim()
-          ? mediaUrlFromApi(row.image)
-          : iconImageFromRecord(row),
-      metaTitle: seoString(row, "meta_title"),
-      metaDescription: seoString(row, "meta_description"),
-      metaKeywords: seoString(row, "meta_keywords"),
-      canonicalUrl: pickString(row.canonical_url) || null,
-      createdAt: typeof row.created_at === "string" ? row.created_at : null,
-      updatedAt: typeof row.updated_at === "string" ? row.updated_at : null,
-      category: category ? recordToCategory(category, locale) : null,
-      features: parseFeatures(row.features, locale),
-    };
+    if (!row) return findPackageDetailByAnySlug(decoded, locale);
+    return recordToDetail(row, locale);
   } catch {
+    const fromList = await findPackageDetailByAnySlug(decoded, locale);
+    if (fromList) return fromList;
+
     const list = await fetchPublicPackages(locale);
-    const hit = list.find((p) => p.slug === slugOrId || p.id === slugOrId);
+    const hit = list.find((p) => p.slug === decoded || p.id === decoded);
     if (!hit) return null;
     return {
       ...hit,
       currency: null,
       price: hit.priceLabel || null,
-      imageUrl: hit.iconImageUrl,
+      imageUrl: hit.imageUrl,
+      imageAlt: hit.imageAlt,
       metaTitle: null,
       metaDescription: null,
       metaKeywords: null,

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/features/shared/components/page-header";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import type { ResolvedCourseLesson, ResolvedPublicCourse } from "@/features/courses/services/courses-public-api";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { CheckCircle2, ChevronDown, ChevronUp, PlayCircle, ShoppingCart } from "lucide-react";
@@ -89,7 +90,7 @@ function CourseSidebar({ course }: { course: ResolvedPublicCourse }) {
 export default function SingleCoursePage({ course }: { course: ResolvedPublicCourse }) {
   const t = useTranslations("courses");
   const richTextClassName =
-    "space-y-3 text-sm leading-relaxed text-gray-600 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5 [&_li]:my-1";
+    "space-y-3 text-sm leading-relaxed text-gray-600";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -101,10 +102,7 @@ export default function SingleCoursePage({ course }: { course: ResolvedPublicCou
             {course.description.trim() ? (
               <section className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
                 <h2 className="mb-4 text-xl font-bold text-gray-900">{t("about_title")}</h2>
-                <div
-                  className={richTextClassName}
-                  dangerouslySetInnerHTML={{ __html: course.description }}
-                />
+                <RichHtml html={course.description} className={richTextClassName} />
               </section>
             ) : null}
 
@@ -115,9 +113,9 @@ export default function SingleCoursePage({ course }: { course: ResolvedPublicCou
                   {course.objectives.map((obj, i) => (
                     <div key={i} className="flex items-start gap-2.5">
                       <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-brand" />
-                      <div
-                        className="min-w-0 flex-1 space-y-2 text-sm text-gray-700 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:ps-5 [&_ol]:list-decimal [&_ol]:ps-5"
-                        dangerouslySetInnerHTML={{ __html: obj }}
+                      <RichHtml
+                        html={obj}
+                        className="min-w-0 flex-1 space-y-2 text-sm text-gray-700"
                       />
                     </div>
                   ))}

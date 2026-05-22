@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import SectionHeader from "@/features/shared/components/section-header";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import type { ServicePackageItem, ServicePackagesSection } from "@/features/services/types";
 import * as motion from "framer-motion/client";
 import { CheckCircle2, Gem, Rocket, Target, X } from "lucide-react";
@@ -75,7 +76,9 @@ function PackageDetailDialog({
             {packageIcon(pkg.icon, "size-10 text-brand")}
           </div>
           <DialogHeader className="space-y-0 text-center">
-            <DialogTitle className="text-xl font-bold text-foreground">{pkg.title}</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-foreground [&_p]:mb-0">
+              <RichHtml html={pkg.title} as="span" className="inline" />
+            </DialogTitle>
           </DialogHeader>
         </div>
 
@@ -126,12 +129,17 @@ export default function SeoPackages({ packages, orderPhone }: Props) {
 
   if (!packages.items.length) return null;
 
-  const sectionTitle = packages.title.trim() || t("title");
+  const sectionTitleHtml = packages.title.trim() || undefined;
 
   return (
     <section className="bg-muted/30 py-16">
       <div className="container space-y-10">
-        <SectionHeader title={sectionTitle} subtitleColor="text-muted-foreground" />
+        <SectionHeader
+          titleHtml={sectionTitleHtml}
+          title={t("title")}
+          subtitleHtml={packages.description}
+          subtitleColor="text-muted-foreground"
+        />
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
           {packages.items.map((pkg, index) => (
@@ -153,16 +161,17 @@ export default function SeoPackages({ packages, orderPhone }: Props) {
                     {packageIcon(pkg.icon, "size-10 text-brand")}
                   </div>
 
-                  <h3
+                  <RichHtml
+                    html={pkg.title}
+                    as="h3"
                     className={`mb-4 text-xl font-bold ${pkg.isFeatured ? "text-brand" : "text-foreground"}`}
-                  >
-                    {pkg.title}
-                  </h3>
+                  />
 
-                  {pkg.descriptionPlain ? (
-                    <p className="mb-8 flex-1 text-sm leading-relaxed text-muted-foreground">
-                      {pkg.descriptionPlain}
-                    </p>
+                  {pkg.descriptionHtml?.trim() ? (
+                    <RichHtml
+                      html={pkg.descriptionHtml}
+                      className="mb-8 flex-1 text-sm leading-relaxed text-muted-foreground"
+                    />
                   ) : (
                     <div className="mb-8 flex-1" />
                   )}

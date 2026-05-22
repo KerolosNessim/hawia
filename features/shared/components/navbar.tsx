@@ -3,7 +3,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import logo from "@/public/logo.png";
 import * as motion from "framer-motion/client";
 import { ChevronDown, LucideUserRound } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import LocaleSwitcher from "./locale-switcher";
 import NavbarSheet from "./navbar-sheet";
@@ -21,8 +21,23 @@ import { useLogoutMutation } from "@/features/auth/hooks/use-auth-mutation";
 import { useCountry } from "@/hooks/use-country";
 import React from "react";
 
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/** Title-case each word for English service labels (e.g. "seo services" → "Seo Services"). */
+function titleCaseEnglish(text: string): string {
+  return stripHtml(text)
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export default function Navbar() {
+  const locale = useLocale();
   const t = useTranslations("navbar");
+  const tServicesPage = useTranslations("servicesPage");
   const path = usePathname();
   const { data, isLoading, error } = useGetServices();
   const { data: settings } = useSettings();
@@ -121,9 +136,17 @@ export default function Navbar() {
                     href={`/services/${link.slug}`}
                     className={` ${path === `/services/${link.slug}` ? active : ""} p-2 rounded-full font-semibold ${hover}`}
                   >
-                    {link?.title}
+                    {locale === "en"
+                      ? titleCaseEnglish(link?.title ?? "")
+                      : link?.title}
                   </Link>
                 ))}
+                <Link
+                  href="/services"
+                  className={`mt-1 border-t border-border/60 pt-3 text-center font-semibold text-brand ${path === "/services" ? active : ""} p-2 rounded-full ${hover}`}
+                >
+                  {tServicesPage("viewAll")}
+                </Link>
               </div>
             </HoverCardContent>
           </HoverCard>

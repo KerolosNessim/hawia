@@ -16,27 +16,38 @@ import ServicesSection from "@/features/services/components/services-section";
 import Values from "@/features/about/components/values";
 import SectionHeader from "@/features/shared/components/section-header";
 import PageContact from "@/features/shared/components/page-contact";
-import { Metadata } from "next";
 import { getAboutData } from "@/features/about/services/about";
+import { localePathname } from "@/lib/seo/metadata-helpers";
+import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
+import type { Locale } from "next-intl";
+import type { Metadata } from "next";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
-  await params;
+  const { locale } = await params;
+  const loc = locale as Locale;
+
   try {
     const response = await getAboutData();
     const data = response.data;
 
-    return {
+    return buildStaticPageMetadata({
+      locale: loc,
+      pathname: localePathname(loc, "/about"),
+      pageKey: "about",
       title: data.meta_title || data.title,
       description: data.meta_description || data.description,
-    };
-  } catch (error) {
-    return {
+    });
+  } catch {
+    return buildStaticPageMetadata({
+      locale: loc,
+      pathname: localePathname(loc, "/about"),
+      pageKey: "about",
       title: "About Us",
-    };
+    });
   }
 }
 

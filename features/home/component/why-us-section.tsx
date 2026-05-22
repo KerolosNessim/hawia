@@ -68,7 +68,7 @@ export default function WhyUsSection() {
           </div>
           <SectionHeader
             title={data?.data?.content?.title || t("title")}
-            subtitle={data?.data?.content?.description || t("description")}
+            subtitleHtml={data?.data?.content?.description || t("description")}
             align="center"
           />
           <Link href="/about" className="flex justify-center items-center mt-10">

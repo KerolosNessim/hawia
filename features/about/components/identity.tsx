@@ -1,5 +1,5 @@
+import { RichHtml } from "@/features/shared/components/rich-html";
 import Image from 'next/image';
-import React from 'react'
 
 export default function Identity({title,description,image}: {title: string,description: string,image?:string}) {
   return (
@@ -9,7 +9,7 @@ export default function Identity({title,description,image}: {title: string,descr
         <div className='space-y-4'>
           <h1 className='text-brand text-3xl font-bold'>{title}</h1>
 
-            <div className='text-lg font-semibold leading-relaxed' dangerouslySetInnerHTML={{ __html: description }} />
+            <RichHtml html={description} className="text-lg font-semibold leading-relaxed" />
         </div>
         <div className=" max-lg:hidden shrink-0 w-1/2">
           <Image

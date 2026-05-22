@@ -1,7 +1,9 @@
 "use client";
 
+import { localePath } from "@/features/blogs/lib/blog-routes";
 import { usePathname } from "@/i18n/navigation";
 import { getSiteUrl } from "@/lib/seo/site-url";
+import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
@@ -61,7 +63,7 @@ export default function BreadcrumbJsonLd() {
         "@type": "ListItem",
         position: 1,
         name: t("home"),
-        item: `${siteUrl}/${locale}`,
+        item: `${siteUrl}${localePath(locale as Locale, "/")}`,
       },
     ];
 
@@ -76,7 +78,7 @@ export default function BreadcrumbJsonLd() {
         "@type": "ListItem",
         position: index + 2,
         name,
-        item: `${siteUrl}/${locale}${acc}`,
+        item: `${siteUrl}${localePath(locale as Locale, acc)}`,
       });
     });
 

@@ -8,45 +8,33 @@ import {
   buildClientsCollectionJsonLd,
   jsonLdScript,
 } from "@/features/clients/lib/json-ld";
+import { getAbsoluteUrl, localePathname } from "@/lib/seo/metadata-helpers";
+import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
+import type { Locale } from "next-intl";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 type Props = Readonly<{ params: Promise<{ locale: string }> }>;
-
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
 
 function metaDescription(value: string, fallback: string): string {
   return (value.trim() || fallback).slice(0, 160);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale } = await params;
+  await params;
+  const loc = (await getLocale()) as Locale;
   const t = await getTranslations("clients");
-  const pageData = await fetchPublicClientsPageData(locale);
+  const pageData = await fetchPublicClientsPageData(loc);
   const title = pageData.title ? `${pageData.title} | Howeyah` : t("metaTitle");
   const description = metaDescription(pageData.description, t("metaDescription"));
-  const canonical = (await absolutePath(`/${locale}/clients`)) ?? undefined;
 
-  return {
+  return buildStaticPageMetadata({
+    locale: loc,
+    pathname: localePathname(loc, "/clients"),
+    pageKey: "clients",
     title,
     description,
-    robots: { index: true, follow: true },
-    alternates: canonical ? { canonical } : undefined,
-    openGraph: {
-      title,
-      description,
-      locale: locale === "ar" ? "ar_SA" : "en_US",
-      type: "website",
-    },
-  };
+  });
 }
 
 export default async function ClientsPage({ params }: Props) {
@@ -55,9 +43,10 @@ export default async function ClientsPage({ params }: Props) {
   const pageData = await fetchPublicClientsPageData(locale);
   const title = pageData.title || t("title");
   const description = pageData.description || t("description");
-  const pageUrl = (await absolutePath(`/${locale}/clients`)) ?? `/${locale}/clients`;
+  const loc = locale as Locale;
+  const pageUrl = await getAbsoluteUrl(localePathname(loc, "/clients"));
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
+    { name: t("breadcrumbHome"), url: await getAbsoluteUrl(localePathname(loc, "/")) },
     { name: t("breadcrumbClients"), url: pageUrl },
   ]);
   const collectionLd = buildClientsCollectionJsonLd({

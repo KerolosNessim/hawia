@@ -1,4 +1,5 @@
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { pickImageAlt } from "@/lib/image-alt";
 import type {
   FaqItem,
   Faqs,
@@ -30,26 +31,33 @@ function pickLoc(field: unknown, locale: string): string {
   return "";
 }
 
-function parseSection(raw: unknown): Section | null {
+function parseSection(raw: unknown, locale: string): Section | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const o = raw as Record<string, unknown>;
   const items = Array.isArray(o.items)
-    ? o.items.map((item) => {
-        const row = item as Record<string, unknown>;
-        return {
-          title: String(row.title ?? ""),
-          description: String(row.description ?? ""),
-          sort_order: String(row.sort_order ?? "0"),
-        };
-      })
+    ? o.items
+        .map((item) => {
+          const row = item as Record<string, unknown>;
+          return {
+            title: String(row.title ?? ""),
+            description: String(row.description ?? ""),
+            sort_order: String(row.sort_order ?? "0"),
+          };
+        })
+        .sort(
+          (a, b) =>
+            Number.parseInt(a.sort_order, 10) - Number.parseInt(b.sort_order, 10),
+        )
     : null;
+  const blockSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
     title: String(o.title ?? ""),
     description: String(o.description ?? ""),
     image: typeof o.image === "string" ? o.image : null,
-    image_alt: typeof o.image_alt === "string" ? o.image_alt : null,
+    image_alt: pickImageAlt(o.image_alt, locale) || null,
     items,
+    sort_order: Number.isFinite(blockSort) ? blockSort : undefined,
   };
 }
 
@@ -95,13 +103,15 @@ function parsePackages(raw: unknown, locale: string): ServicePackagesSection | n
   const o = raw as Record<string, unknown>;
   const items = parsePackageItems(raw, locale);
   if (!items.length && !o.title) return null;
+  const blockSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
     title: String(o.title ?? "").trim(),
     description: String(o.description ?? "").trim(),
     image: typeof o.image === "string" ? o.image : null,
-    image_alt: typeof o.image_alt === "string" ? o.image_alt : null,
+    image_alt: pickImageAlt(o.image_alt, locale) || null,
     items,
+    sort_order: Number.isFinite(blockSort) ? blockSort : undefined,
   };
 }
 
@@ -169,11 +179,13 @@ function parseFaqs(raw: unknown): Faqs | null {
         })
         .filter((x): x is FaqItem => x != null)
     : [];
+  const faqsSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
     title: String(o.title ?? ""),
     description: String(o.description ?? ""),
     items,
+    sort_order: Number.isFinite(faqsSort) ? faqsSort : undefined,
   };
 }
 
@@ -193,13 +205,15 @@ export function normalizeSingleService(
   let benefits = null;
   if (benefitsRaw && typeof benefitsRaw === "object" && !Array.isArray(benefitsRaw)) {
     const b = benefitsRaw as Record<string, unknown>;
+    const benefitsSort = Number(b.sort_order);
     benefits = {
       id: Number(b.id ?? 0),
       title: String(b.title ?? ""),
       description: String(b.description ?? ""),
       image: typeof b.image === "string" ? resolveMediaUrl(b.image) : "",
-      image_alt: typeof b.image_alt === "string" ? b.image_alt : null,
+      image_alt: pickImageAlt(b.image_alt, locale) || null,
       is_active: b.is_active !== false,
+      sort_order: Number.isFinite(benefitsSort) ? benefitsSort : undefined,
     };
   }
 
@@ -207,6 +221,7 @@ export function normalizeSingleService(
   let tools = null;
   if (toolsRaw && typeof toolsRaw === "object" && !Array.isArray(toolsRaw)) {
     const t = toolsRaw as Record<string, unknown>;
+    const toolsSort = Number(t.sort_order);
     tools = {
       id: Number(t.id ?? 0),
       title: String(t.title ?? ""),
@@ -214,6 +229,7 @@ export function normalizeSingleService(
       sub_title: typeof t.sub_title === "string" ? t.sub_title : null,
       sub_description: typeof t.sub_description === "string" ? t.sub_description : null,
       is_active: t.is_active !== false,
+      sort_order: Number.isFinite(toolsSort) ? toolsSort : undefined,
     };
   }
 
@@ -221,12 +237,14 @@ export function normalizeSingleService(
   let ctas = null;
   if (ctasRaw && typeof ctasRaw === "object" && !Array.isArray(ctasRaw)) {
     const c = ctasRaw as Record<string, unknown>;
+    const ctasSort = Number(c.sort_order);
     ctas = {
       id: Number(c.id ?? 0),
       title: String(c.title ?? ""),
       description: String(c.description ?? ""),
       button_text: typeof c.button_text === "string" ? c.button_text : null,
       phone_number: String(c.phone_number ?? ""),
+      sort_order: Number.isFinite(ctasSort) ? ctasSort : undefined,
     };
   }
 
@@ -241,7 +259,7 @@ export function normalizeSingleService(
           }
         : undefined,
     image: resolveMediaUrl(image),
-    image_alt: typeof raw.image_alt === "string" ? raw.image_alt : null,
+    image_alt: pickImageAlt(raw.image_alt, locale) || null,
     title: String(raw.title ?? ""),
     description: String(raw.description ?? ""),
     inside_desc: String(raw.inside_desc ?? ""),
@@ -255,8 +273,8 @@ export function normalizeSingleService(
     social: parseSocial(raw.social),
     benefits,
     audits: raw.audits ?? null,
-    offerings: parseSection(raw.offerings),
-    steps: parseSection(raw.steps),
+    offerings: parseSection(raw.offerings, locale),
+    steps: parseSection(raw.steps, locale),
     tools,
     faqs: parseFaqs(raw.faqs),
     packages: parsePackages(raw.packages, locale),

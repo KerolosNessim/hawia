@@ -64,6 +64,7 @@ export type Benefits = {
   image: string;
   image_alt?: string | null;
   is_active: boolean;
+  sort_order?: number;
 };
 
 export type SectionItem = {
@@ -80,6 +81,7 @@ export type Section = {
   image: string | null;
   image_alt?: string | null;
   items: SectionItem[] | null;
+  sort_order?: number;
 };
 
 export type ServicePackageItem = {
@@ -102,6 +104,7 @@ export type ServicePackagesSection = {
   image: string | null;
   image_alt?: string | null;
   items: ServicePackageItem[];
+  sort_order?: number;
 };
 
 export type ServiceSocial = {
@@ -128,6 +131,7 @@ export type Tools = {
   sub_title: string | null
   sub_description: string | null
   is_active: boolean
+  sort_order?: number
 }
 
 // 🔹 FAQ Item
@@ -142,6 +146,7 @@ export type Faqs = {
   title: string
   description: string
   items: FaqItem[]
+  sort_order?: number
 }
 
 /** Tag label linked to blog articles (CMS `tags` on service). */
@@ -156,6 +161,7 @@ export type Cta = {
   description: string
   button_text: string | null
   phone_number: string
+  sort_order?: number
 }
 
 // 🔹 Main Service Type

@@ -46,7 +46,10 @@ export default async function AdsSection() {
       </div>
 
       <div className="container px-4 relative z-10">
-        <SectionHeader title={data?.data?.content?.title || t("title")} subtitle={data?.data?.content?.description || t("subtitle")} />
+        <SectionHeader
+          title={data?.data?.content?.title || t("title")}
+          subtitleHtml={data?.data?.content?.description || t("subtitle")}
+        />
       </div>
 
       <div className="container px-4 relative z-10">

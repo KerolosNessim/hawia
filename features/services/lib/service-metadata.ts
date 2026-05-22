@@ -1,21 +1,14 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import {
+  buildHreflangLanguages,
+  getAbsoluteUrl,
+  localePathsForSlug,
+  SITE_REFERRER_POLICY,
+} from "@/lib/seo/metadata-helpers";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { SingleService } from "../types";
-
-function stripHtmlToPlainText(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-async function absoluteUrlFromPath(path: string): Promise<string> {
-  if (path.startsWith("http")) return path;
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return path;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
 
 export async function buildServiceMetadata(
   service: SingleService,
@@ -24,17 +17,24 @@ export async function buildServiceMetadata(
   const og = service.social?.open_graph;
   const tw = service.social?.twitter;
 
-  const title = service.meta_title?.trim() || og?.title?.trim() || service.title;
+  const title = plainTextFromHtml(
+    service.meta_title?.trim() || og?.title?.trim() || service.title || "",
+  );
   const descriptionRaw =
     service.meta_description?.trim() ||
     og?.description?.trim() ||
     tw?.description?.trim() ||
     service.description;
-  const description = stripHtmlToPlainText(descriptionRaw).slice(0, 160);
+  const description = plainTextFromHtml(descriptionRaw).slice(0, 160);
 
   const slug = service.slug_local?.[locale === "ar" ? "ar" : "en"] ?? service.slug;
   const canonicalPath = localePath(locale, `/services/${encodeURIComponent(slug)}`);
-  const canonical = await absoluteUrlFromPath(canonicalPath);
+  const canonical = await getAbsoluteUrl(canonicalPath);
+  const localePaths = localePathsForSlug("/services", service.slug_local, service.slug);
+  const languages = await buildHreflangLanguages({
+    logicalPath: `/services/${encodeURIComponent(slug)}`,
+    localePaths,
+  });
 
   const image = og?.image || tw?.image || service.image;
   const images = image ? [{ url: image, alt: service.image_alt || title }] : undefined;
@@ -42,10 +42,12 @@ export async function buildServiceMetadata(
   return {
     title,
     description,
-    alternates: { canonical },
+    referrer: SITE_REFERRER_POLICY,
+    robots: { index: true, follow: true },
+    alternates: { canonical, languages },
     openGraph: {
       title: og?.title?.trim() || title,
-      description: og?.description ? stripHtmlToPlainText(og.description).slice(0, 160) : description,
+      description: og?.description ? plainTextFromHtml(og.description).slice(0, 160) : description,
       locale: locale === "ar" ? "ar_SA" : "en_US",
       type: (og?.type as "website") || "website",
       url: canonical,
@@ -55,7 +57,7 @@ export async function buildServiceMetadata(
     twitter: {
       card: (tw?.card as "summary_large_image") || "summary_large_image",
       title: tw?.title?.trim() || title,
-      description: tw?.description ? stripHtmlToPlainText(tw.description).slice(0, 160) : description,
+      description: tw?.description ? plainTextFromHtml(tw.description).slice(0, 160) : description,
       ...(images ? { images: [images[0].url] } : {}),
     },
   };

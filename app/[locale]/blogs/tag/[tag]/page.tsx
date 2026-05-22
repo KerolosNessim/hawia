@@ -11,10 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { buildPageMetadata, getAbsoluteUrl } from "@/lib/seo/metadata-helpers";
+import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-
-const BLOG_LIST_PER_PAGE = 9;
 
 type SearchParamsType = Record<string, string | string[] | undefined>;
 
@@ -32,15 +31,6 @@ function decodeTagParam(tag: string): string {
   }
 }
 
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
-
 export async function generateMetadata({
   params,
   searchParams,
@@ -53,23 +43,28 @@ export async function generateMetadata({
   const t = await getTranslations("blogsPage");
   const sp = searchParams ? await searchParams : {};
   const page = parsePage(sp);
-  const canonicalPath = blogTagHref(locale, tagLabel, page);
-  const canonical = (await absolutePath(canonicalPath)) ?? undefined;
+  const pathname = blogTagHref(locale, tagLabel, page > 1 ? page : 1);
   const title = t("tagMetaTitle", { tag: tagLabel });
   const description = t("tagMetaDescription", { tag: tagLabel });
 
-  return {
+  const { meta } = await fetchPublicBlogsByTag(tagLabel, {
+    paginationPath: localePath(locale, blogTagPath(tagLabel)),
+    page,
+    per_page: BLOG_LIST_PER_PAGE,
+  });
+
+  return buildPageMetadata({
+    locale,
+    pathname,
+    logicalPath: blogTagPath(tagLabel),
     title,
     description,
-    robots: { index: true, follow: true },
-    alternates: canonical ? { canonical } : undefined,
-    openGraph: {
-      title,
-      description,
-      locale: locale === "ar" ? "ar_SA" : "en_US",
-      type: "website",
+    pagination: {
+      currentPage: meta.current_page,
+      lastPage: meta.last_page,
+      hrefForPage: (p) => blogTagHref(locale, tagLabel, p > 1 ? p : 1),
     },
-  };
+  });
 }
 
 export default async function BlogTagPage(props: {
@@ -90,13 +85,9 @@ export default async function BlogTagPage(props: {
     per_page: BLOG_LIST_PER_PAGE,
   });
 
-  const tagAbs =
-    (await absolutePath(blogTagHref(locale, tagLabel, page > 1 ? page : 1))) ??
-    localePath(locale, blogTagPath(tagLabel));
-  const blogIndexAbs =
-    (await absolutePath(localePath(locale, "/blogs"))) ?? localePath(locale, "/blogs");
-  const homeAbs =
-    (await absolutePath(localePath(locale, "/"))) ?? localePath(locale, "/");
+  const tagAbs = await getAbsoluteUrl(blogTagHref(locale, tagLabel, page > 1 ? page : 1));
+  const blogIndexAbs = await getAbsoluteUrl(localePath(locale, "/blogs"));
+  const homeAbs = await getAbsoluteUrl(localePath(locale, "/"));
 
   const breadcrumbLd = buildBreadcrumbJsonLd([
     { name: t("breadcrumbHome"), url: homeAbs },

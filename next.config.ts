@@ -1,7 +1,20 @@
-import {NextConfig} from 'next';
-import createNextIntlPlugin from 'next-intl/plugin';
- 
+import { SECURITY_RESPONSE_HEADERS } from "./lib/security-headers";
+import { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [...SECURITY_RESPONSE_HEADERS],
+      },
+      {
+        source: "/_next/:path*",
+        headers: [...SECURITY_RESPONSE_HEADERS],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -23,9 +23,12 @@ export type ResolvedCourseLesson = {
 export type ResolvedPublicCourse = {
   id: string;
   slug: string;
+  slugLocal?: { ar?: string; en?: string };
   /** Localized main title */
   title: string;
   description: string;
+  metaTitle?: string;
+  metaDescription?: string;
   priceLabel: string;
   comparePriceLabel: string | null;
   imageSrc: string;
@@ -50,19 +53,49 @@ function unwrapArray(body: unknown): Record<string, unknown>[] {
 
 function pickLoc(field: unknown, locale: string): string {
   if (field == null) return "";
-  if (typeof field === "string") return field;
+  if (typeof field === "string") return field.trim();
   if (typeof field === "object" && !Array.isArray(field)) {
     const o = field as Record<string, unknown>;
     const ar = o.ar;
     const en = o.en;
     if (locale.startsWith("ar")) {
-      if (typeof ar === "string" && ar) return ar;
-      if (typeof en === "string") return en;
+      if (typeof ar === "string" && ar.trim()) return ar.trim();
+      if (typeof en === "string" && en.trim()) return en.trim();
     } else {
-      if (typeof en === "string" && en) return en;
-      if (typeof ar === "string") return ar;
+      if (typeof en === "string" && en.trim()) return en.trim();
+      if (typeof ar === "string" && ar.trim()) return ar.trim();
     }
   }
+  return "";
+}
+
+/** Reads localized SEO fields from API rows (`meta_title`, `meta_title_ar`, etc.). */
+function pickLocalizedField(
+  r: Record<string, unknown>,
+  key: string,
+  locale: string,
+): string {
+  const primary = pickLoc(r[key], locale);
+  if (primary) return primary;
+
+  const suffix = locale.startsWith("ar") ? "ar" : "en";
+  const flat = r[`${key}_${suffix}`];
+  if (typeof flat === "string" && flat.trim()) return flat.trim();
+
+  const camel =
+    key === "meta_title"
+      ? locale.startsWith("ar")
+        ? r.metaTitleAr
+        : r.metaTitleEn
+      : locale.startsWith("ar")
+        ? r.metaDescriptionAr
+        : r.metaDescriptionEn;
+  if (typeof camel === "string" && camel.trim()) return camel.trim();
+
+  const otherSuffix = suffix === "ar" ? "en" : "ar";
+  const fallback = r[`${key}_${otherSuffix}`];
+  if (typeof fallback === "string" && fallback.trim()) return fallback.trim();
+
   return "";
 }
 
@@ -282,11 +315,25 @@ function recordToResolved(
       ? descriptionRaw
       : parseDescription(descriptionRaw, locale);
 
+  const metaTitle = pickLocalizedField(r, "meta_title", locale);
+  const metaDescription = pickLocalizedField(r, "meta_description", locale);
+  const slugLocalRaw = r.slug_local;
+  const slugLocal =
+    slugLocalRaw && typeof slugLocalRaw === "object" && !Array.isArray(slugLocalRaw)
+      ? {
+          ar: pickLoc((slugLocalRaw as Record<string, unknown>).ar, "ar") || undefined,
+          en: pickLoc((slugLocalRaw as Record<string, unknown>).en, "en") || undefined,
+        }
+      : undefined;
+
   return {
     id: readId(r),
     slug,
+    slugLocal,
     title: title || pickLoc(titleRaw, locale),
     description,
+    metaTitle: metaTitle || undefined,
+    metaDescription: metaDescription || undefined,
     priceLabel: priceLabelFromRecord(r) || "—",
     comparePriceLabel: comparePriceFromRecord(r),
     imageSrc: coverFromRecord(r),

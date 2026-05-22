@@ -1,7 +1,8 @@
 import RelatedBlogsSection from "@/features/blogs/components/related-blogs-section";
 import ShareSection from "@/features/blogs/components/share-sction";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import { blogPostAbsoluteUrl, blogTagPath, localePath } from "@/features/blogs/lib/blog-routes";
+import { blogPostHref, blogPostPath, blogPostAbsoluteUrl, blogTagPath, localePath } from "@/features/blogs/lib/blog-routes";
+import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
 import { Link } from "@/i18n/navigation";
 import {
   blogExcerptPlain,
@@ -18,6 +19,7 @@ import {
   plainTextFromHtml,
 } from "@/features/blogs/server/public-blogs";
 import PageHeader from "@/features/shared/components/page-header";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { Calendar, Clock } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -70,21 +72,19 @@ export async function generateSingleBlogMetadata(
     ? { index: true as const, follow: true as const }
     : { index: false as const, follow: false as const, googleBot: { index: false, follow: false } };
 
-  const canonical = blog.canonical_url?.trim()
-    ? blog.canonical_url.trim()
-    : (await absoluteBlogUrl(locale, slug)) ?? undefined;
-
   const ogImages = [];
   const img = resolveMediaUrl(blog.image);
   if (img && img !== "/blog.webp") {
     ogImages.push({ url: img, alt: blog.image_alt || blog.title });
   }
 
-  return {
+  const metadata = await buildPageMetadata({
+    locale,
+    pathname: blogPostHref(locale, slug),
+    logicalPath: blogPostPath(slug),
     title,
     description,
     robots,
-    alternates: canonical ? { canonical } : undefined,
     openGraph: {
       title,
       description,
@@ -92,11 +92,32 @@ export async function generateSingleBlogMetadata(
       type: "article",
       ...(ogImages.length ? { images: ogImages } : {}),
     },
-  };
+  });
+
+  const customCanonical = blog.canonical_url?.trim();
+  if (customCanonical) {
+    return {
+      ...metadata,
+      alternates: { ...metadata.alternates, canonical: customCanonical },
+    };
+  }
+
+  return metadata;
 }
 
 export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: string }) {
   const blog = await fetchPublicBlogBySlug(slug);
+  if (process.env.NODE_ENV === "development") {
+    console.log("[SingleBlogPage]", {
+      locale,
+      routeSlug: slug,
+      blog,
+      titleRichSource: blog?.titleRichSource,
+      descriptionRichSource: blog?.descriptionRichSource,
+      subtitleRichSource: blog?.subtitleRichSource,
+      contentRichSource: blog?.contentRichSource,
+    });
+  }
   if (!blog) redirectToNotFound();
 
   const t = await getTranslations("blogDetail");
@@ -149,7 +170,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     descRich || contentRich
       ? [
           descRich
-            ? `<section class="blog-description-lead mb-8 space-y-3 [&_p]:mb-3 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold">${descRich}</section>`
+            ? `<section class="blog-description-lead cms-rich-html mb-8 space-y-3 [&_p]:mb-3 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold">${descRich}</section>`
             : "",
           contentRich,
         ]
@@ -257,11 +278,9 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
       </div>
 
       <article className="container max-w-3xl space-y-6 text-gray-900">
-        <div
-          className="blog-content space-y-4 text-lg leading-relaxed [&_img]:mx-auto [&_img]:my-4 [&_img]:max-h-[480px] [&_img]:max-w-full [&_img]:rounded-xl [&_a]:font-semibold [&_a]:text-brand [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:scroll-mt-24 [&_h3]:text-xl [&_h3]:font-semibold [&_ul]:my-4 [&_ul]:list-disc [&_ul]:ps-6 [&_blockquote]:border-s-4 [&_blockquote]:border-brand [&_blockquote]:bg-muted/30 [&_blockquote]:py-2 [&_blockquote]:ps-4"
-          dangerouslySetInnerHTML={{
-            __html: articleCombinedHtml || "<p></p>",
-          }}
+        <RichHtml
+          html={articleCombinedHtml || "<p></p>"}
+          className="blog-content space-y-4 text-lg leading-relaxed [&_h1]:scroll-mt-24 [&_h1]:text-3xl [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h3]:scroll-mt-24 [&_h3]:text-xl [&_blockquote]:border-s-4 [&_blockquote]:border-brand [&_blockquote]:bg-muted/30 [&_blockquote]:py-2 [&_blockquote]:ps-4"
         />
 
         {blog.tags.length ? (

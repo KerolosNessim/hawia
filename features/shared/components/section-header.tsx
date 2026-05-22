@@ -3,8 +3,13 @@
 import { motion } from "framer-motion";
 
 type SectionHeaderProps = {
-  title: string;
+  /** Plain fallback when `titleHtml` is empty. */
+  title?: string;
+  /** CMS HTML title — renders as-is when set. */
+  titleHtml?: string;
   subtitle?: string;
+  /** CMS HTML subtitle — takes precedence over plain `subtitle` when set. */
+  subtitleHtml?: string;
   badge?: string;
   align?: "center" | "start";
   subtitleColor?: string;
@@ -13,12 +18,16 @@ type SectionHeaderProps = {
 
 export default function SectionHeader({
   title,
+  titleHtml,
   subtitle,
+  subtitleHtml,
   badge,
   align = "center",
   subtitleColor = "text-gray-200",
   titleColor = "text-brand",
 }: SectionHeaderProps) {
+  const hasRichTitle = Boolean(titleHtml?.trim());
+  const hasRichSubtitle = Boolean(subtitleHtml?.trim());
   const alignment = {
     start: " text-start ",
     center: " text-center flex-col justify-center ",
@@ -40,15 +49,26 @@ export default function SectionHeader({
       )}
 
       {/* Title */}
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-        className={`text-3xl md:text-4xl ${titleColor} font-bold tracking-tight`}
-      >
-        {title}
-      </motion.h2>
+      {hasRichTitle ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className={`cms-rich-html text-3xl md:text-4xl ${titleColor} font-bold tracking-tight [&_p]:mb-0 [&_h2]:text-3xl [&_h3]:text-2xl [&_strong]:font-bold`}
+          dangerouslySetInnerHTML={{ __html: titleHtml!.trim() }}
+        />
+      ) : title ? (
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className={`text-3xl md:text-4xl ${titleColor} font-bold tracking-tight`}
+        >
+          {title}
+        </motion.h2>
+      ) : null}
 
       {/* Animated Line */}
       <motion.div
@@ -60,7 +80,16 @@ export default function SectionHeader({
       />
 
       {/* Subtitle */}
-      {subtitle && (
+      {hasRichSubtitle ? (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          viewport={{ once: true }}
+          className={`cms-rich-html max-w-6xl text-gray-200 [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
+          dangerouslySetInnerHTML={{ __html: subtitleHtml!.trim() }}
+        />
+      ) : subtitle ? (
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -70,7 +99,7 @@ export default function SectionHeader({
         >
           {subtitle}
         </motion.p>
-      )}
+      ) : null}
     </div>
   );
 }

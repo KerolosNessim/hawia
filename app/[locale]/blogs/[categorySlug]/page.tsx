@@ -3,6 +3,7 @@ import BlogCategoriesFilter from "@/features/blogs/components/blog-categories-fi
 import { BlogListPagination } from "@/features/blogs/components/blog-list-pagination";
 import {
   blogCategoryHref,
+  blogCategoryPath,
   blogPostHref,
   localePath,
   RESERVED_BLOG_CATEGORY_SLUGS,
@@ -11,6 +12,7 @@ import {
   generateSingleBlogMetadata,
   SingleBlogPage,
 } from "@/features/blogs/single-blog-page";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import {
   buildBlogCategoryCollectionJsonLd,
   buildBreadcrumbJsonLd,
@@ -29,11 +31,10 @@ import PageHeader from "@/features/shared/components/page-header";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { getAbsoluteUrl, withHreflangAlternates } from "@/lib/seo/metadata-helpers";
+import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
-
-const BLOG_LIST_PER_PAGE = 9;
 
 type SearchParamsType = Record<string, string | string[] | undefined>;
 
@@ -47,15 +48,6 @@ function parseSearch(sp: SearchParamsType): string {
   const raw =
     typeof sp.search === "string" ? sp.search : Array.isArray(sp.search) ? sp.search[0] : "";
   return raw.trim();
-}
-
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export async function generateMetadata({
@@ -91,21 +83,40 @@ export async function generateMetadata({
   const sp = searchParams ? await searchParams : {};
   const page = parsePage(sp);
   const search = parseSearch(sp);
-  const canonicalPath = blogCategoryHref(locale, categorySlug, page > 1 ? page : 1, { search });
-  const canonical = (await absolutePath(canonicalPath)) ?? undefined;
+  const pathname = blogCategoryHref(locale, categorySlug, page > 1 ? page : 1, { search });
 
-  return {
-    title,
-    description,
-    robots,
-    alternates: canonical ? { canonical } : undefined,
-    openGraph: {
+  const paginationBase = localePath(locale, `/blogs/${encodeURIComponent(category.slug)}`);
+  const { meta } = await fetchPublicBlogsPaginated({
+    paginationPath: paginationBase,
+    page,
+    per_page: BLOG_LIST_PER_PAGE,
+    blog_category_id: category.id,
+    search: search || undefined,
+  });
+
+  return withHreflangAlternates(
+    {
       title,
       description,
-      locale: locale === "ar" ? "ar_SA" : "en_US",
-      type: "website",
+      robots,
+      openGraph: {
+        title,
+        description,
+        locale: locale === "ar" ? "ar_SA" : "en_US",
+        type: "website",
+      },
     },
-  };
+    {
+      pathname,
+      logicalPath: blogCategoryPath(categorySlug),
+      pagination: {
+        currentPage: meta.current_page,
+        lastPage: meta.last_page,
+        hrefForPage: (p) =>
+          blogCategoryHref(locale, categorySlug, p > 1 ? p : 1, { search }),
+      },
+    },
+  );
 }
 
 export default async function BlogCategoryPage(props: {
@@ -126,6 +137,13 @@ export default async function BlogCategoryPage(props: {
 
   if (!category) {
     const blog = await fetchPublicBlogBySlug(categorySlug);
+    if (process.env.NODE_ENV === "development") {
+      console.log("[BlogCategoryPage] post route", {
+        locale,
+        categorySlug,
+        blog,
+      });
+    }
     if (blog) {
       return <SingleBlogPage locale={locale} slug={blog.slug} />;
     }
@@ -152,16 +170,15 @@ export default async function BlogCategoryPage(props: {
     key: String(b.id),
   }));
 
-  const blogIndexAbs =
-    (await absolutePath(localePath(locale, "/blogs"))) ?? localePath(locale, "/blogs");
-  const categoryAbs =
-    (await absolutePath(blogCategoryHref(locale, category.slug, page, { search }))) ?? blogIndexAbs;
+  const blogIndexAbs = await getAbsoluteUrl(localePath(locale, "/blogs"));
+  const categoryAbs = await getAbsoluteUrl(
+    blogCategoryHref(locale, category.slug, page, { search }),
+  );
 
   const blogItems = await Promise.all(
     blogs.map(async (b) => ({
       title: blogToCardPayload(b, visibleLocale).title,
-      url:
-        (await absolutePath(blogPostHref(locale, b.slug))) ?? blogPostHref(locale, b.slug),
+      url: await getAbsoluteUrl(blogPostHref(locale, b.slug)),
       image: b.image,
       datePublished: b.published_at,
     })),
@@ -170,7 +187,7 @@ export default async function BlogCategoryPage(props: {
   const breadcrumbLd = buildBreadcrumbJsonLd([
     {
       name: t("breadcrumbHome"),
-      url: (await absolutePath(localePath(locale, "/"))) ?? localePath(locale, "/"),
+      url: await getAbsoluteUrl(localePath(locale, "/")),
     },
     { name: t("breadcrumbBlog"), url: blogIndexAbs },
     { name: category.name, url: categoryAbs },
@@ -225,10 +242,9 @@ export default async function BlogCategoryPage(props: {
         </form>
 
         {category.descriptionRich ? (
-          <div
-            className="max-w-3xl rounded-2xl border border-border/60 bg-muted/20 px-6 py-5 text-foreground [&_a]:font-semibold [&_a]:text-brand [&_h2]:mt-4 [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h2]:font-bold [&_h3]:mt-3 [&_h3]:text-xl [&_h3]:font-semibold [&_img]:mx-auto [&_img]:my-3 [&_img]:max-h-[400px] [&_img]:max-w-full [&_img]:rounded-xl [&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:ps-6"
-            dir={locale === "ar" ? "rtl" : "ltr"}
-            dangerouslySetInnerHTML={{ __html: category.descriptionRich }}
+          <RichHtml
+            html={category.descriptionRich}
+            className="max-w-3xl rounded-2xl border border-border/60 bg-muted/20 px-6 py-5 text-foreground [&_h2]:mt-4 [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h3]:mt-3 [&_h3]:text-xl"
           />
         ) : null}
 

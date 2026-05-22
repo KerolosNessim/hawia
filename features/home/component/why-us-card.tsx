@@ -4,6 +4,7 @@ import { motion, useTransform, type MotionValue } from "motion/react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { RichHtml } from "@/features/shared/components/rich-html";
 
 interface WhyUsCardProps {
   title: string;
@@ -45,9 +46,10 @@ export const WhyUsCard: React.FC<WhyUsCardProps> = ({
           <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
             {title}
           </h3>
-          <p className="text-gray-600 md:text-lg leading-relaxed">
-            {description}
-          </p>
+          <RichHtml
+            html={description}
+            className="text-gray-600 md:text-lg leading-relaxed"
+          />
         </div>
 
         <div className="shrink-0">

@@ -14,6 +14,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import SectionHeader from "@/features/shared/components/section-header";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { useSteps } from "../hooks/useSteps";
 
 import Image from "next/image";
@@ -117,9 +118,10 @@ export default function StepsSection() {
                     <h3 className="font-bold text-xl mt-3 text-brand">
                       {step.title}
                     </h3>
-                    <p className="text-gray-200 mt-2 text-sm max-w-[180px] leading-relaxed">
-                      {step.description}
-                    </p>
+                    <RichHtml
+                      html={step.description}
+                      className="text-gray-200 mt-2 text-sm max-w-[180px] leading-relaxed"
+                    />
                   </div>
                 </motion.div>
 
@@ -176,7 +178,10 @@ export default function StepsSection() {
                 <h3 className="font-bold text-xl mt-2 text-brand">
                   {step.title}
                 </h3>
-                <p className="text-gray-200 mt-2 text-sm max-w-xs">{step.description}</p>
+                <RichHtml
+                  html={step.description}
+                  className="text-gray-200 mt-2 text-sm max-w-xs"
+                />
                 {index !== items.length - 1 && (
                   <ArrowDown className="mt-8 text-gray-300 w-6 h-6 animate-bounce" />
                 )}

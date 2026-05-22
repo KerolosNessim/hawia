@@ -22,7 +22,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 1 }}
-            className="xl:text-9xl! text-5xl! font-bold mb-4 text-gray-900 **:text-inherit! **:font-inherit! [&_h1]:m-0!"
+            className="cms-rich-html xl:text-9xl! text-5xl! font-bold mb-4 text-gray-900 [&_h1]:m-0!"
             dangerouslySetInnerHTML={{
               __html: heroData?.content?.title || t("title"),
             }}
@@ -32,7 +32,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 1, delay: 1 }}
-                      className="xl:text-2xl text-lg font-bold text-gray-900 mt-4 "
+                      className="cms-rich-html xl:text-2xl text-lg font-bold text-gray-900 mt-4"
 
           dangerouslySetInnerHTML={{
             __html: heroData?.content?.description || t("description"),
@@ -44,7 +44,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 1 }}
-            className="xl:text-2xl text-lg font-bold text-gray-900 "
+            className="cms-rich-html xl:text-2xl text-lg font-bold text-gray-900"
             dangerouslySetInnerHTML={{
               __html: heroData?.content?.sub_description || t("subDescription"),
             }}

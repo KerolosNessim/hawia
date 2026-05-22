@@ -1,20 +1,18 @@
-import OfferServiceSection from "@/features/services/components/offer-service-section";
-import SeoFaq from "@/features/services/components/seo-faq";
-import SeoPackages from "@/features/services/components/seo-packages";
-import ServiceArticleTags from "@/features/services/components/service-article-tags";
-import SeoSteps from "@/features/services/components/seo-steps";
-import SeoTools from "@/features/services/components/seo-tools";
+import { localePath } from "@/features/blogs/lib/blog-routes";
+import { jsonLdScript } from "@/features/blogs/lib/json-ld";
+import { ServicePageSections } from "@/features/services/components/service-page-sections";
 import { buildServiceMetadata } from "@/features/services/lib/service-metadata";
 import { getSingleService } from "@/features/services/services/get-single-service";
-import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import PageContact from "@/features/shared/components/page-contact";
 import PageHeader from "@/features/shared/components/page-header";
+import { RichHtml } from "@/features/shared/components/rich-html";
+import { buildFaqPageJsonLd } from "@/features/shared/lib/faq-json-ld";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import * as motion from "framer-motion/client";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import Image from "next/image";
-import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
+import { headers } from "next/headers";
 
 type Props = { params: Promise<{ locale: Locale; slug: string }> };
 
@@ -25,6 +23,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return buildServiceMetadata(res.data, locale);
 }
 
+async function absolutePath(path: string): Promise<string | null> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return null;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  if (path.startsWith("http")) return path;
+  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export default async function ServicePage({ params }: Props) {
   const { slug } = await params;
   const locale = (await getLocale()) as Locale;
@@ -33,10 +40,42 @@ export default async function ServicePage({ params }: Props) {
   if (!res?.data) redirectToNotFound();
   const service = res.data;
 
+  const serviceSlug =
+    service.slug_local?.[locale === "ar" ? "ar" : "en"] ?? service.slug;
+  const servicePath = localePath(
+    locale,
+    `/services/${encodeURIComponent(serviceSlug)}`,
+  );
+  const serviceAbs = (await absolutePath(servicePath)) ?? servicePath;
+
+  const faqItems = service.faqs?.items ?? [];
+  const faqLd =
+    faqItems.length > 0
+      ? buildFaqPageJsonLd({
+          items: faqItems.map((item) => ({
+            question: item.question,
+            answer: item.answer,
+          })),
+          url: serviceAbs,
+          name:
+            plainTextFromHtml(service.faqs?.title ?? "") ||
+            plainTextFromHtml(service.title) ||
+            undefined,
+        })
+      : null;
+
+  const faqStructuredData = faqLd ? jsonLdScript(faqLd) : null;
+
   return (
     <div>
+      {faqStructuredData ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: faqStructuredData }}
+        />
+      ) : null}
       <PageHeader
-        title={service.title || t("title")}
+        descriptionAsHeader
         descriptionHtml={service.inside_desc || t("description")}
         image={service.image || "/whySeo.webp"}
       />
@@ -47,66 +86,13 @@ export default async function ServicePage({ params }: Props) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            dangerouslySetInnerHTML={{ __html: service.highlight_description }}
-            className="container space-y-4 rounded-xl bg-gray-900 p-6 text-center leading-loose text-white"
-          />
+            className="container rounded-xl bg-gray-900 p-6 text-center leading-loose text-white"
+          >
+            <RichHtml html={service.highlight_description} className="space-y-4" />
+          </motion.div>
         ) : null}
 
-        {service.benefits ? (
-          <div className="container flex items-center justify-center gap-10">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="mb-4 text-3xl font-bold text-brand">
-                {service.benefits.title || t("why_seo.title")}
-              </h2>
-              <div dangerouslySetInnerHTML={{ __html: service.benefits.description || "" }} />
-            </motion.div>
-            <motion.div
-              className="w-2/3 max-lg:hidden"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <Image
-                src={service.benefits.image || "/whySeo.webp"}
-                alt={service.benefits.image_alt || service.title}
-                width={500}
-                height={500}
-                className="mask-blob h-auto w-auto"
-                unoptimized={isRemoteMediaUrl(service.benefits.image || "")}
-              />
-            </motion.div>
-          </div>
-        ) : null}
-
-        {service.offerings ? <OfferServiceSection offerings={service.offerings} /> : null}
-
-        {service.steps ? <SeoSteps steps={service.steps} /> : null}
-
-        {service.tools ? <SeoTools tools={service.tools} /> : null}
-
-        {service.faqs ? <SeoFaq faq={service.faqs} /> : null}
-
-        {service.packages?.items.length ? (
-          <SeoPackages packages={service.packages} orderPhone={service.ctas?.phone_number} />
-        ) : null}
-
-        {service.articleTags.length ? (
-          <ServiceArticleTags tags={service.articleTags} heading={t("articleTagsHeading")} />
-        ) : null}
-
-        {service.ctas ? (
-          <PageContact
-            title={service.ctas.title}
-            phone={service.ctas.phone_number}
-            description={service.ctas.description}
-          />
-        ) : null}
+        <ServicePageSections service={service} />
       </div>
     </div>
   );

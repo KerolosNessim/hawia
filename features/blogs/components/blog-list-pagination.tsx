@@ -43,6 +43,7 @@ export function BlogListPagination({
     <LaravelResourcePagination
       meta={meta}
       getPageUrl={getPageUrl}
+      siblingCount={2}
       previousLabel={previousLabel}
       nextLabel={nextLabel}
       isRtl={isRtl}

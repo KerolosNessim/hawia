@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import Marquee from "react-fast-marquee";
 import Image from "next/image";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { pickImageAlt } from "@/lib/image-alt";
 
 import type { Accreditation } from "../types";
 
@@ -14,7 +15,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
   const images =
     accreditation?.images?.map((img) => ({
       url: img.url,
-      alt: img.image_alt?.trim() || undefined,
+      alt: pickImageAlt(img.image_alt, locale, accreditation?.title) || undefined,
     })) ?? [];
 
   const card = (image: string, index: number, alt?: string) => (
@@ -39,7 +40,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
     <section className="container py-16 space-y-8 overflow-hidden">
       <SectionHeader
         title={accreditation?.title || t("title")}
-        subtitle={accreditation?.description || t("subtitle")}
+        subtitleHtml={accreditation?.description || t("subtitle")}
         subtitleColor="text-gray-500"
       />
 

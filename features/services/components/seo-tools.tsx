@@ -1,3 +1,4 @@
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { Tools } from "../types";
 
 export default function SeoTools({ tools }: { tools: Tools }) {
@@ -6,16 +7,19 @@ export default function SeoTools({ tools }: { tools: Tools }) {
     <div className="container grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* tools */}
       <div className="space-y-4">
-        <h2 className="text-3xl font-bold text-brand">
-          {tools?.title }
-        </h2>
-        <div dangerouslySetInnerHTML={{ __html: tools?.description || '' }}></div>
-
+        <RichHtml
+          html={tools?.title}
+          className="text-3xl font-bold text-brand [&_p]:mb-0 [&_h2]:text-3xl [&_strong]:font-bold"
+        />
+        <RichHtml html={tools?.description} />
       </div>
       {/* why choose us */}
       <div className="space-y-4 border-2 border-brand rounded-lg p-6">
-        <h2 className="text-xl font-bold text-brand">{tools?.sub_title}</h2>
-        <div dangerouslySetInnerHTML={{ __html: tools?.sub_description || '' }}></div>
+        <RichHtml
+          html={tools?.sub_title}
+          className="text-xl font-bold text-brand [&_p]:mb-0 [&_strong]:font-bold"
+        />
+        <RichHtml html={tools?.sub_description} />
       </div>
     </div>
   );

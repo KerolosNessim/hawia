@@ -1,5 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
+import { localePath } from '@/features/blogs/lib/blog-routes';
 import { routing } from './i18n/routing';
+import type { Locale } from 'next-intl';
+import { applySecurityHeaders } from '@/lib/security-headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
@@ -13,29 +16,32 @@ export default function middleware(req: NextRequest) {
   const token = req.cookies.get('auth_token')?.value;
   const { pathname } = req.nextUrl;
 
-  // Extract the locale and the actual path
-  // Example: /ar/login -> locale: ar, path: /login
+  // Extract locale prefix and path without locale (supports localePrefix: 'as-needed')
   const pathParts = pathname.split('/');
-  const locale = routing.locales.includes(pathParts[1]) ? pathParts[1] : '';
-  const actualPath = locale ? `/${pathParts.slice(2).join('/')}` : pathname;
+  const localeSegment = pathParts[1];
+  const hasLocalePrefix = routing.locales.includes(localeSegment as Locale);
+  const currentLocale = (hasLocalePrefix ? localeSegment : routing.defaultLocale) as Locale;
+  const actualPath = hasLocalePrefix
+    ? `/${pathParts.slice(2).join('/')}` || '/'
+    : pathname;
 
   const isProtectedRoute = protectedRoutes.some(route => actualPath.startsWith(route));
   const isAuthRoute = authRoutes.some(route => actualPath === route);
 
   // 1. If trying to access a protected route without a token
   if (isProtectedRoute && !token) {
-    const loginUrl = new URL(`/${locale || routing.defaultLocale}/login`, req.url);
-    return NextResponse.redirect(loginUrl);
+    const loginUrl = new URL(localePath(currentLocale, '/login'), req.url);
+    return applySecurityHeaders(NextResponse.redirect(loginUrl));
   }
 
   // 2. If trying to access login/register with a token
   if (isAuthRoute && token) {
-    const homeUrl = new URL(`/${locale || routing.defaultLocale}`, req.url);
-    return NextResponse.redirect(homeUrl);
+    const homeUrl = new URL(localePath(currentLocale, '/'), req.url);
+    return applySecurityHeaders(NextResponse.redirect(homeUrl));
   }
 
   // Fallback to intlMiddleware for localization
-  const response = intlMiddleware(req);
+  const response = applySecurityHeaders(intlMiddleware(req));
 
   // Detect user country from headers (Cloudflare, Vercel, etc)
   // Note: On localhost, these headers are empty, so it defaults to 'EG'

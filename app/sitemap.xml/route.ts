@@ -1,3 +1,4 @@
+import { withSecurityHeaders } from "@/lib/security-headers";
 import { getBaseUrl } from "@/lib/sitemap-utils";
 
 export const revalidate = 3600;
@@ -14,12 +15,6 @@ export async function GET() {
     <loc>${baseUrl}/pages-en.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>${baseUrl}/products-ar.xml</loc>
-  </sitemap>
-  <sitemap>
-    <loc>${baseUrl}/products-en.xml</loc>
-  </sitemap>
-  <sitemap>
     <loc>${baseUrl}/posts-ar.xml</loc>
   </sitemap>
   <sitemap>
@@ -27,10 +22,13 @@ export async function GET() {
   </sitemap>
 </sitemapindex>`;
 
-  return new Response(xml, {
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
-    },
-  });
+  return new Response(
+    xml,
+    withSecurityHeaders({
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      },
+    }),
+  );
 }

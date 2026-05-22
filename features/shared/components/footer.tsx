@@ -13,6 +13,8 @@ import {
   TRADEMARK_CERTIFICATE_PATH,
   TRADEMARK_REGISTRATION_PDF,
 } from "@/features/trademark/constants";
+import { RichHtml } from "@/features/shared/components/rich-html";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 
 export default function Footer() {
   const t = useTranslations("footer");
@@ -67,9 +69,10 @@ export default function Footer() {
                 style={{ width: "auto", height: "auto" }}
               />
             </Link>
-            <p className="text-gray-700 font-bold text-lg max-w-[200px] leading-snug mx-auto lg:mx-0">
-              {settings?.general?.site_description || t("brandDescription")}
-            </p>
+            <RichHtml
+              html={settings?.general?.site_description || t("brandDescription")}
+              className="text-gray-700 font-bold text-lg max-w-[200px] leading-snug mx-auto lg:mx-0"
+            />
             <div className="text-brand font-bold space-y-2">
               <a
                 href={TRADEMARK_REGISTRATION_PDF}
@@ -130,7 +133,7 @@ export default function Footer() {
                       href={`/services/${service.slug}`}
                       className="text-gray-700 font-medium text-sm flex-1 hover:text-brand transition-colors"
                     >
-                      {service.title}
+                      {plainTextFromHtml(service.title)}
                     </Link>
                   </li>
                 ))}

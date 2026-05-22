@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { ShoppingCart } from "lucide-react";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { Link } from "@/i18n/navigation";
 
 type Props = {
@@ -30,9 +31,9 @@ export function CourseCard({ href, title, description, priceLabel, imageSrc }: P
         <CardContent className="flex-1 flex flex-col space-y-3 py-6 text-center">
           <h3 className="text-lg font-bold text-gray-900">{title}</h3>
           {description?.trim() ? (
-            <div
-              className="line-clamp-2 min-h-[3rem] text-sm leading-relaxed text-gray-500 [&_p]:mb-0 [&_p+_p]:mt-1 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold"
-              dangerouslySetInnerHTML={{ __html: description }}
+            <RichHtml
+              html={description}
+              className="line-clamp-2 min-h-[3rem] text-sm leading-relaxed text-gray-500 [&_p+_p]:mt-1"
             />
           ) : null}
         </CardContent>

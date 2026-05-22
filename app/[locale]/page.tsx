@@ -15,8 +15,42 @@ import { getAccreditations } from "@/features/home/services/accreditations";
 import { getLandingPageData } from "@/features/home/services/hero";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import type { Accreditation } from "@/features/home/types";
+import { getSettings } from "@/features/settings/services/settings-service";
+import { localePathname } from "@/lib/seo/metadata-helpers";
+import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import type { Locale } from "next-intl";
 import { getLocale } from "next-intl/server";
+import type { Metadata } from "next";
+
+type PageProps = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const loc = locale as Locale;
+
+  try {
+    const response = await getSettings();
+    const settings = response.data;
+    const homeSeo = settings.seo.find((s) => s.page_key === "home");
+
+    return buildStaticPageMetadata({
+      locale: loc,
+      pathname: localePathname(loc, "/"),
+      pageKey: "home",
+      title: homeSeo?.meta_title || settings.general.site_name || "Howeyah",
+      description:
+        homeSeo?.meta_description || settings.general.site_description || undefined,
+    });
+  } catch {
+    return buildStaticPageMetadata({
+      locale: loc,
+      pathname: localePathname(loc, "/"),
+      pageKey: "home",
+      title: "Howeyah",
+      description: "Howeyah platform for consulting and educational services.",
+    });
+  }
+}
 
 function normalizeAccreditation(raw: Accreditation | undefined): Accreditation | undefined {
   if (!raw?.images?.length) return undefined;

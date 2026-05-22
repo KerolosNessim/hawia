@@ -5,21 +5,17 @@ import {
 } from "@/features/packages/services/packages-public-api";
 import { buildBreadcrumbJsonLd, buildPackageCollectionJsonLd, jsonLdScript } from "@/features/packages/lib/json-ld";
 import { Link } from "@/i18n/navigation";
+import {
+  buildPageMetadata,
+  getAbsoluteUrl,
+  localePathname,
+} from "@/lib/seo/metadata-helpers";
+import type { Locale } from "next-intl";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { getTranslations } from "next-intl/server";
 
 type Props = Readonly<{ params: Promise<{ locale: string; categorySlug: string }> }>;
-
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
 
 function categoryDescription(categoryTitle: string, packagesCount: number, locale: string) {
   if (locale.startsWith("ar")) {
@@ -45,22 +41,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     (locale.startsWith("ar") ? `${category.title} | الباقات` : `${category.title} | Packages`);
   const description =
     category.metaDescription?.trim() || categoryDescription(category.title, packages.length, locale).slice(0, 160);
-  const canonical =
-    (await absolutePath(`/${locale}/packages/categories/${encodeURIComponent(category.slug)}`)) ??
-    undefined;
+  const loc = locale as Locale;
 
-  return {
+  return buildPageMetadata({
+    locale: loc,
+    pathname: localePathname(
+      loc,
+      `/packages/categories/${encodeURIComponent(category.slug)}`,
+    ),
     title,
     description,
-    robots: { index: true, follow: true },
-    alternates: canonical ? { canonical } : undefined,
-    openGraph: {
-      title,
-      description,
-      locale: locale === "ar" ? "ar_SA" : "en_US",
-      type: "website",
-    },
-  };
+  });
 }
 
 export default async function PackageCategoryPage({ params }: Props) {
@@ -71,17 +62,17 @@ export default async function PackageCategoryPage({ params }: Props) {
 
   if (!category) redirectToNotFound();
 
-  const packagesUrl = (await absolutePath(`/${locale}/packages`)) ?? `/${locale}/packages`;
-  const categoryUrl =
-    (await absolutePath(`/${locale}/packages/categories/${encodeURIComponent(category.slug)}`)) ??
-    `/${locale}/packages/categories/${encodeURIComponent(category.slug)}`;
+  const loc = locale as Locale;
+  const packagesUrl = await getAbsoluteUrl(localePathname(loc, "/packages"));
+  const categoryUrl = await getAbsoluteUrl(
+    localePathname(loc, `/packages/categories/${encodeURIComponent(category.slug)}`),
+  );
   const description =
     category.metaDescription?.trim() || categoryDescription(category.title, packages.length, locale);
-  const packageBaseUrl =
-    (await absolutePath(`/${locale}/packages`)) ?? `/${locale}/packages`;
+  const packageBaseUrl = packagesUrl;
 
   const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
+    { name: t("breadcrumbHome"), url: await getAbsoluteUrl(localePathname(loc, "/")) },
     { name: t("breadcrumbPackages"), url: packagesUrl },
     { name: category.title, url: categoryUrl },
   ]);

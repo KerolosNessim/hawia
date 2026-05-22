@@ -6,20 +6,19 @@ import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { Cairo, Geist } from "next/font/google";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/navigation";
+import { cairoLocal, fontPreloadByLocale, geistLocal } from "@/lib/fonts";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
 import BreadcrumbJsonLd from "@/features/shared/components/seo/breadcrumb-json-ld";
+import { HeadTagsFromMarkup } from "@/features/shared/components/seo/head-tags-from-markup";
+import { HeadScriptsFromMarkup } from "@/features/shared/components/seo/head-scripts-from-markup";
 import OrganizationJsonLd from "@/features/shared/components/seo/organization-json-ld";
+import { partitionBodyScripts } from "@/lib/seo/partition-body-scripts";
+import { SITE_REFERRER_POLICY } from "@/lib/seo/metadata-helpers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-import { getScripts, getSettings } from "@/features/settings/services/settings-service";
+import { getSettings, scriptsFromSettings } from "@/features/settings/services/settings-service";
 
 export async function generateMetadata({
   params,
@@ -34,6 +33,7 @@ export async function generateMetadata({
     return {
       title: homeSeo?.meta_title || settings.general.site_name,
       description: homeSeo?.meta_description || settings.general.site_description,
+      referrer: SITE_REFERRER_POLICY,
       icons: {
         icon: settings.general.favicon || "/favicon.ico",
       },
@@ -43,15 +43,10 @@ export async function generateMetadata({
     return {
       title: "Howeyah",
       description: "Howeyah platform for consulting and educational services.",
+      referrer: SITE_REFERRER_POLICY,
     };
   }
 }
-
-const cairo = Cairo({
-  subsets: ["arabic"],
-  variable: "--font-cairo",
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
 
 export default async function RootLayout({
   children,
@@ -67,24 +62,39 @@ export default async function RootLayout({
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  const font = locale === "ar" ? cairo : geistSans;
+  const isArabic = locale === "ar";
+  const font = isArabic ? cairoLocal : geistLocal;
+  const fontPreload = fontPreloadByLocale[isArabic ? "ar" : "en"];
 
-  const dir = locale === "ar" ? "rtl" : "ltr";
+  const dir = isArabic ? "rtl" : "ltr";
 
-  const scriptsResponse = await getScripts().catch(() => null);
-  const scripts = scriptsResponse?.data;
+  const settingsForScripts = await getSettings().catch(() => null);
+  const scripts = settingsForScripts ? scriptsFromSettings(settingsForScripts.data) : null;
+  const { headMarkup: hoistedHeadTags, bodyMarkup: bodyScriptsOnly } = partitionBodyScripts(
+    scripts?.custom_body_scripts,
+  );
 
   return (
-    <html lang={locale} dir={dir} className={`${font.className} `} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={dir}
+      className={`${font.variable} ${font.className}`}
+      suppressHydrationWarning
+    >
       <head>
-        {scripts?.custom_head_scripts && (
-          <script
-            dangerouslySetInnerHTML={{ __html: scripts.custom_head_scripts }}
-          />
-        )}
+        <meta name="referrer" content={SITE_REFERRER_POLICY} />
+        <link
+          rel="preload"
+          href={fontPreload.href}
+          as="font"
+          type={fontPreload.type}
+          crossOrigin="anonymous"
+        />
+        <OrganizationJsonLd locale={locale} />
+        <HeadTagsFromMarkup markup={hoistedHeadTags} />
+        <HeadScriptsFromMarkup markup={scripts?.custom_head_scripts} />
       </head>
       <body className=" relative overflow-x-hidden ">
-        <OrganizationJsonLd locale={locale} />
         <QueryProvider>
           <NextIntlClientProvider messages={messages}>
             <BreadcrumbJsonLd />
@@ -98,11 +108,9 @@ export default async function RootLayout({
           </NextIntlClientProvider>
         </QueryProvider>
 
-        {scripts?.custom_body_scripts && (
-          <div
-            dangerouslySetInnerHTML={{ __html: scripts.custom_body_scripts }}
-          />
-        )}
+        {bodyScriptsOnly ? (
+          <div dangerouslySetInnerHTML={{ __html: bodyScriptsOnly }} />
+        ) : null}
       </body>
     </html>
   );

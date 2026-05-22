@@ -9,6 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 
@@ -71,10 +72,9 @@ export default function BlogCard({
             </Link>
           </h3>
           {article.description.trim() ? (
-            <div
-              dir={isRtl ? "rtl" : "ltr"}
-              className={`blog-card-excerpt text-sm leading-relaxed mb-6 line-clamp-3 max-w-none [&_p]:mb-0 [&_p+_p]:mt-1 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold ${isLight ? "text-gray-500" : "text-gray-300"}`}
-              dangerouslySetInnerHTML={{ __html: article.description }}
+            <RichHtml
+              html={article.description}
+              className={`blog-card-excerpt mb-6 line-clamp-3 max-w-none text-sm leading-relaxed [&_p+_p]:mt-1 ${isLight ? "text-gray-500" : "text-gray-300"}`}
             />
           ) : null}
 

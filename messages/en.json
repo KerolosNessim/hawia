@@ -279,6 +279,18 @@
     "otherTab": "Other",
     "details": "Details"
   },
+  "servicesPage": {
+    "title": "Our Services",
+    "description": "Explore digital marketing services tailored to your market — SEO, ads, social media, and more.",
+    "empty": "No services are available for this country yet.",
+    "metaTitle": "Marketing Services | Howeyah",
+    "metaDescription": "Browse Howeyah marketing services by country — SEO, advertising, social media management, e-commerce, and web development.",
+    "breadcrumbHome": "Home",
+    "breadcrumbServices": "Services",
+    "paginationPrevious": "Previous",
+    "paginationNext": "Next",
+    "viewAll": "View all services"
+  },
   "packagesPage": {
     "title": "Our Packages",
     "description": "Explore pricing and service bundles tailored for your goals.",
@@ -760,7 +772,9 @@
 },
 "faq":{
   "title":"Frequently Asked Questions",
-  "description":"We are always here to achieve your brand's success"
+  "description":"We are always here to achieve your brand's success",
+  "breadcrumbHome": "Home",
+  "breadcrumbFaq": "FAQ"
 },
 "contact":{
   "title":"Contact Us",

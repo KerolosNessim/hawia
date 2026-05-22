@@ -3,6 +3,7 @@ import { blogPostPath } from "@/features/blogs/lib/blog-routes";
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
 import { apiClient } from "@/lib/api";
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
+import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Locale } from "next-intl";
 
 export type PublicBlogCategory = {
@@ -486,7 +487,7 @@ export async function fetchPublicBlogsByTag(
 ): Promise<{ blogs: PublicBlog[]; meta: LaravelPaginationMeta }> {
   const tagLabel = decodeURIComponent(tag).trim();
   const page = params.page ?? 1;
-  const perPage = params.per_page ?? 9;
+  const perPage = params.per_page ?? BLOG_LIST_PER_PAGE;
 
   const apiResult = await fetchPublicBlogsPaginated({
     paginationPath: params.paginationPath,
@@ -586,8 +587,20 @@ export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBl
     const raw = await apiClient.get<unknown>(`/v1/blogs/${encodeURIComponent(slug)}`);
     const data = pickBlogPayloadRecord(raw);
     const one = data ? normalizeBlog(data) : null;
+    if (process.env.NODE_ENV === "development") {
+      console.log("[fetchPublicBlogBySlug] API", {
+        slugParam,
+        slug,
+        raw,
+        normalized: one,
+        visible: one ? isPublicBlogVisible(one) : false,
+      });
+    }
     if (one && isPublicBlogVisible(one)) return one;
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[fetchPublicBlogBySlug] API error", { slugParam, slug, err });
+    }
     /* try list fallback */
   }
 
@@ -602,11 +615,21 @@ export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBl
       });
       lastPage = Math.max(1, meta.last_page);
       const found = blogs.find((b) => blogSlugsMatch(b.slug, slug));
-      if (found) return found;
+      if (found) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[fetchPublicBlogBySlug] list fallback hit", { slug, found });
+        }
+        return found;
+      }
       page++;
     } while (page <= lastPage);
-  } catch {
-    /* */
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[fetchPublicBlogBySlug] list fallback error", { slug, err });
+    }
+  }
+  if (process.env.NODE_ENV === "development") {
+    console.log("[fetchPublicBlogBySlug] not found", { slugParam, slug });
   }
   return null;
 }

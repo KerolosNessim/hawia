@@ -4,6 +4,7 @@ import Image from "next/image";
 import * as motion from "framer-motion/client";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
+import { RichHtml } from "@/features/shared/components/rich-html";
 
 interface ClientCardProps {
   slug: string;
@@ -50,6 +51,7 @@ export default function ClientCard({
             src={image}
             alt={title}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
             className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
           />
         </motion.div>
@@ -63,9 +65,10 @@ export default function ClientCard({
              {title}
           </h3>
           {description ? (
-            <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-gray-600">
-              {description}
-            </p>
+            <RichHtml
+              html={description}
+              className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-gray-600"
+            />
           ) : null}
         </div>
       </div>
