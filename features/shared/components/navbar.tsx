@@ -19,19 +19,22 @@ import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { useLogoutMutation } from "@/features/auth/hooks/use-auth-mutation";
 import { useCountry } from "@/hooks/use-country";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import React from "react";
-
-function stripHtml(text: string): string {
-  return text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
 
 /** Title-case each word for English service labels (e.g. "seo services" → "Seo Services"). */
 function titleCaseEnglish(text: string): string {
-  return stripHtml(text)
+  return text
     .split(" ")
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+}
+
+function serviceNavLabel(title: string | undefined, locale: string): string {
+  const text = plainTextFromHtml(title);
+  if (!text) return "";
+  return locale === "en" ? titleCaseEnglish(text) : text;
 }
 
 export default function Navbar() {
@@ -136,9 +139,7 @@ export default function Navbar() {
                     href={`/services/${link.slug}`}
                     className={` ${path === `/services/${link.slug}` ? active : ""} p-2 rounded-full font-semibold ${hover}`}
                   >
-                    {locale === "en"
-                      ? titleCaseEnglish(link?.title ?? "")
-                      : link?.title}
+                    {serviceNavLabel(link?.title, locale)}
                   </Link>
                 ))}
                 <Link
