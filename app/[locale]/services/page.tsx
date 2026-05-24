@@ -76,15 +76,14 @@ export async function generateMetadata({
 
   return buildStaticPageMetadata({
     locale,
-    pathname: servicesIndexHref(locale, page > 1 ? page : 1, { countryId: selectedCountryId }),
+    pathname: servicesIndexHref(locale, page > 1 ? page : 1),
     pageKey: "services",
     title: t("metaTitle"),
     description: t("metaDescription"),
     pagination: {
       currentPage: meta.current_page,
       lastPage: meta.last_page,
-      hrefForPage: (p) =>
-        servicesIndexHref(locale, p > 1 ? p : 1, { countryId: selectedCountryId }),
+      hrefForPage: (p) => servicesIndexHref(locale, p > 1 ? p : 1),
     },
   });
 }

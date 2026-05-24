@@ -1,5 +1,7 @@
 "use client";
 
+import { useGetServices } from "@/features/services/hooks/useGetServices";
+import { resolveLocalizedPathname } from "@/features/shared/lib/resolve-localized-pathname";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
@@ -12,19 +14,43 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 
+function hreflangTarget(newLocale: string): string | null {
+  if (typeof document === "undefined") return null;
+  const link = document.querySelector(
+    `link[rel="alternate"][hreflang="${newLocale}"]`,
+  ) as HTMLLinkElement | null;
+  return link?.href ?? null;
+}
+
+function syncLocaleCookie(newLocale: string): void {
+  document.cookie = `NEXT_LOCALE=${newLocale};path=/;SameSite=Lax`;
+}
+
 export default function LocaleSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
+  const { data: servicesResponse } = useGetServices();
+  const services = Array.isArray(servicesResponse?.data) ? servicesResponse.data : [];
 
   const handleChange = (newLocale: string) => {
-     if (newLocale === locale) return;
+    if (newLocale === locale) return;
 
-    // Use next-intl navigation so NEXT_LOCALE is synced before routing.
-    // Direct hreflang navigation breaks en -> ar when default locale has no URL prefix.
+    const nextPath = resolveLocalizedPathname(pathname, newLocale, { services });
+
+    // Service/blog detail pages expose localized slugs via hreflang when list lookup misses.
+    if (nextPath === pathname) {
+      const alternateUrl = hreflangTarget(newLocale);
+      if (alternateUrl) {
+        syncLocaleCookie(newLocale);
+        window.location.href = alternateUrl;
+        return;
+      }
+    }
+
     startTransition(() => {
-      router.replace(pathname, { locale: newLocale });
+      router.replace(nextPath, { locale: newLocale });
     });
   };
 
