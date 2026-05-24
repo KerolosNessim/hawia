@@ -1,3 +1,5 @@
+import { parseHtmlAttributes } from "@/lib/seo/parse-html-attributes";
+
 export type ParsedHeadScript = {
   src?: string;
   async?: boolean;
@@ -7,16 +9,6 @@ export type ParsedHeadScript = {
   id?: string;
   type?: string;
 };
-
-function parseHtmlAttributes(attrString: string): Record<string, string> {
-  const attrs: Record<string, string> = {};
-  const re = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*["']([^"']*)["']/g;
-  let match: RegExpExecArray | null;
-  while ((match = re.exec(attrString)) !== null) {
-    attrs[match[1].toLowerCase()] = match[2];
-  }
-  return attrs;
-}
 
 /** Extracts `<script>` tags from CMS `custom_head_scripts` HTML. */
 export function parseHeadScriptsMarkup(markup: string | null | undefined): ParsedHeadScript[] {
@@ -29,26 +21,28 @@ export function parseHeadScriptsMarkup(markup: string | null | undefined): Parse
   while ((match = withBody.exec(markup)) !== null) {
     const attrs = parseHtmlAttributes(match[1]);
     const content = match[2].trim();
+    const src = typeof attrs.src === "string" ? attrs.src : undefined;
     scripts.push({
-      src: attrs.src,
-      async: "async" in attrs,
-      defer: "defer" in attrs,
-      content: attrs.src ? undefined : content || undefined,
-      id: attrs.id,
-      type: attrs.type,
+      src,
+      async: attrs.async === true,
+      defer: attrs.defer === true,
+      content: src ? undefined : content || undefined,
+      id: typeof attrs.id === "string" ? attrs.id : undefined,
+      type: typeof attrs.type === "string" ? attrs.type : undefined,
     });
   }
 
   const selfClosing = /<script\b([^>]*)\/>/gi;
   while ((match = selfClosing.exec(markup)) !== null) {
     const attrs = parseHtmlAttributes(match[1]);
-    if (!attrs.src) continue;
+    const src = typeof attrs.src === "string" ? attrs.src : undefined;
+    if (!src) continue;
     scripts.push({
-      src: attrs.src,
-      async: "async" in attrs,
-      defer: "defer" in attrs,
-      id: attrs.id,
-      type: attrs.type,
+      src,
+      async: attrs.async === true,
+      defer: attrs.defer === true,
+      id: typeof attrs.id === "string" ? attrs.id : undefined,
+      type: typeof attrs.type === "string" ? attrs.type : undefined,
     });
   }
 

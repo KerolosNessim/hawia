@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { tagRobotsFromMeta } from "@/features/blogs/lib/blog-tag";
 import { buildPageMetadata, getAbsoluteUrl } from "@/lib/seo/metadata-helpers";
 import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Metadata } from "next";
@@ -47,7 +48,7 @@ export async function generateMetadata({
   const title = t("tagMetaTitle", { tag: tagLabel });
   const description = t("tagMetaDescription", { tag: tagLabel });
 
-  const { meta } = await fetchPublicBlogsByTag(tagLabel, {
+  const { meta, tagMeta } = await fetchPublicBlogsByTag(tagLabel, {
     paginationPath: localePath(locale, blogTagPath(tagLabel)),
     page,
     per_page: BLOG_LIST_PER_PAGE,
@@ -59,6 +60,7 @@ export async function generateMetadata({
     logicalPath: blogTagPath(tagLabel),
     title,
     description,
+    robots: tagRobotsFromMeta(tagMeta),
     pagination: {
       currentPage: meta.current_page,
       lastPage: meta.last_page,
@@ -79,7 +81,7 @@ export default async function BlogTagPage(props: {
   const locale = (await getLocale()) as Locale;
   const paginationPath = localePath(locale, blogTagPath(tagLabel));
 
-  const { blogs, meta } = await fetchPublicBlogsByTag(tagLabel, {
+  const { blogs, meta, tagMeta } = await fetchPublicBlogsByTag(tagLabel, {
     paginationPath,
     page,
     per_page: BLOG_LIST_PER_PAGE,
@@ -110,6 +112,12 @@ export default async function BlogTagPage(props: {
             <Link href="/blogs">{t("breadcrumbBlog")}</Link>
           </Button>
         </div>
+
+        {!tagMeta.index ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {t("tagNoIndexNotice")}
+          </p>
+        ) : null}
 
         {blogs.length ? (
           <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

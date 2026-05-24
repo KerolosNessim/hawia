@@ -22,6 +22,7 @@ import {
   DEFAULT_INLINE_IMG_WIDTH,
 } from "@/lib/inline-image-alt";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { SiteBreadcrumbBar } from "@/features/shared/components/site-breadcrumb";
 
 type Props = Readonly<{ params: Promise<{ locale: string; slug: string }> }>;
 
@@ -129,7 +130,9 @@ export default async function PackageDetailPage({ params }: Props) {
   const structuredData = jsonLdScript([breadcrumbLd, productLd]);
 
   return (
-    <div className="container mx-auto px-4 py-16 max-w-3xl">
+    <>
+      <SiteBreadcrumbBar />
+      <div className="container mx-auto max-w-3xl px-4 py-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: structuredData }}
@@ -204,6 +207,7 @@ export default async function PackageDetailPage({ params }: Props) {
           </div>
         ) : null}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

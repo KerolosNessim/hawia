@@ -1,4 +1,5 @@
 import LoginForm from "@/features/auth/components/login-form";
+import { SiteBreadcrumbBar } from "@/features/shared/components/site-breadcrumb";
 import {
   buildPageMetadata,
   localePathname,
@@ -24,8 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function LoginPage() {
   return (
-    <div className="py-20 lg:pt-30">
-      <LoginForm />
-    </div>
+    <>
+      <SiteBreadcrumbBar />
+      <div className="py-12 lg:py-16">
+        <LoginForm />
+      </div>
+    </>
   );
 }

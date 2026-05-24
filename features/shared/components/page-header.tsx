@@ -1,5 +1,6 @@
 "use client";
 
+import SiteBreadcrumb from "@/features/shared/components/site-breadcrumb";
 import * as motion from "framer-motion/client";
 
 interface PageHeaderProps {
@@ -61,8 +62,15 @@ export default function PageHeader({
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/70" />
 
+      {/* Breadcrumb — bottom of hero, clear of fixed navbar */}
+      <div className="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/40 backdrop-blur-sm">
+        <div className="container py-2.5 md:py-3">
+          <SiteBreadcrumb variant="hero" />
+        </div>
+      </div>
+
       {/* Content */}
-      <div className="relative z-10 h-full flex items-center">
+      <div className="relative z-10 flex h-full items-center pb-12 md:pb-14">
         <div className="container">
           {descriptionAsHeader ? (
             headerHtml ? (

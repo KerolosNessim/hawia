@@ -2,6 +2,7 @@ import RelatedBlogsSection from "@/features/blogs/components/related-blogs-secti
 import ShareSection from "@/features/blogs/components/share-sction";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { blogPostHref, blogPostPath, blogPostAbsoluteUrl, blogTagPath, localePath } from "@/features/blogs/lib/blog-routes";
+import type { PublicBlogTag } from "@/features/blogs/lib/blog-tag";
 import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
 import { Link } from "@/i18n/navigation";
 import {
@@ -294,7 +295,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     dateModified: blog.created_at,
     imageUrl: heroAbs ?? null,
     authorName: blog.publisher_name,
-    keywords: blog.tags,
+    keywords: blog.tags.map((t) => t.label),
     articleSection: blog.category?.name ?? null,
     inLanguage: articleLang === "ar" ? "ar" : "en",
   });
@@ -389,13 +390,14 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
         {blog.tags.length ? (
           <div className="flex flex-wrap gap-2 pt-6">
-            {blog.tags.map((tag) => (
+            {blog.tags.map((tag: PublicBlogTag) => (
               <Link
-                key={tag}
-                href={blogTagPath(tag)}
+                key={tag.label}
+                href={blogTagPath(tag.label)}
+                rel={tag.follow ? undefined : "nofollow"}
                 className="rounded-full border border-brand bg-white px-3 py-1 text-sm font-semibold text-brand transition-colors hover:bg-brand/5"
               >
-                {tag}
+                {tag.label}
               </Link>
             ))}
           </div>

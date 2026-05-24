@@ -19,6 +19,7 @@ import type {
 import PageContact from "@/features/shared/components/page-contact";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { hasSectionImage } from "@/features/services/lib/has-section-image";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import * as motion from "framer-motion/client";
 import { useTranslations } from "next-intl";
@@ -35,18 +36,22 @@ function renderBenefitsBlock(
   fallbackTitle: string,
   blockKey: string,
 ) {
+  const hasImage = hasSectionImage(benefits.image);
+
   return (
     <div
       key={blockKey}
       className={cn(
-        "container flex flex-col items-center gap-10 lg:flex-row lg:items-center",
-        !benefits.image && "items-center",
+        "container",
+        hasImage
+          ? "flex flex-col items-center gap-10 lg:flex-row lg:items-center"
+          : "flex flex-col items-center text-center",
       )}
     >
       <motion.div
-        className={cn("w-full lg:flex-1", !benefits.image && "text-center")}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+        className={cn("w-full", hasImage ? "lg:flex-1" : "max-w-4xl")}
+        initial={{ opacity: 0, x: hasImage ? -20 : 0, y: hasImage ? 0 : 20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
       >
@@ -56,7 +61,7 @@ function renderBenefitsBlock(
         />
         <RichHtml html={benefits.description} />
       </motion.div>
-      {benefits.image ? (
+      {hasImage ? (
         <motion.div
           className="flex w-full flex-1 justify-center max-lg:hidden"
           initial={{ opacity: 0, y: 20 }}
@@ -65,12 +70,12 @@ function renderBenefitsBlock(
           viewport={{ once: true }}
         >
           <Image
-            src={benefits.image || "/whySeo.webp"}
+            src={benefits.image}
             alt={benefits.image_alt || plainTextFromHtml(serviceTitle)}
             width={500}
             height={500}
             className="mask-blob mx-auto h-auto w-auto"
-            unoptimized={isRemoteMediaUrl(benefits.image || "")}
+            unoptimized={isRemoteMediaUrl(benefits.image)}
           />
         </motion.div>
       ) : null}

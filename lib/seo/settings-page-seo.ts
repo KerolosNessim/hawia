@@ -1,26 +1,13 @@
-import { getSettings } from "@/features/settings/services/settings-service";
+import { resolveSettingsPageSeo } from "@/features/settings/lib/resolve-settings-seo";
 import type { SettingSeo } from "@/features/settings/types";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
 import { buildPageMetadata, type BuildPageMetadataInput } from "./metadata-helpers";
 
-const PAGE_KEY_ALIASES: Record<string, string[]> = {
-  contact: ["contact", "contact-us"],
-  "contact-us": ["contact-us", "contact"],
-};
-
+/** @deprecated Use `resolveSettingsPageSeo` */
 export async function findSettingsSeo(pageKey: string): Promise<SettingSeo | null> {
-  try {
-    const { data } = await getSettings();
-    const keys = PAGE_KEY_ALIASES[pageKey] ?? [pageKey];
-    for (const key of keys) {
-      const row = data.seo.find((s) => s.page_key === key);
-      if (row) return row;
-    }
-  } catch {
-    /* use fallbacks */
-  }
-  return null;
+  const resolved = await resolveSettingsPageSeo(pageKey);
+  return resolved?.row ?? null;
 }
 
 /** Static/listing pages: CMS SEO from settings + canonical + robots in `<head>`. */
@@ -34,13 +21,13 @@ export async function buildStaticPageMetadata(
     robots?: Metadata["robots"];
   } & Pick<BuildPageMetadataInput, "pagination">,
 ): Promise<Metadata> {
-  const cms = input.pageKey ? await findSettingsSeo(input.pageKey) : null;
+  const cms = input.pageKey ? await resolveSettingsPageSeo(input.pageKey) : null;
 
   return buildPageMetadata({
     locale: input.locale,
     pathname: input.pathname,
-    title: cms?.meta_title?.trim() || input.title,
-    description: cms?.meta_description?.trim() || input.description,
+    title: cms?.title || input.title,
+    description: cms?.description || input.description || undefined,
     robots: input.robots,
     pagination: input.pagination,
   });

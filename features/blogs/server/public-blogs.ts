@@ -1,3 +1,9 @@
+import {
+  normalizePublicBlogTags,
+  parseTagMetaFromApiPayload,
+  type PublicBlogTag,
+  type PublicBlogTagMeta,
+} from "@/features/blogs/lib/blog-tag";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { blogPostPath } from "@/features/blogs/lib/blog-routes";
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
@@ -43,7 +49,7 @@ export type PublicBlog = {
   canonical_url: string | null;
   is_searchable: boolean;
   publisher_name: string;
-  tags: string[];
+  tags: PublicBlogTag[];
   reading_time: number | null;
   meta_title: string | null;
   meta_description: string | null;
@@ -238,8 +244,7 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
   const slug = typeof raw.slug === "string" ? raw.slug : "";
   if (!slug) return null;
 
-  const tagsRaw = raw.tags;
-  const tags = Array.isArray(tagsRaw) ? tagsRaw.map((t) => String(t)) : [];
+  const tags = normalizePublicBlogTags(raw.tags);
 
   let category: PublicBlog["category"] = null;
   const cat = asRecord(raw.category);
@@ -396,8 +401,9 @@ export type FetchBlogsQuery = {
 };
 
 /** Case-insensitive match for blog tag labels. */
-export function blogTagMatches(blogTag: string, filterTag: string): boolean {
-  return blogTag.trim().toLowerCase() === filterTag.trim().toLowerCase();
+export function blogTagMatches(blogTag: PublicBlogTag | string, filterTag: string): boolean {
+  const label = typeof blogTag === "string" ? blogTag : blogTag.label;
+  return label.trim().toLowerCase() === filterTag.trim().toLowerCase();
 }
 
 export function blogHasTag(blog: PublicBlog, tag: string): boolean {
@@ -480,14 +486,39 @@ export async function fetchPublicBlogsPaginated(
   }
 }
 
+/** Tag archive SEO meta (`GET /v1/blogs/tags/{name}` or `tag` on filtered list). */
+export async function fetchPublicBlogTagMeta(tagLabel: string): Promise<PublicBlogTagMeta> {
+  const label = decodeURIComponent(tagLabel).trim();
+  const fallback: PublicBlogTagMeta = { label, index: true, follow: true };
+
+  try {
+    const raw = await apiClient.get<unknown>(`/v1/blogs/tags/${encodeURIComponent(label)}`);
+    const parsed = parseTagMetaFromApiPayload(raw, label);
+    if (parsed.label) return parsed;
+  } catch {
+    // optional dedicated endpoint
+  }
+
+  try {
+    const raw = await apiClient.get<unknown>("/v1/blogs", {
+      query: { tag: label, per_page: "1", page: "1" },
+    });
+    return parseTagMetaFromApiPayload(raw, label);
+  } catch {
+    return fallback;
+  }
+}
+
 /** Lists visible blogs that include the given tag (API filter with client-side fallback). */
 export async function fetchPublicBlogsByTag(
   tag: string,
   params: { paginationPath: string; page?: number; per_page?: number },
-): Promise<{ blogs: PublicBlog[]; meta: LaravelPaginationMeta }> {
+): Promise<{ blogs: PublicBlog[]; meta: LaravelPaginationMeta; tagMeta: PublicBlogTagMeta }> {
   const tagLabel = decodeURIComponent(tag).trim();
   const page = params.page ?? 1;
   const perPage = params.per_page ?? BLOG_LIST_PER_PAGE;
+
+  const tagMeta = await fetchPublicBlogTagMeta(tagLabel);
 
   const apiResult = await fetchPublicBlogsPaginated({
     paginationPath: params.paginationPath,
@@ -499,7 +530,7 @@ export async function fetchPublicBlogsByTag(
   const apiFilteredPage =
     apiResult.blogs.length > 0 && apiResult.blogs.every((b) => blogHasTag(b, tagLabel));
 
-  if (apiFilteredPage) return apiResult;
+  if (apiFilteredPage) return { ...apiResult, tagMeta };
 
   const all: PublicBlog[] = [];
   let currentPage = 1;
@@ -539,7 +570,7 @@ export async function fetchPublicBlogsByTag(
       params.paginationPath,
     )!;
 
-  return { blogs: pageRows, meta };
+  return { blogs: pageRows, meta, tagMeta };
 }
 
 export async function fetchPublicBlogs(query?: FetchBlogsQuery): Promise<PublicBlog[]> {

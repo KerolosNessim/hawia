@@ -1,4 +1,5 @@
 import RegisterForm from "@/features/auth/components/register-form";
+import { SiteBreadcrumbBar } from "@/features/shared/components/site-breadcrumb";
 import {
   buildPageMetadata,
   localePathname,
@@ -24,8 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function RegisterPage() {
   return (
-    <div className="py-20 lg:pt-30">
-      <RegisterForm />
-    </div>
+    <>
+      <SiteBreadcrumbBar />
+      <div className="py-12 lg:py-16">
+        <RegisterForm />
+      </div>
+    </>
   );
 }

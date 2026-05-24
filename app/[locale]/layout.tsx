@@ -12,13 +12,13 @@ import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
 import BreadcrumbJsonLd from "@/features/shared/components/seo/breadcrumb-json-ld";
-import SiteBreadcrumb from "@/features/shared/components/site-breadcrumb";
+import { CustomHeadFromSettings } from "@/features/shared/components/seo/custom-head-from-settings";
 import { HeadTagsFromMarkup } from "@/features/shared/components/seo/head-tags-from-markup";
-import { HeadScriptsFromMarkup } from "@/features/shared/components/seo/head-scripts-from-markup";
 import OrganizationJsonLd from "@/features/shared/components/seo/organization-json-ld";
 import { partitionBodyScripts } from "@/lib/seo/partition-body-scripts";
 import { SITE_REFERRER_POLICY } from "@/lib/seo/metadata-helpers";
 
+import { resolveSettingsPageSeo } from "@/features/settings/lib/resolve-settings-seo";
 import { getSettings, scriptsFromSettings } from "@/features/settings/services/settings-service";
 
 export const dynamic = "force-dynamic";
@@ -32,11 +32,12 @@ export async function generateMetadata({
   try {
     const response = await getSettings();
     const settings = response.data;
-    const homeSeo = settings.seo.find((s) => s.page_key === "home");
+    const homeSeo = await resolveSettingsPageSeo("home");
 
     return {
-      title: homeSeo?.meta_title || settings.general.site_name,
-      description: homeSeo?.meta_description || settings.general.site_description,
+      title: homeSeo?.title || settings.general.site_name,
+      description:
+        homeSeo?.description || settings.general.site_description || undefined,
       referrer: SITE_REFERRER_POLICY,
       icons: {
         icon: settings.general.favicon || "/favicon.ico",
@@ -97,7 +98,7 @@ export default async function RootLayout({
         />
         <OrganizationJsonLd locale={locale} />
         <HeadTagsFromMarkup markup={hoistedHeadTags} />
-        <HeadScriptsFromMarkup markup={scripts?.custom_head_scripts} />
+        <CustomHeadFromSettings markup={scripts?.custom_head_scripts} />
       </head>
       <body className=" relative overflow-x-hidden ">
         <QueryProvider>
@@ -105,7 +106,6 @@ export default async function RootLayout({
             <BreadcrumbJsonLd />
             <DirectionProvider direction={dir}>
               <Navbar />
-              <SiteBreadcrumb />
               {children}
               <Footer />
               <FloatingSocials />

@@ -359,7 +359,8 @@
     "tagMetaDescription": "Browse published articles tagged “{tag}” on the Howeyah blog.",
     "tagTitle": "Articles: {tag}",
     "tagDescription": "All published articles linked to this tag.",
-    "tagEmpty": "No published articles are tagged “{tag}” yet."
+    "tagEmpty": "No published articles are tagged “{tag}” yet.",
+    "tagNoIndexNotice": "This tag archive is marked noindex and may be hidden from search engines."
   },
   "blogDetail": {
     "notFoundTitle": "Article not found",

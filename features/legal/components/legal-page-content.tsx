@@ -3,11 +3,14 @@ import {
   DEFAULT_INLINE_IMG_WIDTH,
 } from "@/lib/inline-image-alt";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { SiteBreadcrumbBar } from "@/features/shared/components/site-breadcrumb";
 import { LegalPageData } from "../types";
 
 export function LegalPageContent({ data }: { data: LegalPageData }) {
   return (
-    <div className="container mx-auto px-4 py-24 min-h-[60vh]">
+    <>
+      <SiteBreadcrumbBar />
+      <div className="container mx-auto min-h-[60vh] px-4 py-12 md:py-16">
       <div className="max-w-4xl mx-auto">
         {data.image && (
           <div className="mb-12 w-full h-[300px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-2xl relative">
@@ -38,6 +41,7 @@ export function LegalPageContent({ data }: { data: LegalPageData }) {
           className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-primary prose-a:text-primary hover:prose-a:underline"
         />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

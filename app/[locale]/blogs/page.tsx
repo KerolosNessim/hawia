@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { buildPageMetadata, getAbsoluteUrl } from "@/lib/seo/metadata-helpers";
+import { getAbsoluteUrl } from "@/lib/seo/metadata-helpers";
+import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
@@ -56,9 +57,10 @@ export async function generateMetadata({
     search: search || undefined,
   });
 
-  return buildPageMetadata({
+  return buildStaticPageMetadata({
     locale,
     pathname,
+    pageKey: "blog",
     title: t("metaTitle"),
     description: t("metaDescription"),
     pagination: {

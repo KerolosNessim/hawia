@@ -26,6 +26,9 @@ export interface SettingsData {
   general: {
     site_name: string;
     site_description: string;
+    /** Home page meta from general settings (fallback if `seo` has no `home` row). */
+    home_meta_title?: string | null;
+    home_meta_description?: string | null;
     logo: string;
     favicon: string;
     timezone: string;

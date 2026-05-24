@@ -31,15 +31,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   try {
     const response = await getSettings();
     const settings = response.data;
-    const homeSeo = settings.seo.find((s) => s.page_key === "home");
 
     return buildStaticPageMetadata({
       locale: loc,
       pathname: localePathname(loc, "/"),
       pageKey: "home",
-      title: homeSeo?.meta_title || settings.general.site_name || "Howeyah",
-      description:
-        homeSeo?.meta_description || settings.general.site_description || undefined,
+      title: settings.general.site_name || "Howeyah",
+      description: settings.general.site_description || undefined,
     });
   } catch {
     return buildStaticPageMetadata({

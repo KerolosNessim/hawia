@@ -1,37 +1,50 @@
+import {
+  htmlAttrsToReactProps,
+  parseHtmlAttributes,
+} from "@/lib/seo/parse-html-attributes";
 import type { ReactNode } from "react";
 
-function parseHtmlAttributes(attrString: string): Record<string, string> {
-  const attrs: Record<string, string> = {};
-  const re = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*["']([^"']*)["']/g;
-  let match: RegExpExecArray | null;
-  while ((match = re.exec(attrString)) !== null) {
-    attrs[match[1]] = match[2];
-  }
-  return attrs;
-}
-
 function extractTags(markup: string, tagName: "meta" | "link"): string[] {
-  const re = new RegExp(`<${tagName}\\b[^>]*>`, "gi");
+  const re = new RegExp(`<${tagName}\\b[^>]*\\/?>`, "gi");
   return markup.match(re) ?? [];
 }
 
+function attrStringFromTag(tag: string, tagName: string): string {
+  return tag
+    .replace(new RegExp(`^<${tagName}\\b`, "i"), "")
+    .replace(/\/?>$/i, "")
+    .trim();
+}
+
 /**
- * Renders `<meta>` / `<link>` tags inside `<head>` (from CMS body scripts we hoisted).
+ * Renders `<meta>` / `<link>` tags from CMS markup (`custom_head_scripts` or hoisted body snippets).
  */
-export function HeadTagsFromMarkup({ markup }: { markup: string }) {
-  if (!markup.trim()) return null;
+export function HeadTagsFromMarkup({
+  markup,
+}: {
+  markup: string | null | undefined;
+}) {
+  if (!markup?.trim()) return null;
 
   const elements: ReactNode[] = [];
   let key = 0;
 
   for (const tag of extractTags(markup, "meta")) {
-    const attrs = parseHtmlAttributes(tag.replace(/^<meta\b/i, "").replace(/>$/i, ""));
-    elements.push(<meta key={`meta-${key++}`} {...attrs} />);
+    const props = htmlAttrsToReactProps(
+      parseHtmlAttributes(attrStringFromTag(tag, "meta")),
+    );
+    elements.push(<meta key={`meta-${key++}`} {...props} />);
   }
 
   for (const tag of extractTags(markup, "link")) {
-    const attrs = parseHtmlAttributes(tag.replace(/^<link\b/i, "").replace(/\/?>$/i, ""));
-    elements.push(<link key={`link-${key++}`} {...attrs} />);
+    const props = htmlAttrsToReactProps(
+      parseHtmlAttributes(attrStringFromTag(tag, "link")),
+    );
+    const linkKey =
+      typeof props.href === "string"
+        ? `${props.rel}-${props.href}`
+        : `link-${key}`;
+    elements.push(<link key={linkKey} {...props} />);
   }
 
   return <>{elements}</>;
