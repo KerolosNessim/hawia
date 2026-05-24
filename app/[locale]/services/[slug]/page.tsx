@@ -37,6 +37,8 @@ export default async function ServicePage({ params }: Props) {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("singleService");
   const res = await getSingleService(slug, locale);
+  console.log({ res });
+
   if (!res?.data) redirectToNotFound();
   const service = res.data;
 
@@ -78,7 +80,7 @@ export default async function ServicePage({ params }: Props) {
       ) : null}
       <PageHeader
         descriptionAsHeader
-        descriptionHtml={service.inside_desc || t("description")}
+        descriptionHtml={service.inside_desc || service.title || t("description")}
         image={service.image || "/whySeo.webp"}
         imageAlt={service.image_alt || ""}
       />
