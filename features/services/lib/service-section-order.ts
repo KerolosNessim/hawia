@@ -25,7 +25,7 @@ export type ServicePageSectionKey =
 function blockSortOrder(raw: unknown, fallback: number): number {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return fallback;
   const n = Number((raw as Record<string, unknown>).sort_order);
-  return Number.isFinite(n) ? n : fallback;
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 function hasSection(service: SingleService, key: ServicePageSectionKey): boolean {

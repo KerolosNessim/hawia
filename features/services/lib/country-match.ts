@@ -1,7 +1,7 @@
 import type { Country } from "../types";
 
 export const COUNTRY_CODE_ALIASES: Record<string, string[]> = {
-  SA: ["saudi", "ksa", "سعود"],
+  SA: ["saudi", "ksa", "سعود", "السعود"],
   OM: ["oman", "عمان"],
   EG: ["egypt", "مصر"],
   AE: ["uae", "emirates", "امارات", "إمارات"],

@@ -57,7 +57,7 @@ function parseSection(raw: unknown, locale: string): Section | null {
     image: typeof o.image === "string" ? o.image : null,
     image_alt: pickImageAlt(o.image_alt, locale) || null,
     items,
-    sort_order: Number.isFinite(blockSort) ? blockSort : undefined,
+    sort_order: Number.isFinite(blockSort) && blockSort > 0 ? blockSort : undefined,
   };
 }
 
@@ -111,7 +111,7 @@ function parsePackages(raw: unknown, locale: string): ServicePackagesSection | n
     image: typeof o.image === "string" ? o.image : null,
     image_alt: pickImageAlt(o.image_alt, locale) || null,
     items,
-    sort_order: Number.isFinite(blockSort) ? blockSort : undefined,
+    sort_order: Number.isFinite(blockSort) && blockSort > 0 ? blockSort : undefined,
   };
 }
 
@@ -185,7 +185,7 @@ function parseFaqs(raw: unknown): Faqs | null {
     title: String(o.title ?? ""),
     description: String(o.description ?? ""),
     items,
-    sort_order: Number.isFinite(faqsSort) ? faqsSort : undefined,
+    sort_order: Number.isFinite(faqsSort) && faqsSort > 0 ? faqsSort : undefined,
   };
 }
 
@@ -213,7 +213,7 @@ export function normalizeSingleService(
       image: typeof b.image === "string" ? resolveMediaUrl(b.image) : "",
       image_alt: pickImageAlt(b.image_alt, locale) || null,
       is_active: b.is_active !== false,
-      sort_order: Number.isFinite(benefitsSort) ? benefitsSort : undefined,
+      sort_order: Number.isFinite(benefitsSort) && benefitsSort > 0 ? benefitsSort : undefined,
     };
   }
 
@@ -229,7 +229,7 @@ export function normalizeSingleService(
       sub_title: typeof t.sub_title === "string" ? t.sub_title : null,
       sub_description: typeof t.sub_description === "string" ? t.sub_description : null,
       is_active: t.is_active !== false,
-      sort_order: Number.isFinite(toolsSort) ? toolsSort : undefined,
+      sort_order: Number.isFinite(toolsSort) && toolsSort > 0 ? toolsSort : undefined,
     };
   }
 
@@ -244,7 +244,7 @@ export function normalizeSingleService(
       description: String(c.description ?? ""),
       button_text: typeof c.button_text === "string" ? c.button_text : null,
       phone_number: String(c.phone_number ?? ""),
-      sort_order: Number.isFinite(ctasSort) ? ctasSort : undefined,
+      sort_order: Number.isFinite(ctasSort) && ctasSort > 0 ? ctasSort : undefined,
     };
   }
 

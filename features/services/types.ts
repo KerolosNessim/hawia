@@ -17,6 +17,7 @@ export interface ServiceCountry {
 export interface Service {
   id: number;
   slug: string;
+  slug_local?: { ar?: string; en?: string };
   image: string;
   title: string;
   description: string;

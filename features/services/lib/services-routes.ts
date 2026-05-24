@@ -1,5 +1,15 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
 import type { Locale } from "next-intl";
+import type { Service } from "../types";
+
+export function pickServiceSlug(
+  service: Pick<Service, "slug"> & { slug_local?: { ar?: string; en?: string } },
+  locale: string,
+): string {
+  const key = locale === "ar" ? "ar" : "en";
+  const local = service.slug_local?.[key] ?? service.slug_local?.ar ?? service.slug_local?.en;
+  return (local ?? service.slug ?? "").trim();
+}
 
 export function servicePostPath(slug: string): string {
   return `/services/${encodeURIComponent(slug)}`;

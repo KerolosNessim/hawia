@@ -18,6 +18,8 @@ import { useGetServices } from "@/features/services/hooks/useGetServices";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { useLogoutMutation } from "@/features/auth/hooks/use-auth-mutation";
+import { filterServicesByCountryCode } from "@/features/services/lib/filter-services-by-country";
+import { pickServiceSlug } from "@/features/services/lib/services-routes";
 import { useCountry } from "@/hooks/use-country";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import React from "react";
@@ -46,32 +48,7 @@ export default function Navbar() {
   const { data: settings } = useSettings();
   const userCountryCode = useCountry();
   const allServices = Array.isArray(data?.data) ? data?.data : [];
-
-  // Filter services by the user's detected country
-  const countryAliases: Record<string, string[]> = {
-    'SA': ['saudi', 'ksa', 'السعودي'],
-    'OM': ['oman', 'عمان'],
-    'EG': ['egypt', 'مصر'],
-    'AE': ['uae', 'emirates', 'امارات', 'إمارات'],
-    'QA': ['qatar', 'قطر'],
-    'KW': ['kuwait', 'كويت'],
-    'BH': ['bahrain', 'بحرين'],
-  };
-  const currentAliases = countryAliases[userCountryCode] || [];
-  const userServices = allServices.filter((s) =>
-    s.countries?.some((c) =>
-      currentAliases.some(
-        (alias) => c.name.en?.toLowerCase().includes(alias) || c.name.ar?.toLowerCase().includes(alias)
-      )
-    )
-  );
-  // Fallback to Oman services if no match
-  const omanServices = allServices.filter((s) =>
-    s.countries?.some(
-      (c) => c.name.en?.toLowerCase().includes('oman') || c.name.ar?.includes('عمان')
-    )
-  );
-  const services = userServices.length > 0 ? userServices : omanServices;
+  const services = filterServicesByCountryCode(allServices, userCountryCode);
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
@@ -133,15 +110,18 @@ export default function Navbar() {
             </HoverCardTrigger>
             <HoverCardContent>
               <div className="flex flex-col gap-2">
-                {services?.map((link) => (
+                {services?.map((service) => {
+                  const serviceSlug = pickServiceSlug(service, locale);
+                  return (
                   <Link
-                    key={link.id}
-                    href={`/services/${link.slug}`}
-                    className={` ${path === `/services/${link.slug}` ? active : ""} p-2 rounded-full font-semibold ${hover}`}
+                    key={service.id}
+                    href={`/services/${encodeURIComponent(serviceSlug)}`}
+                    className={` ${path === `/services/${serviceSlug}` ? active : ""} p-2 rounded-full font-semibold ${hover}`}
                   >
-                    {serviceNavLabel(link?.title, locale)}
+                    {serviceNavLabel(service?.title, locale)}
                   </Link>
-                ))}
+                  );
+                })}
                 <Link
                   href="/services"
                   className={`mt-1 border-t border-border/60 pt-3 text-center font-semibold text-brand ${path === "/services" ? active : ""} p-2 rounded-full ${hover}`}
