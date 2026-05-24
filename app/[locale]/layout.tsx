@@ -69,7 +69,7 @@ export default async function RootLayout({
   const font = isArabic ? cairoLocal : geistLocal;
   const fontPreload = fontPreloadByLocale[isArabic ? "ar" : "en"];
 
-  const dir = isArabic ? "rtl" : "ltr";
+  const dir   = isArabic ? "rtl" : "ltr";
 
   const settingsForScripts = await getSettings().catch(() => null);
   const scripts = settingsForScripts ? scriptsFromSettings(settingsForScripts.data) : null;

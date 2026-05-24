@@ -26,6 +26,8 @@ async function resolveServiceRow(
 
   try {
     const list = await apiClient.get<unknown>("/v1/services");
+
+    console.log({list})
     const rows: Record<string, unknown>[] = [];
     if (list && typeof list === "object") {
       const p = list as Record<string, unknown>;

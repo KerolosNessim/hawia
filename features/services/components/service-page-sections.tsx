@@ -18,6 +18,7 @@ import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import * as motion from "framer-motion/client";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 type Props = {
   service: SingleService;
@@ -31,13 +32,15 @@ export function ServicePageSections({ service }: Props) {
     switch (key) {
       case "benefits":
         if (!service.benefits) return null;
+
+        console.log('service.benefits', service.benefits)
         return (
           <div
             key={key}
-            className="container flex flex-col items-center gap-10 lg:flex-row lg:items-center"
+            className={cn("container flex flex-col items-center gap-10 lg:flex-row lg:items-center", !service.benefits.image && "items-center")}
           >
             <motion.div
-              className="w-full lg:max-w-xl lg:flex-1"
+              className={cn("w-full lg:flex-1", !service.benefits.image && "text-center")}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
@@ -49,7 +52,7 @@ export function ServicePageSections({ service }: Props) {
               />
               <RichHtml html={service.benefits.description} />
             </motion.div>
-            <motion.div
+            {service.benefits.image && <motion.div
               className="flex w-full flex-1 justify-center max-lg:hidden"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -67,7 +70,7 @@ export function ServicePageSections({ service }: Props) {
                 className="mask-blob mx-auto h-auto w-auto"
                 unoptimized={isRemoteMediaUrl(service.benefits.image || "")}
               />
-            </motion.div>
+            </motion.div>}
           </div>
         );
       case "offerings":

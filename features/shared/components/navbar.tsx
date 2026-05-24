@@ -60,7 +60,9 @@ export default function Navbar() {
 
   const active = " bg-brand text-white  rounded-full";
   const hover =
-    " hover:bg-brand hover:text-white hover: hover:rounded-full transition-all duration-300 ease-in-out";
+    "hover:bg-brand hover:text-white hover: hover:rounded-full transition-all duration-300 ease-in-out";
+
+    
   const links = [
     { href: "/", label: t("home") },
     { href: "/about", label: t("about") },
@@ -71,6 +73,7 @@ export default function Navbar() {
     { href: "/faq", label: t("faq") },
     { href: "/contact-us", label: t("contact-us") },
   ];
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -50 }}

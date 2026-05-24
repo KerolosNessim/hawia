@@ -19,6 +19,10 @@ export default function LocaleSwitcher() {
   const [isPending, startTransition] = useTransition();
 
   const handleChange = (newLocale: string) => {
+     if (newLocale === locale) return;
+
+    // Use next-intl navigation so NEXT_LOCALE is synced before routing.
+    // Direct hreflang navigation breaks en -> ar when default locale has no URL prefix.
     startTransition(() => {
       router.replace(pathname, { locale: newLocale });
     });

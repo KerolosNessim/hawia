@@ -40,6 +40,8 @@ export default async function ServicePage({ params }: Props) {
   if (!res?.data) redirectToNotFound();
   const service = res.data;
 
+  console.log({ service })
+
   const serviceSlug =
     service.slug_local?.[locale === "ar" ? "ar" : "en"] ?? service.slug;
   const servicePath = localePath(
@@ -52,16 +54,16 @@ export default async function ServicePage({ params }: Props) {
   const faqLd =
     faqItems.length > 0
       ? buildFaqPageJsonLd({
-          items: faqItems.map((item) => ({
-            question: item.question,
-            answer: item.answer,
-          })),
-          url: serviceAbs,
-          name:
-            plainTextFromHtml(service.faqs?.title ?? "") ||
-            plainTextFromHtml(service.title) ||
-            undefined,
-        })
+        items: faqItems.map((item) => ({
+          question: item.question,
+          answer: item.answer,
+        })),
+        url: serviceAbs,
+        name:
+          plainTextFromHtml(service.faqs?.title ?? "") ||
+          plainTextFromHtml(service.title) ||
+          undefined,
+      })
       : null;
 
   const faqStructuredData = faqLd ? jsonLdScript(faqLd) : null;
