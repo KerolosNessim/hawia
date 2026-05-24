@@ -1,4 +1,6 @@
-import type { SingleService } from "../types";
+import type { ServicePageSectionKey, SingleService } from "../types";
+
+export type { ServicePageSectionKey } from "../types";
 
 /** Default display order when API omits block `sort_order` (matches legacy layout). */
 const DEFAULT_BLOCK_ORDER: Record<ServicePageSectionKey, number> = {
@@ -11,16 +13,6 @@ const DEFAULT_BLOCK_ORDER: Record<ServicePageSectionKey, number> = {
   articleTags: 65,
   ctas: 90,
 };
-
-export type ServicePageSectionKey =
-  | "benefits"
-  | "offerings"
-  | "steps"
-  | "tools"
-  | "faqs"
-  | "packages"
-  | "articleTags"
-  | "ctas";
 
 function blockSortOrder(raw: unknown, fallback: number): number {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return fallback;

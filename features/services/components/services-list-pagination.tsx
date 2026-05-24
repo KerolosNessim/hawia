@@ -11,7 +11,6 @@ type Props = {
   countryId: number;
   previousLabel: string;
   nextLabel: string;
-  isRtl?: boolean;
 };
 
 export function ServicesListPagination({
@@ -19,7 +18,6 @@ export function ServicesListPagination({
   countryId,
   previousLabel,
   nextLabel,
-  isRtl,
 }: Props) {
   const locale = useLocale() as Locale;
 
@@ -32,7 +30,6 @@ export function ServicesListPagination({
       getPageUrl={getPageUrl}
       previousLabel={previousLabel}
       nextLabel={nextLabel}
-      isRtl={isRtl}
     />
   );
 }

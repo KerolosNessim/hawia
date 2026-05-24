@@ -135,7 +135,6 @@ export default async function BlogTagPage(props: {
             tag={tagLabel}
             previousLabel={t("paginationPrevious")}
             nextLabel={t("paginationNext")}
-            isRtl={locale === "ar"}
           />
         ) : null}
       </div>

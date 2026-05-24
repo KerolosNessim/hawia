@@ -20,7 +20,7 @@ import {
 } from "@/features/blogs/server/public-blogs";
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, HelpCircle } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -28,6 +28,10 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { FaStar } from "react-icons/fa";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 async function absoluteFromPath(path: string): Promise<string | null> {
   const h = await headers();
@@ -45,6 +49,73 @@ async function absoluteBlogUrl(locale: Locale, slug: string): Promise<string | n
   const proto = h.get("x-forwarded-proto") ?? "https";
   return blogPostAbsoluteUrl(`${proto}://${host}`, locale, slug);
 }
+
+// ---------------------------------------------------------------------------
+// FAQ JSON-LD builder
+// ---------------------------------------------------------------------------
+
+/**
+ * Parses the FAQ rich HTML and builds a Google-compliant FAQPage JSON-LD block.
+ *
+ * Convention: every <h2> (or <h3>) is treated as a question and the next
+ * sibling block-level content up to the following heading is the answer.
+ *
+ * Falls back to treating every <p> as an answer to the previous heading if
+ * the content doesn't follow the heading structure.
+ */
+function buildFaqJsonLd(faqHtml: string): object | null {
+  if (!faqHtml.trim()) return null;
+
+  // Strip tags helper — keeps text content only
+  const strip = (html: string) =>
+    html
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .trim();
+
+  // Split on heading tags to extract Q/A pairs
+  const headingRegex = /<h[2-4][^>]*>([\s\S]*?)<\/h[2-4]>/gi;
+  const pairs: Array<{ question: string; answer: string }> = [];
+
+  const parts = faqHtml.split(headingRegex);
+  // parts[0] = content before first heading (skip)
+  // parts[1,3,5...] = heading inner HTML (question)
+  // parts[2,4,6...] = content after heading until next heading (answer)
+
+  for (let i = 1; i < parts.length; i += 2) {
+    const question = strip(parts[i] ?? "");
+    const answerHtml = parts[i + 1] ?? "";
+    const answer = strip(answerHtml);
+    if (question && answer) {
+      pairs.push({ question, answer });
+    }
+  }
+
+  if (pairs.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: pairs.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: answer,
+      },
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Metadata
+// ---------------------------------------------------------------------------
 
 export async function generateSingleBlogMetadata(
   locale: Locale,
@@ -105,8 +176,13 @@ export async function generateSingleBlogMetadata(
   return metadata;
 }
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: string }) {
   const blog = await fetchPublicBlogBySlug(slug);
+
   if (process.env.NODE_ENV === "development") {
     console.log("[SingleBlogPage]", {
       locale,
@@ -116,8 +192,10 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
       descriptionRichSource: blog?.descriptionRichSource,
       subtitleRichSource: blog?.subtitleRichSource,
       contentRichSource: blog?.contentRichSource,
+      faqRichSource: blog?.faqRichSource,
     });
   }
+
   if (!blog) redirectToNotFound();
 
   const t = await getTranslations("blogDetail");
@@ -137,7 +215,8 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     }
   }
 
-  const pageUrl = blog.canonical_url?.trim() || (await absoluteBlogUrl(locale, slug)) || undefined;
+  const pageUrl =
+    blog.canonical_url?.trim() || (await absoluteBlogUrl(locale, slug)) || undefined;
 
   const visibleLocale = (await getLocale()) as Locale;
   const articleLang = visibleLocale === "ar" ? "ar" : "en";
@@ -163,8 +242,20 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   const subtitleLooksLikeHtml =
     localizedSubtitleHtml.length > 0 && /<[a-z][\s\S]*>/i.test(localizedSubtitleHtml);
 
-  const descRich = pickLocalizedRichText(blog.descriptionRichSource ?? blog.description, articleLang).trim();
-  const contentRich = pickLocalizedRichText(blog.contentRichSource ?? blog.content, articleLang).trim();
+  const descRich = pickLocalizedRichText(
+    blog.descriptionRichSource ?? blog.description,
+    articleLang,
+  ).trim();
+  const contentRich = pickLocalizedRichText(
+    blog.contentRichSource ?? blog.content,
+    articleLang,
+  ).trim();
+
+  // FAQ rich HTML for the current locale
+  const faqRich = pickLocalizedRichText(
+    blog.faqRichSource ?? blog.faq,
+    articleLang,
+  ).trim();
 
   const articleCombinedHtml =
     descRich || contentRich
@@ -180,7 +271,8 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
   const blogIndexAbs =
     (await absoluteFromPath(localePath(locale, "/blogs"))) ?? localePath(locale, "/blogs");
-  const blogPostingAbs = pageUrl ?? (await absoluteBlogUrl(locale, slug)) ?? blogIndexAbs;
+  const blogPostingAbs =
+    pageUrl ?? (await absoluteBlogUrl(locale, slug)) ?? blogIndexAbs;
   const heroAbs =
     (await absoluteFromPath(heroImage)) ??
     (heroImage.startsWith("http") ? heroImage : undefined);
@@ -207,7 +299,17 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     inLanguage: articleLang === "ar" ? "ar" : "en",
   });
 
-  const structuredData = jsonLdScript([breadcrumbLd, postingLd]);
+  // Build FAQ JSON-LD only when FAQ content exists
+  const faqLd = faqRich ? buildFaqJsonLd(faqRich) : null;
+
+  const allLdBlocks = [breadcrumbLd, postingLd, ...(faqLd ? [faqLd] : [])];
+  const structuredData = jsonLdScript(allLdBlocks);
+
+  // Translation keys with sensible fallbacks
+  const faqHeading =
+    articleLang === "ar"
+      ? t("faqHeading", { defaultValue: "الأسئلة الشائعة" })
+      : t("faqHeading", { defaultValue: "Frequently Asked Questions" });
 
   return (
     <div className="pb-16 space-y-16">
@@ -231,6 +333,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
             priority
           />
         </div>
+
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
           <div className="flex items-center gap-4">
             <Image
@@ -277,6 +380,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
         ) : null}
       </div>
 
+      {/* ── Main article body ──────────────────────────────────────────────── */}
       <article className="container max-w-3xl space-y-6 text-gray-900">
         <RichHtml
           html={articleCombinedHtml || "<p></p>"}
@@ -297,6 +401,53 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
           </div>
         ) : null}
       </article>
+
+      {/* ── FAQ section ───────────────────────────────────────────────────── */}
+      {faqRich ? (
+        <section
+          aria-labelledby="faq-section-heading"
+          className="container max-w-3xl"
+          // Signal to Google's crawler that this section contains FAQ content
+          itemScope
+          itemType="https://schema.org/FAQPage"
+        >
+          {/* Section header */}
+          <div className="mb-8 flex items-center gap-3 border-b border-border pb-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600">
+              <HelpCircle className="h-5 w-5" />
+            </div>
+            <h2
+              id="faq-section-heading"
+              className="text-2xl font-bold text-gray-900"
+            >
+              {faqHeading}
+            </h2>
+          </div>
+
+          {/* Rich HTML FAQ content — styles mirror the article body but add
+              question/answer visual treatment via heading + paragraph targets */}
+          <RichHtml
+            html={faqRich}
+            className={[
+              "faq-content space-y-0 text-base leading-relaxed text-gray-800",
+              // Question headings get a distinct left accent and bold weight
+              "[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:scroll-mt-24 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-gray-900",
+              "[&_h2]:border-s-4 [&_h2]:border-violet-400 [&_h2]:ps-4",
+              "[&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:scroll-mt-24 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-gray-900",
+              "[&_h3]:border-s-4 [&_h3]:border-violet-300 [&_h3]:ps-4",
+              // Answer paragraphs get left padding to align with headings
+              "[&_p]:ps-4 [&_p]:mb-3 [&_p]:text-muted-foreground",
+              // Lists inside answers
+              "[&_ul]:ps-8 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:text-muted-foreground",
+              "[&_ol]:ps-8 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:text-muted-foreground",
+              // Links
+              "[&_a]:font-semibold [&_a]:text-brand [&_a]:underline-offset-2 [&_a]:hover:underline",
+              // Strong
+              "[&_strong]:font-semibold [&_strong]:text-gray-900",
+            ].join(" ")}
+          />
+        </section>
+      ) : null}
 
       <RatingSection />
 

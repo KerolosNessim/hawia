@@ -223,7 +223,6 @@ export default async function BlogPage(props: {
           search={search}
           previousLabel={t("paginationPrevious")}
           nextLabel={t("paginationNext")}
-          isRtl={locale === "ar"}
         />
       </div>
     </div>

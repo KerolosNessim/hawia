@@ -40,8 +40,6 @@ export default async function ServicePage({ params }: Props) {
   if (!res?.data) redirectToNotFound();
   const service = res.data;
 
-  console.log({ service })
-
   const serviceSlug =
     service.slug_local?.[locale === "ar" ? "ar" : "en"] ?? service.slug;
   const servicePath = localePath(
@@ -50,7 +48,9 @@ export default async function ServicePage({ params }: Props) {
   );
   const serviceAbs = (await absolutePath(servicePath)) ?? servicePath;
 
-  const faqItems = service.faqs?.items ?? [];
+  const faqItems = service.pageSections
+    .filter((section) => section.key === "faqs")
+    .flatMap((section) => (section.data as { items?: { question: string; answer: string }[] }).items ?? []);
   const faqLd =
     faqItems.length > 0
       ? buildFaqPageJsonLd({
@@ -80,6 +80,7 @@ export default async function ServicePage({ params }: Props) {
         descriptionAsHeader
         descriptionHtml={service.inside_desc || t("description")}
         image={service.image || "/whySeo.webp"}
+        imageAlt={service.image_alt || ""}
       />
       <div className="space-y-16 py-16">
         {service.highlight_description ? (

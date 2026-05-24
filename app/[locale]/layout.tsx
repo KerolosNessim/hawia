@@ -12,6 +12,7 @@ import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
 import BreadcrumbJsonLd from "@/features/shared/components/seo/breadcrumb-json-ld";
+import SiteBreadcrumb from "@/features/shared/components/site-breadcrumb";
 import { HeadTagsFromMarkup } from "@/features/shared/components/seo/head-tags-from-markup";
 import { HeadScriptsFromMarkup } from "@/features/shared/components/seo/head-scripts-from-markup";
 import OrganizationJsonLd from "@/features/shared/components/seo/organization-json-ld";
@@ -77,6 +78,7 @@ export default async function RootLayout({
     scripts?.custom_body_scripts,
   );
 
+ 
   return (
     <html
       lang={locale}
@@ -102,7 +104,8 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             <BreadcrumbJsonLd />
             <DirectionProvider direction={dir}>
-              <Navbar/>
+              <Navbar />
+              <SiteBreadcrumb />
               {children}
               <Footer />
               <FloatingSocials />

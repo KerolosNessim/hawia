@@ -16,7 +16,6 @@ type Props = {
   search?: string;
   previousLabel: string;
   nextLabel: string;
-  isRtl?: boolean;
 };
 
 export function BlogListPagination({
@@ -27,7 +26,6 @@ export function BlogListPagination({
   search,
   previousLabel,
   nextLabel,
-  isRtl,
 }: Props) {
   const locale = useLocale() as Locale;
 
@@ -46,7 +44,6 @@ export function BlogListPagination({
       siblingCount={2}
       previousLabel={previousLabel}
       nextLabel={nextLabel}
-      isRtl={isRtl}
     />
   );
 }

@@ -1,15 +1,30 @@
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { pickImageAlt } from "@/lib/image-alt";
+import { buildPageSections } from "./collect-page-sections";
 import type {
+  Benefits,
+  Cta,
   FaqItem,
   Faqs,
   Section,
   ServiceArticleTag,
   ServicePackagesSection,
   ServicePackageItem,
+  ServicePageSectionInstance,
+  ServicePageSectionKey,
   ServiceSocial,
+  Tools,
   SingleService,
 } from "../types";
+
+/** First block of a given type in display order (for legacy single-field accessors). */
+function firstPageSectionData<T>(
+  pageSections: ServicePageSectionInstance[],
+  key: ServicePageSectionKey,
+): T | null {
+  const hit = pageSections.find((section) => section.key === key);
+  return hit ? (hit.data as T) : null;
+}
 
 const PACKAGE_ICONS = ["rocket", "gem", "target"] as const;
 
@@ -165,9 +180,99 @@ function parseArticleTags(raw: unknown): ServiceArticleTag[] {
   return out;
 }
 
-function parseFaqs(raw: unknown): Faqs | null {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const o = raw as Record<string, unknown>;
+function parseBenefitsBlock(
+  o: Record<string, unknown>,
+  locale: string,
+): Benefits | null {
+  const benefitsSort = Number(o.sort_order);
+  return {
+    id: Number(o.id ?? 0),
+    title: String(o.title ?? ""),
+    description: String(o.description ?? ""),
+    image: typeof o.image === "string" ? resolveMediaUrl(o.image) : "",
+    image_alt: pickImageAlt(o.image_alt, locale) || null,
+    is_active: o.is_active !== false,
+    sort_order: Number.isFinite(benefitsSort) && benefitsSort > 0 ? benefitsSort : undefined,
+  };
+}
+
+function parseBenefitsList(raw: unknown, locale: string): Benefits[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => parseBenefitsBlock(item as Record<string, unknown>, locale))
+      .filter((x): x is Benefits => x != null);
+  }
+  if (typeof raw === "object") {
+    const one = parseBenefitsBlock(raw as Record<string, unknown>, locale);
+    return one ? [one] : [];
+  }
+  return [];
+}
+
+function parseSectionList(raw: unknown, locale: string): Section[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => parseSection(item, locale))
+      .filter((x): x is Section => x != null);
+  }
+  const one = parseSection(raw, locale);
+  return one ? [one] : [];
+}
+
+function parseToolsBlock(o: Record<string, unknown>): Tools {
+  const toolsSort = Number(o.sort_order);
+  return {
+    id: Number(o.id ?? 0),
+    title: String(o.title ?? ""),
+    description: String(o.description ?? ""),
+    sub_title: typeof o.sub_title === "string" ? o.sub_title : null,
+    sub_description: typeof o.sub_description === "string" ? o.sub_description : null,
+    is_active: o.is_active !== false,
+    sort_order: Number.isFinite(toolsSort) && toolsSort > 0 ? toolsSort : undefined,
+  };
+}
+
+function parseToolsList(raw: unknown): Tools[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((item) => item && typeof item === "object")
+      .map((item) => parseToolsBlock(item as Record<string, unknown>));
+  }
+  if (typeof raw === "object") {
+    return [parseToolsBlock(raw as Record<string, unknown>)];
+  }
+  return [];
+}
+
+function parseCtaBlock(o: Record<string, unknown>): Cta {
+  const ctasSort = Number(o.sort_order);
+  return {
+    id: Number(o.id ?? 0),
+    title: String(o.title ?? ""),
+    description: String(o.description ?? ""),
+    button_text: typeof o.button_text === "string" ? o.button_text : null,
+    phone_number: String(o.phone_number ?? ""),
+    sort_order: Number.isFinite(ctasSort) && ctasSort > 0 ? ctasSort : undefined,
+  };
+}
+
+function parseCtasList(raw: unknown): Cta[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((item) => item && typeof item === "object")
+      .map((item) => parseCtaBlock(item as Record<string, unknown>));
+  }
+  if (typeof raw === "object") {
+    return [parseCtaBlock(raw as Record<string, unknown>)];
+  }
+  return [];
+}
+
+function parseFaqsBlock(o: Record<string, unknown>): Faqs {
   const items: FaqItem[] = Array.isArray(o.items)
     ? o.items
         .map((item) => {
@@ -189,6 +294,35 @@ function parseFaqs(raw: unknown): Faqs | null {
   };
 }
 
+function parseFaqs(raw: unknown): Faqs | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  return parseFaqsBlock(raw as Record<string, unknown>);
+}
+
+function parseFaqsList(raw: unknown): Faqs[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((item) => item && typeof item === "object")
+      .map((item) => parseFaqsBlock(item as Record<string, unknown>));
+  }
+  if (typeof raw === "object") {
+    return [parseFaqsBlock(raw as Record<string, unknown>)];
+  }
+  return [];
+}
+
+function parsePackagesList(raw: unknown, locale: string): ServicePackagesSection[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => parsePackages(item, locale))
+      .filter((x): x is ServicePackagesSection => x != null && x.items.length > 0);
+  }
+  const one = parsePackages(raw, locale);
+  return one && one.items.length > 0 ? [one] : [];
+}
+
 /** Maps raw `/v1/services/{slug}` payload to `SingleService`. */
 export function normalizeSingleService(
   raw: Record<string, unknown>,
@@ -201,52 +335,27 @@ export function normalizeSingleService(
     if (localized) image = localized;
   }
 
-  const benefitsRaw = raw.benefits;
-  let benefits = null;
-  if (benefitsRaw && typeof benefitsRaw === "object" && !Array.isArray(benefitsRaw)) {
-    const b = benefitsRaw as Record<string, unknown>;
-    const benefitsSort = Number(b.sort_order);
-    benefits = {
-      id: Number(b.id ?? 0),
-      title: String(b.title ?? ""),
-      description: String(b.description ?? ""),
-      image: typeof b.image === "string" ? resolveMediaUrl(b.image) : "",
-      image_alt: pickImageAlt(b.image_alt, locale) || null,
-      is_active: b.is_active !== false,
-      sort_order: Number.isFinite(benefitsSort) && benefitsSort > 0 ? benefitsSort : undefined,
-    };
-  }
+  const benefitsList = parseBenefitsList(raw.benefits, locale);
+  const offeringsList = parseSectionList(raw.offerings, locale);
+  const stepsList = parseSectionList(raw.steps, locale);
+  const toolsList = parseToolsList(raw.tools);
+  const faqsList = parseFaqsList(raw.faqs);
+  const packagesList = parsePackagesList(raw.packages, locale);
+  const ctasList = parseCtasList(raw.ctas);
+  const articleTags = parseArticleTags(
+    raw.tags ?? raw.blog_tags ?? raw.article_tags,
+  );
 
-  const toolsRaw = raw.tools;
-  let tools = null;
-  if (toolsRaw && typeof toolsRaw === "object" && !Array.isArray(toolsRaw)) {
-    const t = toolsRaw as Record<string, unknown>;
-    const toolsSort = Number(t.sort_order);
-    tools = {
-      id: Number(t.id ?? 0),
-      title: String(t.title ?? ""),
-      description: String(t.description ?? ""),
-      sub_title: typeof t.sub_title === "string" ? t.sub_title : null,
-      sub_description: typeof t.sub_description === "string" ? t.sub_description : null,
-      is_active: t.is_active !== false,
-      sort_order: Number.isFinite(toolsSort) && toolsSort > 0 ? toolsSort : undefined,
-    };
-  }
-
-  const ctasRaw = raw.ctas;
-  let ctas = null;
-  if (ctasRaw && typeof ctasRaw === "object" && !Array.isArray(ctasRaw)) {
-    const c = ctasRaw as Record<string, unknown>;
-    const ctasSort = Number(c.sort_order);
-    ctas = {
-      id: Number(c.id ?? 0),
-      title: String(c.title ?? ""),
-      description: String(c.description ?? ""),
-      button_text: typeof c.button_text === "string" ? c.button_text : null,
-      phone_number: String(c.phone_number ?? ""),
-      sort_order: Number.isFinite(ctasSort) && ctasSort > 0 ? ctasSort : undefined,
-    };
-  }
+  const pageSections = buildPageSections({
+    benefits: benefitsList,
+    offerings: offeringsList,
+    steps: stepsList,
+    tools: toolsList,
+    faqs: faqsList,
+    packages: packagesList,
+    ctas: ctasList,
+    articleTags,
+  });
 
   return {
     id: Number(raw.id ?? 0),
@@ -271,17 +380,23 @@ export function normalizeSingleService(
     meta_title: String(raw.meta_title ?? ""),
     meta_description: String(raw.meta_description ?? ""),
     social: parseSocial(raw.social),
-    benefits,
+    pageSections,
+    /** @deprecated Use `pageSections` — first benefits block in display order only. */
+    benefits: firstPageSectionData<Benefits>(pageSections, "benefits"),
     audits: raw.audits ?? null,
-    offerings: parseSection(raw.offerings, locale),
-    steps: parseSection(raw.steps, locale),
-    tools,
-    faqs: parseFaqs(raw.faqs),
-    packages: parsePackages(raw.packages, locale),
-    ctas,
-    articleTags: parseArticleTags(
-      raw.tags ?? raw.blog_tags ?? raw.article_tags,
-    ),
+    /** @deprecated Use `pageSections` */
+    offerings: firstPageSectionData<Section>(pageSections, "offerings"),
+    /** @deprecated Use `pageSections` */
+    steps: firstPageSectionData<Section>(pageSections, "steps"),
+    /** @deprecated Use `pageSections` */
+    tools: firstPageSectionData<Tools>(pageSections, "tools"),
+    /** @deprecated Use `pageSections` */
+    faqs: firstPageSectionData<Faqs>(pageSections, "faqs"),
+    /** @deprecated Use `pageSections` */
+    packages: firstPageSectionData<ServicePackagesSection>(pageSections, "packages"),
+    /** @deprecated Use `pageSections` */
+    ctas: firstPageSectionData<Cta>(pageSections, "ctas"),
+    articleTags,
     countries: Array.isArray(raw.countries)
       ? (raw.countries as SingleService["countries"])
       : [],

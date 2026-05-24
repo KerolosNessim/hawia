@@ -165,6 +165,30 @@ export type Cta = {
   sort_order?: number
 }
 
+export type ServicePageSectionKey =
+  | "benefits"
+  | "offerings"
+  | "steps"
+  | "tools"
+  | "faqs"
+  | "packages"
+  | "articleTags"
+  | "ctas";
+
+export type ServicePageSectionInstance = {
+  key: ServicePageSectionKey;
+  index: number;
+  sort_order: number;
+  data:
+    | Benefits
+    | Section
+    | Faqs
+    | Tools
+    | Cta
+    | ServicePackagesSection
+    | ServiceArticleTag[];
+};
+
 // 🔹 Main Service Type
 export type SingleService = {
   id: number;
@@ -185,6 +209,12 @@ export type SingleService = {
   meta_title: string;
   meta_description: string;
   social?: ServiceSocial | null;
+
+  /**
+   * All page blocks in display order (`sort_order` from API).
+   * Source of truth for rendering — supports multiple blocks per type.
+   */
+  pageSections: ServicePageSectionInstance[];
 
   benefits: Benefits | null;
   audits: unknown | null;

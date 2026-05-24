@@ -184,7 +184,6 @@ export default async function ServicesPage(props: {
             countryId={selectedCountryId}
             previousLabel={t("paginationPrevious")}
             nextLabel={t("paginationNext")}
-            isRtl={locale === "ar"}
           />
         ) : null}
       </div>

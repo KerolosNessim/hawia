@@ -202,6 +202,7 @@ export default async function BlogCategoryPage(props: {
 
   const structuredData = jsonLdScript([breadcrumbLd, ...collectionLds]);
 
+ 
   return (
     <div className="space-y-12 pb-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
@@ -277,7 +278,6 @@ export default async function BlogCategoryPage(props: {
           search={search}
           previousLabel={t("paginationPrevious")}
           nextLabel={t("paginationNext")}
-          isRtl={locale === "ar"}
         />
       </div>
     </div>

@@ -1,44 +1,69 @@
 "use client";
 
-import * as motion from 'framer-motion/client'
+import * as motion from "framer-motion/client";
 
 interface PageHeaderProps {
   /** Plain fallback when `titleHtml` is empty. */
   title?: string;
+
   /** CMS HTML title (rich text from admin). Renders as-is when set. */
   titleHtml?: string;
+
   description?: string;
+
   /** CMS HTML (e.g. rich subtitle). Takes precedence over plain `description` when set. */
   descriptionHtml?: string;
+
   image?: string;
+
+  /** Accessible alt text for the background image */
+  imageAlt?: string;
+
   /** When true, title is hidden and description is shown as the main hero heading. */
   descriptionAsHeader?: boolean;
 }
+
 export default function PageHeader({
   title,
   titleHtml,
   description,
   descriptionHtml,
   image = "/seo-banner.jpg",
+  imageAlt = "Page header background",
   descriptionAsHeader = false,
 }: PageHeaderProps) {
   const hasRichTitle = Boolean(titleHtml?.trim());
   const hasRichDescription = Boolean(descriptionHtml?.trim());
+
   const showTitle = !descriptionAsHeader;
-  const headerHtml = descriptionAsHeader ? descriptionHtml?.trim() : undefined;
-  const headerPlain = descriptionAsHeader ? description?.trim() : undefined;
+
+  const headerHtml = descriptionAsHeader
+    ? descriptionHtml?.trim()
+    : undefined;
+
+  const headerPlain = descriptionAsHeader
+    ? description?.trim()
+    : undefined;
+
   const showDescriptionBelow =
-    !descriptionAsHeader && (hasRichDescription || Boolean(description?.trim()));
+    !descriptionAsHeader &&
+    (hasRichDescription || Boolean(description?.trim()));
 
   return (
-    <div
-      style={{ backgroundImage: `url(${image})` }}
-      className="lg:h-[60vh] md:h-[40vh] h-[30vh] bg-cover bg-center bg-no-repeat"
-    >
-      {/* layer */}
-      <div className=" bg-black/70 h-full flex items-center justify-center">
-        {/* content */}
-        <div className="container ">
+    <section className="relative overflow-hidden lg:h-[60vh] md:h-[40vh] h-[30vh]">
+      {/* Background image */}
+      <img
+        src={image}
+        alt={imageAlt}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/70" />
+
+      {/* Content */}
+      <div className="relative z-10 h-full flex items-center">
+        <div className="container">
           {descriptionAsHeader ? (
             headerHtml ? (
               <motion.div
@@ -78,6 +103,7 @@ export default function PageHeader({
               </motion.h1>
             ) : null
           ) : null}
+
           {showDescriptionBelow ? (
             hasRichDescription ? (
               <motion.div
@@ -85,7 +111,9 @@ export default function PageHeader({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="cms-rich-html text-lg text-white mt-4 max-w-3xl [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold"
-                dangerouslySetInnerHTML={{ __html: descriptionHtml!.trim() }}
+                dangerouslySetInnerHTML={{
+                  __html: descriptionHtml!.trim(),
+                }}
               />
             ) : (
               <motion.p
@@ -100,6 +128,6 @@ export default function PageHeader({
           ) : null}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
