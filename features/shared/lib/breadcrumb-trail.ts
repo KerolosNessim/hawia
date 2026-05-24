@@ -21,11 +21,21 @@ export function isBreadcrumbSegment(segment: string): segment is BreadcrumbSegme
 }
 
 export function humanizeSegment(segment: string): string {
-  return segment
+  const decoded = safeDecodeSegment(segment);
+
+  return decoded
     .split("-")
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+}
+
+function safeDecodeSegment(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
 }
 
 export type BreadcrumbTrailItem = {
