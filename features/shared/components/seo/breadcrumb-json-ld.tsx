@@ -3,8 +3,7 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
 import {
   getBreadcrumbTrailItems,
-  humanizeSegment,
-  isBreadcrumbSegment,
+  resolveBreadcrumbSegmentLabel,
 } from "@/features/shared/lib/breadcrumb-trail";
 import { usePathname } from "@/i18n/navigation";
 import { getSiteUrl } from "@/lib/seo/site-url";
@@ -16,13 +15,18 @@ export default function BreadcrumbJsonLd() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("seo.breadcrumb");
+  const tPackages = useTranslations("packagesPage");
   const siteUrl = getSiteUrl();
 
   const jsonLd = useMemo(() => {
     const items = getBreadcrumbTrailItems(pathname, (segment) => {
-      if (segment === "home") return t("home");
-      if (isBreadcrumbSegment(segment)) return t(segment);
-      return humanizeSegment(segment);
+      if (
+        segment.toLowerCase() === "categories" &&
+        pathname.startsWith("/packages")
+      ) {
+        return tPackages("breadcrumbCategories");
+      }
+      return resolveBreadcrumbSegmentLabel(segment, (key) => t(key));
     });
 
     if (!items) {
@@ -41,7 +45,7 @@ export default function BreadcrumbJsonLd() {
       "@type": "BreadcrumbList",
       itemListElement,
     };
-  }, [locale, pathname, siteUrl, t]);
+  }, [locale, pathname, siteUrl, t, tPackages]);
 
   if (!jsonLd) {
     return null;

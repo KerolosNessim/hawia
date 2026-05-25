@@ -22,6 +22,7 @@ export default function ServiceArticleTags({ tags, heading }: Props) {
           <Link
             key={tag.label}
             href={blogTagPath(tag.label)}
+            rel={tag.follow ? undefined : "nofollow"}
             className="rounded-full border border-brand bg-white px-4 py-2 text-sm font-semibold text-brand transition-colors hover:bg-brand/5"
           >
             {tag.label}

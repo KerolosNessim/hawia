@@ -44,30 +44,34 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
         subtitleColor="text-gray-500"
       />
 
-      <div dir="ltr" className="space-y-8 relative">
+      <div dir="ltr" className="relative max-w-full space-y-8 overflow-x-hidden">
         {/* Gradient Masks */}
         <div className="absolute inset-y-0 left-0 w-32 bg-linear-to-r from-background to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-32 bg-linear-to-l from-background to-transparent z-10 pointer-events-none" />
 
         {/* Row 1: natural direction */}
-        <Marquee
-          direction={locale === "ar" ? "right" : "left"}
-          speed={50}
-          pauseOnHover
-          autoFill
-        >
-          {images.map((image, index) => card(image.url, index, image.alt))}
-        </Marquee>
+        <div className="max-w-full overflow-hidden">
+          <Marquee
+            direction={locale === "ar" ? "right" : "left"}
+            speed={50}
+            pauseOnHover
+            autoFill
+          >
+            {images.map((image, index) => card(image.url, index, image.alt))}
+          </Marquee>
+        </div>
 
         {/* Row 2: opposite direction */}
-        <Marquee
-          direction={locale === "ar" ? "left" : "right"}
-          speed={50}
-          pauseOnHover
-          autoFill
-        >
-          {images.map((image, index) => card(image.url, index, image.alt))}
-        </Marquee>
+        <div className="max-w-full overflow-hidden">
+          <Marquee
+            direction={locale === "ar" ? "left" : "right"}
+            speed={50}
+            pauseOnHover
+            autoFill
+          >
+            {images.map((image, index) => card(image.url, index, image.alt))}
+          </Marquee>
+        </div>
       </div>
     </section>
   );

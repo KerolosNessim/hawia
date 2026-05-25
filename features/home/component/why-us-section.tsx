@@ -36,7 +36,7 @@ export default function WhyUsSection() {
   const features = apiFeatures.length > 0 ? apiFeatures : fallbackFeatures;
 
   return (
-    <section ref={container} className="relative py-20 ">
+    <section ref={container} className="relative overflow-x-hidden py-20">
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <Loader2 className="animate-spin text-brand" />
@@ -78,7 +78,7 @@ export default function WhyUsSection() {
             </Button>
           </Link>
 
-          <div className="container mx-auto px-4 relative">
+          <div className="container relative mx-auto min-w-0 max-w-full px-4">
             {features.map((feature, i) => {
               const targetScale = 1 - (features.length - i) * 0.05;
               return (

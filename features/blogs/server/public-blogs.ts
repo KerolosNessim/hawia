@@ -7,9 +7,15 @@ import {
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { blogPostPath } from "@/features/blogs/lib/blog-routes";
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { apiClient } from "@/lib/api";
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
+import {
+  extractBlogCategoriesFromRaw,
+  pickLatestBlogCategory,
+  type BlogCategoryRef,
+} from "@/features/blogs/lib/pick-blog-category";
 import type { Locale } from "next-intl";
 
 export type PublicBlogCategory = {
@@ -57,6 +63,8 @@ export type PublicBlog = {
   is_active: boolean;
   published_at: string | null;
   category: { id: number; name: string; slug?: string } | null;
+  /** All categories from API; primary `category` is the latest assignment. */
+  categories?: BlogCategoryRef[];
   created_at: string | null;
 };
 
@@ -125,18 +133,7 @@ function pickBlogPayloadRecord(payload: unknown): Record<string, unknown> | null
 
 /** Slug as captured from the Next route — safe-decode segments that arrive percent-encoded. */
 export function normalizeBlogSlugFromRoute(routeSlug: string): string {
-  let s = routeSlug.trim();
-  if (!s) return s;
-  try {
-    let prev = "";
-    while (prev !== s) {
-      prev = s;
-      s = decodeURIComponent(s.replace(/\+/g, "%20"));
-    }
-  } catch {
-    /* keep s */
-  }
-  return s;
+  return decodePathSegment(routeSlug);
 }
 
 /** Compare slugs tolerant of encoding + Unicode normalization (Arabic NFC/NFD vs API). */
@@ -246,14 +243,11 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
 
   const tags = normalizePublicBlogTags(raw.tags);
 
-  let category: PublicBlog["category"] = null;
-  const cat = asRecord(raw.category);
-  if (cat != null && cat.id != null) {
-    const cid = typeof cat.id === "number" ? cat.id : Number(cat.id);
-    const cname = typeof cat.name === "string" ? cat.name : "";
-    const cslug = typeof cat.slug === "string" ? cat.slug : undefined;
-    if (Number.isFinite(cid)) category = { id: cid as number, name: cname, slug: cslug };
-  }
+  const categoryRefs = extractBlogCategoriesFromRaw(raw);
+  const latestRef = pickLatestBlogCategory(categoryRefs);
+  const category: PublicBlog["category"] = latestRef
+    ? { id: latestRef.id, name: latestRef.name, slug: latestRef.slug }
+    : null;
 
   const title = typeof raw.title === "string" ? raw.title : pickLocalizedRichText(raw.title, "en");
   const subtitle =
@@ -294,6 +288,7 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
     is_active: raw.is_active !== false && raw.is_active !== 0 && raw.is_active !== "0",
     published_at: typeof raw.published_at === "string" ? raw.published_at : null,
     category,
+    ...(categoryRefs.length ? { categories: categoryRefs } : {}),
     created_at: typeof raw.created_at === "string" ? raw.created_at : null,
   };
 }
@@ -488,7 +483,7 @@ export async function fetchPublicBlogsPaginated(
 
 /** Tag archive SEO meta (`GET /v1/blogs/tags/{name}` or `tag` on filtered list). */
 export async function fetchPublicBlogTagMeta(tagLabel: string): Promise<PublicBlogTagMeta> {
-  const label = decodeURIComponent(tagLabel).trim();
+  const label = decodePathSegment(tagLabel).trim();
   const fallback: PublicBlogTagMeta = { label, index: true, follow: true };
 
   try {
@@ -514,7 +509,7 @@ export async function fetchPublicBlogsByTag(
   tag: string,
   params: { paginationPath: string; page?: number; per_page?: number },
 ): Promise<{ blogs: PublicBlog[]; meta: LaravelPaginationMeta; tagMeta: PublicBlogTagMeta }> {
-  const tagLabel = decodeURIComponent(tag).trim();
+  const tagLabel = decodePathSegment(tag).trim();
   const page = params.page ?? 1;
   const perPage = params.per_page ?? BLOG_LIST_PER_PAGE;
 

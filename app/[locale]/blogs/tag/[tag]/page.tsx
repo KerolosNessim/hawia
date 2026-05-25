@@ -6,6 +6,7 @@ import {
   blogToCardPayload,
   fetchPublicBlogsByTag,
 } from "@/features/blogs/server/public-blogs";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import PageHeader from "@/features/shared/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -25,11 +26,7 @@ function parsePage(sp: SearchParamsType): number {
 }
 
 function decodeTagParam(tag: string): string {
-  try {
-    return decodeURIComponent(tag).trim();
-  } catch {
-    return tag.trim();
-  }
+  return decodePathSegment(tag).trim();
 }
 
 export async function generateMetadata({

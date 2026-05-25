@@ -31,7 +31,7 @@ function TestimonialCard({
 }) {
   return (
     <div className="p-2 h-full ">
-      <Card className="h-full ring-brand  backdrop-blur-sm ring-1   transition-all duration-300 flex flex-col justify-between overflow-visible">
+      <Card className="h-full ring-brand backdrop-blur-sm ring-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">
         <CardContent>
           {/* Quote icon */}
           <div className="mb-4 flex items-center justify-between">

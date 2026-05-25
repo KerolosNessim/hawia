@@ -87,7 +87,11 @@ const ResultItem = ({ item, href, icon: Icon, onClose }: ResultItemProps) => (
   </Link>
 );
 
-export const SearchDialog = () => {
+type SearchDialogProps = {
+  triggerClassName?: string;
+};
+
+export const SearchDialog = ({ triggerClassName }: SearchDialogProps = {}) => {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
@@ -129,8 +133,13 @@ export const SearchDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="size-14! rounded-full bg-brand text-white">
-          <SearchIcon className="size-6" />
+        <Button
+          className={
+            triggerClassName ??
+            "size-14! rounded-full bg-brand text-white"
+          }
+        >
+          <SearchIcon className="size-5 sm:size-6" />
         </Button>
       </DialogTrigger>
 

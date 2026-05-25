@@ -23,8 +23,9 @@ export function matchCountryByUserCode(
   );
 
   if (!matched) {
-    matched = countries.find(
-      (c) => c.name.toLowerCase().includes("oman") || c.name.includes("عمان"),
+    const saAliases = COUNTRY_CODE_ALIASES.SA;
+    matched = countries.find((c) =>
+      saAliases.some((alias) => c.name.toLowerCase().includes(alias)),
     );
   }
 

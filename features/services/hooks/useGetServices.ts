@@ -7,7 +7,7 @@ export const useGetServices = () => {
     const locale = useLocale();
     const { data, isLoading, error } = useQuery({
         queryKey: ["services", locale],
-        queryFn: getServices,
+        queryFn: () => getServices(locale),
     });
     const { data: countries, isLoading: countriesLoading, error: countriesError } = useQuery({
         queryKey: ["countries", locale],

@@ -34,7 +34,7 @@ export default function SectionHeader({
   };
 
   return (
-    <div className={`container space-y-4  ${alignment[align]}`}>
+    <div className={`container min-w-0 max-w-full space-y-4 ${alignment[align]}`}>
       {/* Badge */}
       {badge && (
         <motion.span

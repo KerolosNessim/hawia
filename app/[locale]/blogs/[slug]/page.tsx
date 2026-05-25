@@ -6,7 +6,7 @@ import {
   blogCategoryPath,
   blogPostHref,
   localePath,
-  RESERVED_BLOG_CATEGORY_SLUGS,
+  RESERVED_BLOG_SLUGS,
 } from "@/features/blogs/lib/blog-routes";
 import {
   generateSingleBlogMetadata,
@@ -54,19 +54,19 @@ export async function generateMetadata({
   params,
   searchParams,
 }: {
-  params: Promise<{ locale: Locale; categorySlug: string }>;
+  params: Promise<{ locale: Locale; slug: string }>;
   searchParams?: Promise<SearchParamsType>;
 }): Promise<Metadata> {
-  const { locale, categorySlug } = await params;
-  if (RESERVED_BLOG_CATEGORY_SLUGS.has(categorySlug)) {
+  const { locale, slug } = await params;
+  if (RESERVED_BLOG_SLUGS.has(slug)) {
     return { title: "—", robots: { index: false, follow: false } };
   }
 
   const categories = await fetchPublicBlogCategories(locale);
-  const category = findPublicBlogCategoryBySlug(categories, categorySlug);
+  const category = findPublicBlogCategoryBySlug(categories, slug);
   if (!category) {
-    const blog = await fetchPublicBlogBySlug(categorySlug);
-    if (blog) return generateSingleBlogMetadata(locale, categorySlug);
+    const blog = await fetchPublicBlogBySlug(slug);
+    if (blog) return generateSingleBlogMetadata(locale, slug);
     return { title: "—", robots: { index: false, follow: false } };
   }
 
@@ -83,7 +83,7 @@ export async function generateMetadata({
   const sp = searchParams ? await searchParams : {};
   const page = parsePage(sp);
   const search = parseSearch(sp);
-  const pathname = blogCategoryHref(locale, categorySlug, page > 1 ? page : 1, { search });
+  const pathname = blogCategoryHref(locale, slug, page > 1 ? page : 1, { search });
 
   const paginationBase = localePath(locale, `/blogs/${encodeURIComponent(category.slug)}`);
   const { meta } = await fetchPublicBlogsPaginated({
@@ -108,42 +108,35 @@ export async function generateMetadata({
     },
     {
       pathname,
-      logicalPath: blogCategoryPath(categorySlug),
+      logicalPath: blogCategoryPath(slug),
       pagination: {
         currentPage: meta.current_page,
         lastPage: meta.last_page,
-        hrefForPage: (p) =>
-          blogCategoryHref(locale, categorySlug, p > 1 ? p : 1, { search }),
+        hrefForPage: (p) => blogCategoryHref(locale, slug, p > 1 ? p : 1, { search }),
       },
     },
   );
 }
 
-export default async function BlogCategoryPage(props: {
-  params: Promise<{ locale: Locale; categorySlug: string }>;
+/** `/blogs/{slug}` — blog post or category listing (same URL shape). */
+export default async function BlogSlugPage(props: {
+  params: Promise<{ locale: Locale; slug: string }>;
   searchParams?: Promise<SearchParamsType>;
 }) {
-  const { locale, categorySlug } = await props.params;
+  const { locale, slug } = await props.params;
   const sp = props.searchParams ? await props.searchParams : {};
   const page = parsePage(sp);
   const search = parseSearch(sp);
 
-  if (RESERVED_BLOG_CATEGORY_SLUGS.has(categorySlug)) {
+  if (RESERVED_BLOG_SLUGS.has(slug)) {
     redirectToNotFound();
   }
 
   const categories = await fetchPublicBlogCategories(locale);
-  const category = findPublicBlogCategoryBySlug(categories, categorySlug);
+  const category = findPublicBlogCategoryBySlug(categories, slug);
 
   if (!category) {
-    const blog = await fetchPublicBlogBySlug(categorySlug);
-    if (process.env.NODE_ENV === "development") {
-      console.log("[BlogCategoryPage] post route", {
-        locale,
-        categorySlug,
-        blog,
-      });
-    }
+    const blog = await fetchPublicBlogBySlug(slug);
     if (blog) {
       return <SingleBlogPage locale={locale} slug={blog.slug} />;
     }
@@ -154,7 +147,6 @@ export default async function BlogCategoryPage(props: {
   const visibleLocale = (await getLocale()) as Locale;
 
   const paginationBase = localePath(locale, `/blogs/${encodeURIComponent(category.slug)}`);
-  /** Prefer numeric id: avoids query-string issues with Unicode slugs; matches Postman `blog_category_id`. */
   const { blogs, meta } = await fetchPublicBlogsPaginated({
     paginationPath: paginationBase,
     page,
@@ -202,7 +194,6 @@ export default async function BlogCategoryPage(props: {
 
   const structuredData = jsonLdScript([breadcrumbLd, ...collectionLds]);
 
- 
   return (
     <div className="space-y-12 pb-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />

@@ -24,7 +24,7 @@ export default function ClientsSection() {
   const card = (image: string, key: string, alt?: string) => (
     <div
       key={key}
-      className="group relative mx-2 flex h-32 w-44 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/50 p-8 transition-all duration-300 hover:border-brand hover:bg-white"
+      className="group relative mx-2 flex h-32 w-44 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/60 bg-neutral-50/40 p-8 transition-all duration-300 hover:border-brand hover:shadow-md"
     >
       <Image
         src={image}
@@ -32,10 +32,15 @@ export default function ClientsSection() {
         width={180}
         height={80}
         unoptimized={isRemoteMediaUrl(image)}
-        className="h-full w-full object-contain transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0"
+        className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
       />
     </div>
   );
+
+  const partnerRows = Array.from({ length: 3 }, () => [] as typeof partnerImages);
+  partnerImages.forEach((partner, index) => {
+    partnerRows[index % 3].push(partner);
+  });
 
   if (isLoading || partnerImages.length === 0) return null;
 
@@ -43,34 +48,39 @@ export default function ClientsSection() {
   const sectionSubtitle = partnersList[0]?.description?.trim() || t("subtitle");
 
   return (
-    <section className="space-y-8 overflow-hidden bg-gray-900 py-16">
-      <SectionHeader title={sectionTitle} subtitleHtml={sectionSubtitle} />
+    <section className="space-y-8 overflow-hidden bg-white py-16">
+      <SectionHeader
+        title={sectionTitle}
+        subtitleHtml={sectionSubtitle}
+        subtitleColor="text-gray-500"
+      />
 
-      <div dir="ltr" className="relative space-y-8">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32 bg-linear-to-r from-gray-900 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-32 bg-linear-to-l from-gray-900 to-transparent" />
+      <div dir="ltr" className="relative max-w-full space-y-6 overflow-x-hidden">
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32 bg-linear-to-r from-white to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-32 bg-linear-to-l from-white to-transparent" />
 
-        <Marquee
-          direction={locale === "ar" ? "right" : "left"}
-          speed={50}
-          pauseOnHover
-          autoFill
-        >
-          {partnerImages.map((partner, index) =>
-            card(partner.url, `r1-${partner.url}-${index}`, partner.alt),
-          )}
-        </Marquee>
+        {partnerRows.map((rowPartners, rowIndex) => {
+          if (rowPartners.length === 0) return null;
 
-        <Marquee
-          direction={locale === "ar" ? "left" : "right"}
-          speed={50}
-          pauseOnHover
-          autoFill
-        >
-          {partnerImages.map((partner, index) =>
-            card(partner.url, `r2-${partner.url}-${index}`, partner.alt),
-          )}
-        </Marquee>
+          const isReverse = rowIndex % 2 === 1;
+          const direction = locale === "ar"
+            ? isReverse ? "left" : "right"
+            : isReverse ? "right" : "left";
+
+          return (
+            <div key={rowIndex} className="max-w-full overflow-hidden">
+              <Marquee direction={direction} speed={50} pauseOnHover autoFill>
+                {rowPartners.map((partner, index) =>
+                  card(
+                    partner.url,
+                    `r${rowIndex}-${partner.url}-${index}`,
+                    partner.alt,
+                  ),
+                )}
+              </Marquee>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

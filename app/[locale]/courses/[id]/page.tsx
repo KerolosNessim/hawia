@@ -1,5 +1,6 @@
 import SingleCoursePage from "@/features/courses/components/single-course-page";
 import { resolvePublicCourse } from "@/features/courses/services/courses-public-api";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import {
   buildPageMetadata,
@@ -16,7 +17,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, id } = await params;
-  const course = await resolvePublicCourse(decodeURIComponent(id), locale);
+  const course = await resolvePublicCourse(decodePathSegment(id), locale);
 
   if (!course) {
     return buildPageMetadata({
@@ -45,7 +46,7 @@ export default async function Page({
   params,
 }: Props) {
   const { locale, id } = await params;
-  const course = await resolvePublicCourse(decodeURIComponent(id), locale);
+  const course = await resolvePublicCourse(decodePathSegment(id), locale);
   if (!course) redirectToNotFound();
   return <SingleCoursePage course={course} />;
 }

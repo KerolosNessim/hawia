@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaFacebook,
   FaInstagram,
@@ -17,8 +17,13 @@ import { useTranslations } from "next-intl";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 
 export default function FloatingSocials() {
-  const [open, setOpen] = useState(true);
-  const locale = useLocale()
+  const [open, setOpen] = useState(false);
+  const locale = useLocale();
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1280px)");
+    if (media.matches) setOpen(true);
+  }, []);
   const t = useTranslations("socials");
   const { data: settings } = useSettings();
 

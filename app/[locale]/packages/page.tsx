@@ -63,7 +63,7 @@ export default async function PackagesPage() {
   const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);
 
   return (
-    <div className="space-y-16 pb-16">
+    <div className="min-w-0 space-y-16 overflow-x-clip pb-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: structuredData }}

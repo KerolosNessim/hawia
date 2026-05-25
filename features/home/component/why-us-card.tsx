@@ -31,7 +31,7 @@ export const WhyUsCard: React.FC<WhyUsCardProps> = ({
 
   return (
     <div
-      className="flex items-center justify-center sticky pt-24"
+      className="sticky flex w-full max-w-full items-center justify-center overflow-hidden pt-24"
       style={{ top: `${index * 20 + 80}px` }}
     >
       <motion.div
@@ -39,10 +39,10 @@ export const WhyUsCard: React.FC<WhyUsCardProps> = ({
           scale,
         }}
         className={cn(
-          "w-full max-w-7xl min-h-64 bg-white rounded-3xl p-8 md:p-12 shadow-2xl border border-gray-100 flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10 relative origin-top",
+          "relative flex w-full min-w-0 max-w-full min-h-64 origin-top flex-col items-start gap-6 rounded-3xl border border-gray-100 bg-white p-8 shadow-2xl md:flex-row md:items-center md:gap-10 md:p-12",
         )}
       >
-        <div className="flex-1 space-y-4 text-start">
+        <div className="min-w-0 flex-1 space-y-4 text-start overflow-hidden">
           <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
             {title}
           </h3>

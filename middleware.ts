@@ -44,8 +44,8 @@ export default function middleware(req: NextRequest) {
   const response = applySecurityHeaders(intlMiddleware(req));
 
   // Detect user country from headers (Cloudflare, Vercel, etc)
-  // Note: On localhost, these headers are empty, so it defaults to 'EG'
-  const country = req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || 'EG';
+  // Note: On localhost, these headers are empty, so it defaults to 'SA'
+  const country = req.headers.get('x-vercel-ip-country') || req.headers.get('cf-ipcountry') || 'SA';
   
   // Set the country as a cookie so it can be easily accessed on client and server
   response.cookies.set('user_country', country, {

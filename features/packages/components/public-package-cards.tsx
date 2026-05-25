@@ -108,7 +108,7 @@ export function PublicPackageCardGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
+    <div className="grid grid-cols-1 items-stretch gap-6 max-w-6xl mx-auto md:grid-cols-2 lg:grid-cols-3">
       {items.map((pkg, index) => (
         <motion.div
           key={`${pkg.id}-${index}`}
@@ -116,16 +116,16 @@ export function PublicPackageCardGrid({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.08 }}
           viewport={{ once: true }}
-          className="h-full"
+          className="h-full min-w-0"
         >
           <Card
-            className={`flex h-full max-h-120 flex-col overflow-hidden transition-shadow duration-300 hover:shadow-xl rounded-2xl ${
+            className={`flex h-full flex-col overflow-hidden rounded-2xl transition-shadow duration-300 hover:shadow-xl ${
               pkg.isFeatured
-                ? "border-2 border-brand shadow-lg md:scale-107 z-10 bg-white"
+                ? "z-10 border-2 border-brand bg-white shadow-lg ring-2 ring-brand/25"
                 : "border border-gray-200 bg-white"
             }`}
           >
-            <CardContent className="flex h-full min-h-0 flex-col items-center overflow-hidden p-8 text-center">
+            <CardContent className="flex h-full flex-col items-center overflow-hidden p-8 text-center">
               <div className="mb-6 mx-auto flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-50 p-2 shadow-sm">
                 <PackageImage
                   pkg={pkg}
@@ -144,10 +144,10 @@ export function PublicPackageCardGrid({
                 <p className="mb-2 shrink-0 text-sm font-semibold text-brand">{pkg.priceLabel}</p>
               ) : null}
 
-              <div className="mb-0 min-h-0 w-full max-h-36 flex-1 overflow-y-auto overscroll-contain">
+              <div className="mb-4 w-full min-w-0 flex-1">
                 <RichHtml
                   html={pkg.description}
-                  className="text-sm leading-relaxed text-gray-600"
+                  className="overflow-visible text-sm leading-relaxed text-gray-600 [&_*]:overflow-visible [&_p]:line-clamp-4"
                 />
               </div>
 

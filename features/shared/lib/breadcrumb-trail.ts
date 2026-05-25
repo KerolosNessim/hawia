@@ -1,3 +1,5 @@
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
+
 export const BREADCRUMB_SEGMENTS = [
   "about",
   "blog",
@@ -8,6 +10,7 @@ export const BREADCRUMB_SEGMENTS = [
   "faq",
   "login",
   "packages",
+  "categories",
   "register",
   "services",
 ] as const;
@@ -17,11 +20,18 @@ export type BreadcrumbSegment = (typeof BREADCRUMB_SEGMENTS)[number];
 const BREADCRUMB_SEGMENT_SET = new Set<string>(BREADCRUMB_SEGMENTS);
 
 export function isBreadcrumbSegment(segment: string): segment is BreadcrumbSegment {
-  return BREADCRUMB_SEGMENT_SET.has(segment);
+  return BREADCRUMB_SEGMENT_SET.has(segment.toLowerCase());
 }
 
 export function humanizeSegment(segment: string): string {
-  return segment
+  const decoded = decodePathSegment(segment);
+
+  // Slugs with spaces or non-ASCII (e.g. Arabic titles) — show decoded text as-is
+  if (/[^\u0000-\u007F]/.test(decoded) || /\s/.test(decoded)) {
+    return decoded;
+  }
+
+  return decoded
     .split("-")
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -33,12 +43,29 @@ export type BreadcrumbTrailItem = {
   label: string;
 };
 
+type BreadcrumbTranslate = (key: "home" | BreadcrumbSegment) => string;
+
+/** Single resolver for UI breadcrumbs and layout JSON-LD. */
+export function resolveBreadcrumbSegmentLabel(
+  segment: string,
+  translate: BreadcrumbTranslate,
+): string {
+  if (segment === "home") return translate("home");
+  const normalized = segment.toLowerCase();
+  if (isBreadcrumbSegment(normalized)) return translate(normalized);
+  return humanizeSegment(segment);
+}
+
+function splitPathname(pathname: string): string[] {
+  if (!pathname || pathname === "/") return [];
+  return pathname.split("/").filter(Boolean).map(decodePathSegment);
+}
+
 export function getBreadcrumbTrailItems(
   pathname: string,
   resolveLabel: (segment: string) => string,
 ): BreadcrumbTrailItem[] | null {
-  const segments =
-    !pathname || pathname === "/" ? [] : pathname.split("/").filter(Boolean);
+  const segments = splitPathname(pathname);
 
   if (segments.length === 0) {
     return null;
@@ -48,7 +75,7 @@ export function getBreadcrumbTrailItems(
 
   let acc = "";
   for (const segment of segments) {
-    acc += `/${segment}`;
+    acc += `/${encodeURIComponent(segment)}`;
     items.push({ href: acc, label: resolveLabel(segment) });
   }
 

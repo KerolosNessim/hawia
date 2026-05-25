@@ -15,5 +15,5 @@ export async function getServerCountry(): Promise<string> {
   const cookieStore = await cookies();
   const cookieCountry = cookieStore.get('user_country')?.value;
 
-  return cookieCountry || 'EG'; // Default fallback
+  return cookieCountry || 'SA'; // Default fallback
 }

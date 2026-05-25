@@ -34,7 +34,7 @@ export function filterServicesByCountryCode(
   const user = filterByCountryCode(services, userCountryCode);
   if (user.length > 0) return user;
 
-  for (const fallbackCode of ["OM", "SA", "AE", "EG"]) {
+  for (const fallbackCode of ["SA", "OM", "AE", "EG"]) {
     const matched = filterByCountryCode(services, fallbackCode);
     if (matched.length > 0) return matched;
   }

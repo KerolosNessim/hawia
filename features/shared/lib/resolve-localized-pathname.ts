@@ -1,26 +1,19 @@
 import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
 import type { Service } from "@/features/services/types";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 
 const SERVICES_DETAIL_RE = /^\/services\/([^/?#]+)$/;
-
-function decodeSlug(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
 
 function serviceSlugVariants(
   service: Pick<Service, "slug"> & { slug_local?: { ar?: string; en?: string } },
 ): string[] {
   return [service.slug, service.slug_local?.ar, service.slug_local?.en]
     .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-    .map((value) => decodeSlug(value.trim()));
+    .map((value) => decodePathSegment(value.trim()));
 }
 
 function findServiceBySlug(services: Service[], slugInUrl: string): Service | undefined {
-  const decoded = decodeSlug(slugInUrl);
+  const decoded = decodePathSegment(slugInUrl);
   return services.find((service) => serviceSlugVariants(service).includes(decoded));
 }
 

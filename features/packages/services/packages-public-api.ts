@@ -1,9 +1,12 @@
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { apiClient } from "@/lib/api";
 import { pickImageAlt } from "@/lib/image-alt";
 
 export type PublicPackageCategory = {
   id: string;
   slug: string;
+  slugAr: string;
+  slugEn: string;
   title: string;
   sortOrder: number;
   metaTitle: string | null;
@@ -104,7 +107,9 @@ function readPageMeta(body: unknown): PageMeta {
 }
 
 async function fetchAllRows(url: string): Promise<Record<string, unknown>[]> {
-  const first = await apiClient.get<unknown>(url);
+  const first = await apiClient.get<unknown>(url, {
+    query: { page: 1, per_page: 100 },
+  });
   const firstRows = unwrapArray(first);
   const meta = readPageMeta(first);
   if (meta.lastPage <= 1) return firstRows;
@@ -112,12 +117,46 @@ async function fetchAllRows(url: string): Promise<Record<string, unknown>[]> {
   const rest = await Promise.all(
     Array.from({ length: meta.lastPage - 1 }, (_, i) =>
       apiClient.get<unknown>(url, {
-        query: { page: i + 2, per_page: meta.perPage },
+        query: { page: i + 2, per_page: meta.perPage || 100 },
       }),
     ),
   );
 
   return rest.reduce((rows, page) => rows.concat(unwrapArray(page)), firstRows);
+}
+
+function readNestedCategoryId(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "number" || typeof value === "string") {
+    const s = String(value).trim();
+    return s || "";
+  }
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const o = value as Record<string, unknown>;
+    const id = o.id ?? o.uuid;
+    return id != null ? String(id).trim() : "";
+  }
+  return "";
+}
+
+function bilingualSlugs(r: Record<string, unknown>): { ar: string; en: string } {
+  const s = r.slug;
+  if (typeof s === "string") {
+    const t = s.trim();
+    return { ar: t, en: t };
+  }
+  if (s && typeof s === "object" && !Array.isArray(s)) {
+    const o = s as Record<string, unknown>;
+    return {
+      ar: pickString(o.ar),
+      en: pickString(o.en),
+    };
+  }
+  const local = asRecord(r.slug_local);
+  return {
+    ar: local ? pickString(local.ar) : "",
+    en: local ? pickString(local.en) : "",
+  };
 }
 
 function pickLoc(field: unknown, locale: string): string {
@@ -177,7 +216,7 @@ function slugObjectMatches(
   slugOrId: string,
   r: Record<string, unknown>,
 ): boolean {
-  const decoded = decodeURIComponent(slugOrId).trim();
+  const decoded = decodePathSegment(slugOrId).trim();
   if (!decoded) return false;
   if (readId(r) === decoded) return true;
   const s = r.slug;
@@ -238,14 +277,27 @@ function priceLabelFromRecord(r: Record<string, unknown>): string {
 }
 
 function categoryIdFromPackage(r: Record<string, unknown>): string | null {
-  const direct = r.package_category_id;
-  if (direct != null && String(direct).trim() !== "") return String(direct);
-  const cat = r.package_category ?? r.category;
-  if (cat && typeof cat === "object" && !Array.isArray(cat)) {
-    const id = (cat as Record<string, unknown>).id;
-    if (id != null) return String(id);
+  for (const key of [
+    "package_category_id",
+    "packageCategoryId",
+    "category_id",
+    "categoryId",
+    "package_category",
+    "packageCategory",
+    "category",
+  ] as const) {
+    const id = readNestedCategoryId(r[key]);
+    if (id) return id;
   }
   return null;
+}
+
+function categoryIdsMatch(
+  packageCategoryId: string | null | undefined,
+  categoryId: string,
+): boolean {
+  if (!packageCategoryId || !categoryId) return false;
+  return String(packageCategoryId).trim() === String(categoryId).trim();
 }
 
 function categoryRecordFromPackage(
@@ -263,9 +315,14 @@ function recordToCategory(
   if (!id) return null;
   const active = r.is_active ?? r.isActive;
   if (active === false || active === 0 || active === "0") return null;
+  const slugs = bilingualSlugs(r);
+  const slug =
+    readSlug(r, locale) || (locale.startsWith("ar") ? slugs.ar : slugs.en) || slugs.ar || slugs.en || id;
   return {
     id,
-    slug: readSlug(r, locale) || id,
+    slug,
+    slugAr: slugs.ar || slug,
+    slugEn: slugs.en || slug,
     title: pickLoc(r.title ?? r.name, locale),
     sortOrder: Number(r.sort_order ?? 0) || 0,
     metaTitle: seoString(r, "meta_title"),
@@ -351,8 +408,17 @@ export function findPublicPackageCategoryBySlug(
   categories: PublicPackageCategory[],
   slugOrId: string,
 ): PublicPackageCategory | null {
-  const decoded = decodeURIComponent(slugOrId);
-  return categories.find((c) => c.slug === decoded || c.id === decoded) ?? null;
+  const decoded = decodePathSegment(slugOrId).trim();
+  if (!decoded) return null;
+  return (
+    categories.find(
+      (c) =>
+        c.id === decoded ||
+        c.slug === decoded ||
+        c.slugAr === decoded ||
+        c.slugEn === decoded,
+    ) ?? null
+  );
 }
 
 export async function fetchPublicPackageCategoryById(
@@ -396,35 +462,55 @@ export async function fetchPublicPackagesByCategorySlug(
   category: PublicPackageCategory | null;
   packages: PublicPackageCard[];
 }> {
-  const decoded = decodeURIComponent(categorySlug);
-  try {
-    const directBody = await apiClient.get<unknown>(
-      `/v1/packages/categories/${encodeURIComponent(decoded)}`,
-    );
-    const direct = recordToCategoryWithPackages(
-      unwrapObject(directBody),
-      locale,
-    );
-    if (direct.category && direct.hasPackagesKey) {
-      return { category: direct.category, packages: direct.packages };
-    }
-  } catch {
-    /* Fall back to list + client-side grouping for older API deployments. */
+  const decoded = decodePathSegment(categorySlug).trim();
+  const categories = await fetchPublicPackageCategories(locale);
+  const categoryFromList = findPublicPackageCategoryBySlug(categories, decoded);
+
+  const lookupKeys = new Set<string>();
+  if (decoded) lookupKeys.add(decoded);
+  if (categoryFromList) {
+    lookupKeys.add(categoryFromList.id);
+    lookupKeys.add(categoryFromList.slug);
+    if (categoryFromList.slugAr) lookupKeys.add(categoryFromList.slugAr);
+    if (categoryFromList.slugEn) lookupKeys.add(categoryFromList.slugEn);
   }
 
-  const categories = await fetchPublicPackageCategories(locale);
-  const category = findPublicPackageCategoryBySlug(categories, categorySlug);
-  if (!category) return { category: null, packages: [] };
+  let resolvedCategory: PublicPackageCategory | null = categoryFromList;
+  let resolvedPackages: PublicPackageCard[] = [];
+
+  for (const key of lookupKeys) {
+    try {
+      const directBody = await apiClient.get<unknown>(
+        `/v1/packages/categories/${encodeURIComponent(key)}`,
+      );
+      const direct = recordToCategoryWithPackages(
+        unwrapObject(directBody),
+        locale,
+      );
+      if (!direct.category) continue;
+      resolvedCategory = direct.category;
+      if (direct.packages.length > 0) {
+        return { category: direct.category, packages: direct.packages };
+      }
+    } catch {
+      /* try next key or fallback */
+    }
+  }
+
+  if (!resolvedCategory) return { category: null, packages: [] };
 
   const detailedCategory = await fetchPublicPackageCategoryById(
-    category.id,
+    resolvedCategory.id,
     locale,
   );
-  const packages = (await fetchPublicPackages(locale)).filter(
-    (pkg) => pkg.categoryId === category.id,
+  resolvedCategory = detailedCategory ?? resolvedCategory;
+
+  const allPackages = await fetchPublicPackages(locale);
+  resolvedPackages = allPackages.filter((pkg) =>
+    categoryIdsMatch(pkg.categoryId, resolvedCategory!.id),
   );
 
-  return { category: detailedCategory ?? category, packages };
+  return { category: resolvedCategory, packages: resolvedPackages };
 }
 
 export async function fetchPackagesSectionData(
@@ -443,12 +529,12 @@ export async function fetchPackagesSectionData(
   const uncategorized: PublicPackageCard[] = [];
 
   for (const pkg of packages) {
-    const cid = pkg.categoryId;
-    if (
-      cid &&
-      Object.prototype.hasOwnProperty.call(packagesByCategoryId, cid)
-    ) {
-      packagesByCategoryId[cid].push(pkg);
+    const cid = pkg.categoryId?.trim();
+    const bucketId = cid
+      ? categories.find((c) => categoryIdsMatch(cid, c.id))?.id
+      : undefined;
+    if (bucketId && packagesByCategoryId[bucketId]) {
+      packagesByCategoryId[bucketId].push(pkg);
     } else {
       uncategorized.push(pkg);
     }
@@ -512,7 +598,7 @@ async function findPackageDetailByAnySlug(
   slugOrId: string,
   locale: string,
 ): Promise<PublicPackageDetail | null> {
-  const decoded = decodeURIComponent(slugOrId).trim();
+  const decoded = decodePathSegment(slugOrId).trim();
   try {
     const rows = await fetchAllRows("/v1/packages");
     const row = rows.find((r) => slugObjectMatches(decoded, r));
@@ -526,7 +612,7 @@ export async function fetchPublicPackageDetail(
   slugOrId: string,
   locale: string,
 ): Promise<PublicPackageDetail | null> {
-  const decoded = decodeURIComponent(slugOrId).trim();
+  const decoded = decodePathSegment(slugOrId).trim();
   const key = encodeURIComponent(decoded);
   try {
     const body = await apiClient.get<unknown>(`/v1/packages/${key}`);

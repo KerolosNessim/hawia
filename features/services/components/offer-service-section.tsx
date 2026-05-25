@@ -1,7 +1,10 @@
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { hasSectionImage } from "@/features/services/lib/has-section-image";
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { useTranslations } from "next-intl";
 import * as motion from "framer-motion/client";
+import Image from "next/image";
 import { Section } from "../types";
 
 interface OfferServiceItemProps {
@@ -18,6 +21,8 @@ export default function OfferServiceSection({
 }) {
   const t = useTranslations("singleService.whatWeOffer");
   const items = t.raw("cards") as OfferServiceItemProps[];
+  const hasImage = hasSectionImage(offerings?.image);
+
   return (
     <div className="container space-y-6">
       <SectionHeader
@@ -26,6 +31,18 @@ export default function OfferServiceSection({
         subtitleHtml={offerings?.description || t("subtitle")}
         subtitleColor="text-gray-500"
       />
+      {hasImage && offerings.image ? (
+        <div className="flex justify-center">
+          <Image
+            src={offerings.image}
+            alt={offerings.image_alt ?? ""}
+            width={640}
+            height={400}
+            className="h-auto max-h-[400px] w-full max-w-2xl rounded-2xl object-contain"
+            unoptimized={isRemoteMediaUrl(offerings.image)}
+          />
+        </div>
+      ) : null}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {offerings?.items?.map((item: any, index: number) => (
           <motion.div

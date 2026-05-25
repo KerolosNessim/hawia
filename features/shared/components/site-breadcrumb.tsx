@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import {
   getBreadcrumbTrailItems,
-  humanizeSegment,
-  isBreadcrumbSegment,
+  resolveBreadcrumbSegmentLabel,
+  type BreadcrumbTrailItem,
 } from "@/features/shared/lib/breadcrumb-trail";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -23,26 +23,33 @@ type SiteBreadcrumbProps = {
   /** On hero banners: light text over the image. Inline: below the fixed navbar. */
   variant?: "hero" | "inline";
   className?: string;
+  /** When set (e.g. blog post with category), replaces pathname-derived trail. */
+  items?: BreadcrumbTrailItem[];
 };
 
 export default function SiteBreadcrumb({
   variant = "inline",
   className,
+  items: itemsOverride,
 }: SiteBreadcrumbProps) {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("seo.breadcrumb");
+  const tPackages = useTranslations("packagesPage");
   const isRtl = locale === "ar";
 
-  const items = useMemo(
-    () =>
-      getBreadcrumbTrailItems(pathname, (segment) => {
-        if (segment === "home") return t("home");
-        if (isBreadcrumbSegment(segment)) return t(segment);
-        return humanizeSegment(segment);
-      }),
-    [pathname, t],
-  );
+  const items = useMemo(() => {
+    if (itemsOverride?.length) return itemsOverride;
+    return getBreadcrumbTrailItems(pathname, (segment) => {
+      if (
+        segment.toLowerCase() === "categories" &&
+        pathname.startsWith("/packages")
+      ) {
+        return tPackages("breadcrumbCategories");
+      }
+      return resolveBreadcrumbSegmentLabel(segment, (key) => t(key));
+    });
+  }, [itemsOverride, pathname, t, tPackages]);
 
   if (!items) {
     return null;

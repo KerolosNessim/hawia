@@ -1,3 +1,4 @@
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { hasSectionImage } from "@/features/services/lib/has-section-image";
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
@@ -50,13 +51,14 @@ export default function SeoSteps({ steps }: { steps: Section }) {
             ))}
           </div>
           {hasImage && steps.image ? (
-            <div className="max-lg:hidden shrink-0">
+            <div className="shrink-0 max-lg:mx-auto max-lg:w-full max-lg:max-w-md">
               <Image
                 src={steps.image}
                 alt={steps.image_alt ?? ""}
                 width={500}
                 height={500}
-                className="mask-blob h-auto w-auto"
+                className="mask-blob h-auto w-auto max-w-full"
+                unoptimized={isRemoteMediaUrl(steps.image)}
               />
             </div>
           ) : null}

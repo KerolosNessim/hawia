@@ -1,7 +1,9 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { useLocale } from "next-intl";
 import { getCountries, getFooterServices } from "../services/get-countries";
 
 export const useFooterServices = () => {
+  const locale = useLocale();
   // 1. Fetch countries first
   const { data: countriesRes, isLoading: countriesLoading } = useQuery({
     queryKey: ["countries"],
@@ -14,8 +16,8 @@ export const useFooterServices = () => {
   // We use useQueries to fetch them in parallel
   const footerServicesQueries = useQueries({
     queries: countries.map((country) => ({
-      queryKey: ["footer-services", country.id],
-      queryFn: () => getFooterServices(country.id),
+      queryKey: ["footer-services", country.id, locale],
+      queryFn: () => getFooterServices(country.id, locale),
       enabled: !!country.id,
     })),
   });

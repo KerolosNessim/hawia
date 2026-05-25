@@ -76,10 +76,10 @@ export default async function Home() {
   );
 
   return (
-    <main>
+    <main className="overflow-x-hidden max-w-full">
       <HeroSection heroData={data?.data?.hero} />
       <div className="bg-gray-900">
-        <div className="container mx-auto lg:-translate-y-16 max-lg:pt-16">
+        <div className="container mx-auto min-w-0 max-w-full overflow-x-hidden lg:-translate-y-16 max-lg:pt-16">
           <HeroStats stats={data?.data?.hero?.stats} />
         </div>
         <WhyUsSection />

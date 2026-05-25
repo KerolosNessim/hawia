@@ -1,57 +1,75 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { NumberTicker } from "@/components/ui/number-ticker";
+import { RichHtml } from "@/features/shared/components/rich-html";
+import { parseStatNumber } from "@/features/home/lib/parse-stat-number";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import * as motion from "framer-motion/client";
-import { cn } from "@/lib/utils";
+import type { HeroStat } from "../types";
 
 interface StatItemProps {
-  value: number;
-  suffix?: string;
+  prefix: string;
+  value: number | null;
+  suffix: string;
+  display: string;
   title: string;
   description: string;
   index: number;
 }
 
-function StatItem({ value, suffix, title, description, index }: StatItemProps) {
+function StatItem({
+  prefix,
+  value,
+  suffix,
+  display,
+  title,
+  description,
+  index,
+}: StatItemProps) {
+  const descriptionText = plainTextFromHtml(description);
+  const hasDescription = descriptionText.length > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-white  flex flex-col items-center justify-center gap-4 p-4   rounded-2xl   text-center min-w-[200px] flex-1"
+      className="bg-white flex min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-2xl p-4 text-center max-lg:min-w-0 lg:min-w-[200px]"
     >
-      <div className=" text-5xl font-extrabold text-brand flex items-center gap-0.5">
-        <NumberTicker value={value} className="text-brand" />
-        {suffix && <span className="text-brand">{suffix}</span>}
-      </div>
-      <h3 className=" text-xl  font-bold mt-2 text-zinc-800">
-        {title}
+      <h3 className="flex w-full flex-col items-center gap-2 text-zinc-800">
+        <span className="inline-flex flex-wrap items-baseline justify-center gap-0.5 text-5xl font-extrabold leading-none text-brand">
+          {prefix ? <span className="text-brand">{prefix}</span> : null}
+          {value != null ? (
+            <NumberTicker value={value} className="text-brand" />
+          ) : display ? (
+            <span className="text-brand">{display}</span>
+          ) : null}
+          {suffix ? <span className="text-brand">{suffix}</span> : null}
+        </span>
+        {title ? (
+          <span className="block text-xl font-bold text-zinc-800">{title}</span>
+        ) : null}
       </h3>
-      <p className=" text-zinc-900  mt-1 max-w-[180px]  text-sm">
-        {description}
-      </p>
+      {hasDescription ? (
+        <RichHtml
+          as="p"
+          html={description}
+          className="mt-0 max-w-[180px] overflow-visible text-sm text-zinc-900 [&_*]:overflow-visible"
+        />
+      ) : null}
     </motion.div>
   );
 }
 
-import type { HeroStat } from "../types";
-
 export function HeroStats({ stats }: { stats?: HeroStat[] }) {
-  const t = useTranslations("hero.stats");
-
   const displayStats = Array.isArray(stats)
     ? stats.map((stat) => {
-        // Extract numbers and non-numbers from the string (e.g., "+10" -> value: 10, suffix: "+")
-        const numMatch = stat.content.number.match(/\d+/);
-        const suffixMatch = stat.content.number.match(/[^\d]+/);
-
+        const parsed = parseStatNumber(stat.content.number);
         return {
-          value: numMatch ? parseInt(numMatch[0]) : 0,
-          suffix: suffixMatch ? suffixMatch[0] : "",
-          title: stat.content.title,
-          description: stat.content.description,
+          ...parsed,
+          title: stat.content.title?.trim() ?? "",
+          description: stat.content.description ?? "",
         };
       })
     : [];
@@ -59,7 +77,7 @@ export function HeroStats({ stats }: { stats?: HeroStat[] }) {
   if (displayStats.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid min-w-0 grid-cols-2 gap-3 max-sm:grid-cols-1 sm:gap-4 lg:grid-cols-4">
       {displayStats.map((stat, index) => (
         <StatItem key={index} {...stat} index={index} />
       ))}

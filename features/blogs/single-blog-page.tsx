@@ -1,7 +1,16 @@
 import RelatedBlogsSection from "@/features/blogs/components/related-blogs-section";
 import ShareSection from "@/features/blogs/components/share-sction";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import { blogPostHref, blogPostPath, blogPostAbsoluteUrl, blogTagPath, localePath } from "@/features/blogs/lib/blog-routes";
+import {
+  blogCategoryPath,
+  blogPostHref,
+  blogPostPath,
+  blogPostAbsoluteUrl,
+  blogTagPath,
+  localePath,
+} from "@/features/blogs/lib/blog-routes";
+import { pickPrimaryBlogCategory } from "@/features/blogs/lib/pick-blog-category";
+import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
 import type { PublicBlogTag } from "@/features/blogs/lib/blog-tag";
 import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
 import { Link } from "@/i18n/navigation";
@@ -15,6 +24,7 @@ import RatingSection from "@/features/blogs/components/rating-section";
 import {
   blogToCardPayload,
   fetchPublicBlogBySlug,
+  fetchPublicBlogCategories,
   fetchPublicBlogs,
   pickLocalizedRichText,
   plainTextFromHtml,
@@ -221,7 +231,19 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
   const visibleLocale = (await getLocale()) as Locale;
   const articleLang = visibleLocale === "ar" ? "ar" : "en";
-  const categoryId = blog.category?.id;
+  let primaryCategory = pickPrimaryBlogCategory(blog);
+  if (primaryCategory?.id && !primaryCategory.slug?.trim()) {
+    const allCategories = await fetchPublicBlogCategories(locale);
+    const match = allCategories.find((c) => c.id === primaryCategory!.id);
+    if (match) {
+      primaryCategory = {
+        id: match.id,
+        name: match.name || primaryCategory.name,
+        slug: match.slug || primaryCategory.slug,
+      };
+    }
+  }
+  const categoryId = primaryCategory?.id;
 
   const related =
     categoryId != null
@@ -278,14 +300,40 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     (await absoluteFromPath(heroImage)) ??
     (heroImage.startsWith("http") ? heroImage : undefined);
 
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    {
-      name: tBlogs("breadcrumbHome"),
-      url: (await absoluteFromPath(localePath(locale, "/"))) ?? localePath(locale, "/"),
-    },
+  const homeAbs =
+    (await absoluteFromPath(localePath(locale, "/"))) ?? localePath(locale, "/");
+  const breadcrumbTrail: BreadcrumbTrailItem[] = [
+    { href: "/", label: tBlogs("breadcrumbHome") },
+    { href: "/blogs", label: tBlogs("breadcrumbBlog") },
+  ];
+  if (primaryCategory?.name) {
+    const catSlug = primaryCategory.slug?.trim();
+    breadcrumbTrail.push({
+      href: catSlug ? blogCategoryPath(catSlug) : "/blogs",
+      label: primaryCategory.name,
+    });
+  }
+  breadcrumbTrail.push({
+    href: blogPostPath(slug),
+    label: localizedTitle,
+  });
+
+  const breadcrumbLdItems = [
+    { name: tBlogs("breadcrumbHome"), url: homeAbs },
     { name: tBlogs("breadcrumbBlog"), url: blogIndexAbs },
-    { name: localizedTitle, url: blogPostingAbs },
-  ]);
+  ];
+  if (primaryCategory?.name) {
+    const catSlug = primaryCategory.slug?.trim();
+    breadcrumbLdItems.push({
+      name: primaryCategory.name,
+      url:
+        (catSlug
+          ? await absoluteFromPath(blogCategoryPath(catSlug))
+          : null) ?? blogIndexAbs,
+    });
+  }
+  breadcrumbLdItems.push({ name: localizedTitle, url: blogPostingAbs });
+  const breadcrumbLd = buildBreadcrumbJsonLd(breadcrumbLdItems);
 
   const postingLd = buildBlogPostingJsonLd({
     url: blogPostingAbs,
@@ -296,7 +344,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     imageUrl: heroAbs ?? null,
     authorName: blog.publisher_name,
     keywords: blog.tags.map((t) => t.label),
-    articleSection: blog.category?.name ?? null,
+    articleSection: primaryCategory?.name ?? null,
     inLanguage: articleLang === "ar" ? "ar" : "en",
   });
 
@@ -321,6 +369,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
         title={localizedTitle}
         description={subtitleLooksLikeHtml ? undefined : subtitlePlainBanner || undefined}
         descriptionHtml={subtitleLooksLikeHtml ? localizedSubtitleHtml : undefined}
+        breadcrumbItems={breadcrumbTrail}
       />
 
       <div className="lg:w-2/3 mx-auto max-lg:container space-y-8">
@@ -346,8 +395,8 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
             />
             <div>
               <p className="text-gray-900 font-bold">{blog.publisher_name}</p>
-              {blog.category?.name ? (
-                <p className="text-sm text-muted-foreground">{blog.category.name}</p>
+              {primaryCategory?.name ? (
+                <p className="text-sm text-muted-foreground">{primaryCategory.name}</p>
               ) : null}
             </div>
           </div>
@@ -385,6 +434,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
       <article className="container max-w-3xl space-y-6 text-gray-900">
         <RichHtml
           html={articleCombinedHtml || "<p></p>"}
+          allowHorizontalScroll
           className="blog-content space-y-4 text-lg leading-relaxed [&_h1]:scroll-mt-24 [&_h1]:text-3xl [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h3]:scroll-mt-24 [&_h3]:text-xl [&_blockquote]:border-s-4 [&_blockquote]:border-brand [&_blockquote]:bg-muted/30 [&_blockquote]:py-2 [&_blockquote]:ps-4"
         />
 

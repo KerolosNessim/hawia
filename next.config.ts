@@ -13,6 +13,20 @@ const SEO_ROUTE_SOURCES = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/blogs/blog/:slug",
+        destination: "/blogs/:slug",
+        permanent: true,
+      },
+      {
+        source: "/en/blogs/blog/:slug",
+        destination: "/en/blogs/:slug",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       ...SEO_ROUTE_SOURCES.map((source) => ({

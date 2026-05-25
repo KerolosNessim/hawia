@@ -29,6 +29,7 @@
       "blogs": "Blog",
       "blog": "Article",
       "packages": "Packages",
+      "categories": "Categories",
       "courses": "Courses",
       "faq": "FAQ",
       "contact-us": "Contact Us",
@@ -277,7 +278,8 @@
     "empty": "No packages are available at the moment.",
     "emptyCategory": "No packages in this category yet.",
     "otherTab": "Other",
-    "details": "Details"
+    "details": "Details",
+    "viewCategory": "View all in this category"
   },
   "servicesPage": {
     "title": "Our Services",
@@ -298,9 +300,15 @@
     "metaTitle": "Marketing Packages and Service Bundles | Howeyah",
     "metaDescription": "Explore Howeyah marketing packages, compare service bundles, pricing, and included features, and choose the right package for your growth goals.",
     "categoriesHeading": "Browse packages by category",
+    "categoriesIndexTitle": "Package categories",
+    "categoriesIndexDescription": "Browse Howeyah packages by category and compare service bundles for your goals.",
+    "categoriesIndexMetaTitle": "Package Categories | Howeyah",
+    "categoriesIndexMetaDescription": "Browse Howeyah marketing package categories and open each category to compare bundles, pricing, and included features.",
     "breadcrumbHome": "Home",
     "breadcrumbPackages": "Packages",
-    "allPackages": "All packages"
+    "breadcrumbCategories": "Categories",
+    "allPackages": "All packages",
+    "emptyCategories": "No package categories are available at the moment."
   },
   "packageDetail": {
     "back": "All packages",
@@ -399,7 +407,8 @@
     "brandDescription": "Leaving a mark at the core of your brand",
     "registeredTrademark": "Registered Trademark No. 181546",
     "trademarkCertificate": "Trademark Certificate",
-    "authenticatedBy": "Authenticated by the Ministry of Commerce & Investment",
+    "authenticatedBy": "Verified with the Ministry of Commerce & Investment",
+    "ministryLogoAlt": "Ministry of Commerce certification badge",
     "omanServicesTitle": "Most Requested Services in Oman:",
     "turkeyServicesTitle": "Most Requested Services in Turkey:",
     "saudiServicesTitle": "Most Requested Services in Saudi Arabia:",
@@ -426,16 +435,19 @@
     ],
     "officesTitle": "Our Offices",
     "offices": [
-      "Turkey Office: Istanbul - Beylikdüzü - Cumhuriyet Mah. - Ikarus Complex",
-      "Oman Office: Muscat - Seeb - Al Khoudh Bldg 304 - Complex 333 - Road 1002",
-      "Egypt Office: Cairo - 6th of October - 1st District - 1st Neighborhood",
-      "Saudi Arabia Office: Jeddah - Al Rawdah District"
+      {
+        "label": "Turkey Office",
+        "address": "Fatih, opposite Historia Mall"
+      },
+      {
+        "label": "Sultanate of Oman Office",
+        "address": "Barka, Souq Street"
+      }
     ],
     "contactTitle": "Mobile / WhatsApp",
     "phones": [
-      "(+90) 536 031 67 75",
-      "(+968) 9520 4555",
-      "(+968) 9525 1971"
+      "+905360316775",
+      "+96895204555"
     ],
     "email": "info@howeyah.com",
     "copyright": "© 2024 All rights reserved - Howeyah Company",
@@ -449,7 +461,8 @@
     "metaDescription": "Howeyah registered trademark certificate No. 181546, authenticated by the Ministry of Commerce and Investment.",
     "title": "Trademark Certificate",
     "description": "View the official registered trademark certificate for Howeyah.",
-    "authenticatedBy": "Authenticated by the Ministry of Commerce & Investment",
+    "authenticatedBy": "Verified with the Ministry of Commerce & Investment",
+    "ministryLogoAlt": "Ministry of Commerce certification badge",
     "registeredNote": "Registered trademark No. {number}",
     "pdfTitle": "Trademark certificate",
     "openPdf": "Open certificate (PDF)"
@@ -807,6 +820,8 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "userOrEmail": "Username or email",
     "submit": "Register",
     "login": "Login",
@@ -832,15 +847,10 @@
     "breadcrumbHome":"Home",
     "breadcrumbClients":"Clients",
     "empty":"No client work is available yet.",
+    "emptyFiltered":"No client work in this category yet.",
+    "filterAll":"All",
     "back":"Back to clients",
-    "not_found":"This client work could not be found.",
-    "tabs":[
-      "All",
-      "seo",
-      "Digital Marketing",
-      "Web Design",
-      "Brand Identity"
-    ]
+    "not_found":"This client work could not be found."
   },
   "courses":{
     "title":"Training Courses",

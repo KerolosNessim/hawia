@@ -71,9 +71,11 @@ export default async function PackageCategoryPage({ params }: Props) {
     category.metaDescription?.trim() || categoryDescription(category.title, packages.length, locale);
   const packageBaseUrl = packagesUrl;
 
+  const categoriesUrl = await getAbsoluteUrl(localePathname(loc, "/packages/categories"));
   const breadcrumbLd = buildBreadcrumbJsonLd([
     { name: t("breadcrumbHome"), url: await getAbsoluteUrl(localePathname(loc, "/")) },
     { name: t("breadcrumbPackages"), url: packagesUrl },
+    { name: t("breadcrumbCategories"), url: categoriesUrl },
     { name: category.title, url: categoryUrl },
   ]);
   const collectionLd = buildPackageCollectionJsonLd({

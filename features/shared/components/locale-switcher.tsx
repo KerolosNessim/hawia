@@ -26,7 +26,11 @@ function syncLocaleCookie(newLocale: string): void {
   document.cookie = `NEXT_LOCALE=${newLocale};path=/;SameSite=Lax`;
 }
 
-export default function LocaleSwitcher() {
+type LocaleSwitcherProps = {
+  triggerClassName?: string;
+};
+
+export default function LocaleSwitcher({ triggerClassName }: LocaleSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
@@ -62,7 +66,10 @@ export default function LocaleSwitcher() {
       disabled={isPending}
     >
       <SelectTrigger
-        className="w-fit bg-brand text-base size-14! rounded-full font-semibold hover:bg-main-navy transition-all duration-300  px-3 flex items-center justify-center"
+        className={
+          triggerClassName ??
+          "flex size-14! w-fit items-center justify-center rounded-full bg-brand px-3 text-base font-semibold transition-all duration-300 hover:bg-main-navy"
+        }
         withArrow={false}
       >
         <ReactCountryFlag

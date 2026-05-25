@@ -1,6 +1,8 @@
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { apiClient } from "@/lib/api";
+import { normalizeServicesForLocale } from "../lib/normalize-service";
 import type { Country, GetServicesApiRaw, Service } from "../types";
+import { fetchServicesListMerged } from "./fetch-services-list";
 
 export async function fetchPublicCountries(): Promise<Country[]> {
   try {
@@ -14,6 +16,7 @@ export async function fetchPublicCountries(): Promise<Country[]> {
 
 export type FetchPublicServicesPaginatedParams = {
   paginationPath: string;
+  locale?: string;
   page?: number;
   per_page?: number;
   country_id?: number;
@@ -30,10 +33,12 @@ export async function fetchPublicServicesPaginated(
   }
 
   try {
-    const raw = await apiClient.get<GetServicesApiRaw>("/v1/services", {
-      query: Object.keys(q).length ? q : undefined,
-    });
-    const services = raw.data?.data ?? [];
+    const locale = params.locale ?? "ar";
+    const { raw, rows } = await fetchServicesListMerged(
+      locale,
+      Object.keys(q).length ? q : undefined,
+    );
+    const services = normalizeServicesForLocale(rows, locale);
     const metaPartial = raw.data?.meta ?? {
       current_page: 1,
       last_page: 1,

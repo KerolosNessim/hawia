@@ -16,6 +16,7 @@ import type {
   SingleService,
   Tools,
 } from "@/features/services/types";
+import { SectionLinkShell } from "@/features/services/components/section-link-shell";
 import PageContact from "@/features/shared/components/page-contact";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
@@ -30,6 +31,10 @@ type Props = {
   service: SingleService;
 };
 
+function sectionLinkFromData(data: { link?: string | null }): string | undefined {
+  return data.link?.trim() || undefined;
+}
+
 function renderBenefitsBlock(
   benefits: Benefits,
   serviceTitle: string,
@@ -38,9 +43,8 @@ function renderBenefitsBlock(
 ) {
   const hasImage = hasSectionImage(benefits.image);
 
-  return (
+  const inner = (
     <div
-      key={blockKey}
       className={cn(
         "container",
         hasImage
@@ -63,7 +67,7 @@ function renderBenefitsBlock(
       </motion.div>
       {hasImage ? (
         <motion.div
-          className="flex w-full flex-1 justify-center max-lg:hidden"
+          className="flex w-full flex-1 justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -80,6 +84,12 @@ function renderBenefitsBlock(
         </motion.div>
       ) : null}
     </div>
+  );
+
+  return (
+    <SectionLinkShell key={blockKey} link={sectionLinkFromData(benefits)}>
+      {inner}
+    </SectionLinkShell>
   );
 }
 
@@ -106,28 +116,46 @@ function renderSectionInstance(
         t("why_seo.title"),
         blockKey,
       );
-    case "offerings":
+    case "offerings": {
+      const offerings = section.data as Section;
       return (
-        <OfferServiceSection
-          key={blockKey}
-          offerings={section.data as Section}
-        />
+        <SectionLinkShell key={blockKey} link={sectionLinkFromData(offerings)}>
+          <OfferServiceSection offerings={offerings} />
+        </SectionLinkShell>
       );
-    case "steps":
-      return <SeoSteps key={blockKey} steps={section.data as Section} />;
-    case "tools":
-      return <SeoTools key={blockKey} tools={section.data as Tools} />;
-    case "faqs":
-      return <SeoFaq key={blockKey} faq={section.data as Faqs} />;
+    }
+    case "steps": {
+      const steps = section.data as Section;
+      return (
+        <SectionLinkShell key={blockKey} link={sectionLinkFromData(steps)}>
+          <SeoSteps steps={steps} />
+        </SectionLinkShell>
+      );
+    }
+    case "tools": {
+      const tools = section.data as Tools;
+      return (
+        <SectionLinkShell key={blockKey} link={sectionLinkFromData(tools)}>
+          <SeoTools tools={tools} />
+        </SectionLinkShell>
+      );
+    }
+    case "faqs": {
+      const faq = section.data as Faqs;
+      return (
+        <SectionLinkShell key={blockKey} link={sectionLinkFromData(faq)}>
+          <SeoFaq faq={faq} />
+        </SectionLinkShell>
+      );
+    }
     case "packages": {
       const packages = section.data as NonNullable<SingleService["packages"]>;
-      return packages.items.length ? (
-        <SeoPackages
-          key={blockKey}
-          packages={packages}
-          orderPhone={service.ctas?.phone_number}
-        />
-      ) : null;
+      if (!packages.items.length) return null;
+      return (
+        <SectionLinkShell key={blockKey} link={sectionLinkFromData(packages)}>
+          <SeoPackages packages={packages} orderPhone={service.ctas?.phone_number} />
+        </SectionLinkShell>
+      );
     }
     case "articleTags":
       return (
@@ -140,12 +168,13 @@ function renderSectionInstance(
     case "ctas": {
       const cta = section.data as Cta;
       return (
-        <PageContact
-          key={blockKey}
-          title={cta.title}
-          phone={cta.phone_number}
-          description={cta.description}
-        />
+        <SectionLinkShell key={blockKey} link={sectionLinkFromData(cta)}>
+          <PageContact
+            title={cta.title}
+            phone={cta.phone_number}
+            description={cta.description}
+          />
+        </SectionLinkShell>
       );
     }
     default:

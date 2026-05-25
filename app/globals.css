@@ -132,11 +132,11 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
-    @apply font-sans;
+    @apply font-sans overflow-x-clip;
+  }
+  body {
+    @apply bg-background text-foreground overflow-x-clip;
   }
   a,
   button,
@@ -226,7 +226,58 @@
   }
 
   .container {
-    @apply px-4 mx-auto sm:w-[540px] md:w-[720px] lg:w-[960px] xl:w-[1180px] 2xl:w-[1380px];
+    @apply w-full max-w-full px-4 mx-auto sm:w-[540px] md:w-[720px] lg:w-[960px] xl:w-[1180px] 2xl:w-[1380px];
+  }
+
+  .cms-rich-html {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Cards: never show inner scrollbars on CMS title/description blocks */
+  [data-slot="card"] .cms-rich-html,
+  [data-slot="card"] [data-slot="card-title"] .cms-rich-html,
+  [data-slot="card"] [data-slot="card-description"] .cms-rich-html,
+  [data-slot="card"] [data-slot="card-content"] .cms-rich-html {
+    overflow: visible;
+    overflow-x: clip;
+    max-height: none;
+    scrollbar-width: none;
+  }
+
+  [data-slot="card"] .cms-rich-html::-webkit-scrollbar,
+  [data-slot="card"] [data-slot="card-title"] .cms-rich-html::-webkit-scrollbar,
+  [data-slot="card"] [data-slot="card-description"] .cms-rich-html::-webkit-scrollbar,
+  [data-slot="card"] [data-slot="card-content"] .cms-rich-html::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-slot="card"] .cms-rich-html [style*="overflow"],
+  [data-slot="card"] .cms-rich-html p,
+  [data-slot="card"] .cms-rich-html span {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Service cards: keep CMS text readable on hover (light tint, no forced white-on-dark) */
+  .group:hover .service-card .service-card__title.cms-rich-html :is(p, span, strong, em),
+  .group:hover .service-card .service-card__subtitle.cms-rich-html :is(p, span, strong, em),
+  .group:hover .service-card .service-card__description.cms-rich-html :is(p, span, strong, em) {
+    background-color: transparent !important;
+    color: inherit;
+  }
+
+  .cms-rich-html img,
+  .cms-rich-html video,
+  .cms-rich-html iframe,
+  .cms-rich-html table,
+  .cms-rich-html pre {
+    max-width: 100%;
+  }
+
+  .cms-rich-html pre {
+    overflow-x: auto;
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;

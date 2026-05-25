@@ -62,7 +62,7 @@ export default function BlogCard({
           </div>
         </CardHeader>
 
-        <CardContent className="p-6 flex-1 flex flex-col pt-8 ">
+        <CardContent className="flex min-w-0 flex-1 flex-col overflow-hidden p-6 pt-8">
           <h3 className={`mb-4 text-xl leading-snug line-clamp-2 ${isLight ? "text-gray-900" : "text-white"}`}>
             <Link
               href={article.link}

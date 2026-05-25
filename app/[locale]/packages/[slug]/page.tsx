@@ -1,4 +1,5 @@
 import { fetchPublicPackageDetail } from "@/features/packages/services/packages-public-api";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { PackageImage } from "@/features/packages/components/public-package-cards";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ function packageDescription(pkg: { description: string; title: string }) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, locale } = await params;
-  const decoded = decodeURIComponent(slug);
+  const decoded = decodePathSegment(slug);
   const pkg = await fetchPublicPackageDetail(decoded, locale);
   const t = await getTranslations("packageDetail");
   const loc = locale as Locale;
@@ -83,7 +84,7 @@ export default async function PackageDetailPage({ params }: Props) {
   const locale = await getLocale();
   const t = await getTranslations("packageDetail");
   const packagesT = await getTranslations("packagesPage");
-  const decoded = decodeURIComponent(slug);
+  const decoded = decodePathSegment(slug);
 
   const pkg = await fetchPublicPackageDetail(decoded, locale);
   if (!pkg) redirectToNotFound();

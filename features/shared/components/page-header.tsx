@@ -1,6 +1,7 @@
 "use client";
 
 import SiteBreadcrumb from "@/features/shared/components/site-breadcrumb";
+import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
 import * as motion from "framer-motion/client";
 
 interface PageHeaderProps {
@@ -22,6 +23,9 @@ interface PageHeaderProps {
 
   /** When true, title is hidden and description is shown as the main hero heading. */
   descriptionAsHeader?: boolean;
+
+  /** Custom breadcrumb trail (e.g. blog post: Home › Blog › Category › Title). */
+  breadcrumbItems?: BreadcrumbTrailItem[];
 }
 
 export default function PageHeader({
@@ -32,6 +36,7 @@ export default function PageHeader({
   image = "/seo-banner.jpg",
   imageAlt = "Page header background",
   descriptionAsHeader = false,
+  breadcrumbItems,
 }: PageHeaderProps) {
   const hasRichTitle = Boolean(titleHtml?.trim());
   const hasRichDescription = Boolean(descriptionHtml?.trim());
@@ -65,7 +70,7 @@ export default function PageHeader({
       {/* Breadcrumb — bottom of hero, clear of fixed navbar */}
       <div className="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/40 backdrop-blur-sm">
         <div className="container py-2.5 md:py-3">
-          <SiteBreadcrumb variant="hero" />
+          <SiteBreadcrumb variant="hero" items={breadcrumbItems} />
         </div>
       </div>
 

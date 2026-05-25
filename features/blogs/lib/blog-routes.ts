@@ -1,8 +1,11 @@
 import { routing } from "@/i18n/routing";
 import type { Locale } from "next-intl";
 
-/** Segments reserved under `/blogs/*` so they never map to a category or post slug route. */
-export const RESERVED_BLOG_CATEGORY_SLUGS = new Set(["blog", "tag"]);
+/** Single-segment slugs under `/blogs/{slug}` handled by other routes (e.g. `/blogs/tag/...`). */
+export const RESERVED_BLOG_SLUGS = new Set(["tag"]);
+
+/** @deprecated Use {@link RESERVED_BLOG_SLUGS} */
+export const RESERVED_BLOG_CATEGORY_SLUGS = RESERVED_BLOG_SLUGS;
 
 /** Path without locale prefix (for `@/i18n/navigation` `Link` and pathname helpers). */
 export function blogPostPath(slug: string): string {
@@ -69,11 +72,3 @@ export function blogPostAbsoluteUrl(origin: string, locale: Locale, slug: string
   return `${origin.replace(/\/$/, "")}${path}`;
 }
 
-/** Legacy `/blogs/blog/{slug}` — kept for permanent redirects. */
-export function legacyBlogPostPath(slug: string): string {
-  return `/blogs/blog/${encodeURIComponent(slug)}`;
-}
-
-export function legacyBlogPostHref(locale: Locale, slug: string): string {
-  return localePath(locale, legacyBlogPostPath(slug));
-}

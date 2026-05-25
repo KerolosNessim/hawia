@@ -84,7 +84,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${font.variable} ${font.className}`}
+      className={`${font.variable} ${font.className} overflow-x-clip`}
       suppressHydrationWarning
     >
       <head>
@@ -100,7 +100,7 @@ export default async function RootLayout({
         <HeadTagsFromMarkup markup={hoistedHeadTags} />
         <CustomHeadFromSettings markup={scripts?.custom_head_scripts} />
       </head>
-      <body className=" relative overflow-x-hidden ">
+      <body className="relative max-w-full min-h-dvh overflow-x-clip">
         <QueryProvider>
           <NextIntlClientProvider messages={messages}>
             <BreadcrumbJsonLd />

@@ -1,5 +1,8 @@
+import { normalizePublicBlogTags } from "@/features/blogs/lib/blog-tag";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { pickImageAlt } from "@/lib/image-alt";
+import { pickLocalizedField, pickSlugLocal } from "./pick-localized-field";
+import { pickServiceCoverPath, resolveLocalizedImageUrl } from "./pick-service-cover";
 import { buildPageSections } from "./collect-page-sections";
 import type {
   Benefits,
@@ -32,18 +35,17 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function pickLoc(field: unknown, locale: string): string {
-  if (field == null) return "";
-  if (typeof field === "string") return field;
-  if (typeof field === "object" && !Array.isArray(field)) {
-    const o = field as Record<string, unknown>;
-    const key = locale.startsWith("ar") ? "ar" : "en";
-    const primary = o[key];
-    if (typeof primary === "string" && primary.trim()) return primary.trim();
-    const fallback = o.en ?? o.ar;
-    if (typeof fallback === "string" && fallback.trim()) return fallback.trim();
-  }
-  return "";
+function pickSectionLink(o: Record<string, unknown>): string | null {
+  const link = o.link;
+  if (typeof link === "string" && link.trim()) return link.trim();
+  return null;
+}
+
+function sectionImageUrl(
+  o: Record<string, unknown>,
+  locale: string,
+): string | null {
+  return resolveLocalizedImageUrl(o.image, locale, o.images);
 }
 
 function parseSection(raw: unknown, locale: string): Section | null {
@@ -54,8 +56,8 @@ function parseSection(raw: unknown, locale: string): Section | null {
         .map((item) => {
           const row = item as Record<string, unknown>;
           return {
-            title: String(row.title ?? ""),
-            description: String(row.description ?? ""),
+            title: pickLocalizedField(row.title, locale),
+            description: pickLocalizedField(row.description, locale),
             sort_order: String(row.sort_order ?? "0"),
           };
         })
@@ -67,12 +69,13 @@ function parseSection(raw: unknown, locale: string): Section | null {
   const blockSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
-    title: String(o.title ?? ""),
-    description: String(o.description ?? ""),
-    image: typeof o.image === "string" ? o.image : null,
+    title: pickLocalizedField(o.title, locale),
+    description: pickLocalizedField(o.description, locale),
+    image: sectionImageUrl(o, locale),
     image_alt: pickImageAlt(o.image_alt, locale) || null,
     items,
     sort_order: Number.isFinite(blockSort) && blockSort > 0 ? blockSort : undefined,
+    link: pickSectionLink(o),
   };
 }
 
@@ -83,9 +86,9 @@ function parsePackageItems(raw: unknown, locale: string): ServicePackageItem[] {
   const parsed = rows
     .map((item, idx) => {
       const o = item as Record<string, unknown>;
-      const title = String(o.title ?? "").trim();
+      const title = pickLocalizedField(o.title, locale).trim();
       if (!title) return null;
-      const descHtml = typeof o.description === "string" ? o.description : "";
+      const descHtml = pickLocalizedField(o.description, locale);
       const features = Array.isArray(o.features)
         ? o.features.filter((f): f is string => typeof f === "string" && f.trim())
         : [];
@@ -98,7 +101,7 @@ function parsePackageItems(raw: unknown, locale: string): ServicePackageItem[] {
         price: o.price != null && String(o.price).trim() ? String(o.price).trim() : null,
         currency: typeof o.currency === "string" && o.currency.trim() ? o.currency.trim() : null,
         sortOrder: Number.isFinite(sortOrder) ? sortOrder : idx,
-        imageAlt: pickLoc(o.image_alt, locale) || null,
+        imageAlt: pickLocalizedField(o.image_alt, locale) || null,
       };
     })
     .filter((x): x is Omit<ServicePackageItem, "icon" | "isFeatured"> => x != null)
@@ -121,16 +124,17 @@ function parsePackages(raw: unknown, locale: string): ServicePackagesSection | n
   const blockSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
-    title: String(o.title ?? "").trim(),
-    description: String(o.description ?? "").trim(),
-    image: typeof o.image === "string" ? o.image : null,
+    title: pickLocalizedField(o.title, locale).trim(),
+    description: pickLocalizedField(o.description, locale).trim(),
+    image: sectionImageUrl(o, locale),
     image_alt: pickImageAlt(o.image_alt, locale) || null,
     items,
     sort_order: Number.isFinite(blockSort) && blockSort > 0 ? blockSort : undefined,
+    link: pickSectionLink(o),
   };
 }
 
-function parseSocial(raw: unknown): ServiceSocial | null {
+function parseSocial(raw: unknown, locale: string): ServiceSocial | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const o = raw as Record<string, unknown>;
   const og =
@@ -144,7 +148,8 @@ function parseSocial(raw: unknown): ServiceSocial | null {
       ? {
           title: typeof og.title === "string" ? og.title : undefined,
           description: typeof og.description === "string" ? og.description : undefined,
-          image: typeof og.image === "string" ? resolveMediaUrl(og.image) : undefined,
+          image:
+            resolveLocalizedImageUrl(og.image, locale, og.images) ?? undefined,
           type: typeof og.type === "string" ? og.type : undefined,
           site_name: typeof og.site_name === "string" ? og.site_name : undefined,
         }
@@ -154,30 +159,19 @@ function parseSocial(raw: unknown): ServiceSocial | null {
           card: typeof tw.card === "string" ? tw.card : undefined,
           title: typeof tw.title === "string" ? tw.title : undefined,
           description: typeof tw.description === "string" ? tw.description : undefined,
-          image: typeof tw.image === "string" ? resolveMediaUrl(tw.image) : undefined,
+          image:
+            resolveLocalizedImageUrl(tw.image, locale, tw.images) ?? undefined,
         }
       : undefined,
   };
 }
 
 function parseArticleTags(raw: unknown): ServiceArticleTag[] {
-  if (!Array.isArray(raw)) return [];
-  const seen = new Set<string>();
-  const out: ServiceArticleTag[] = [];
-  for (const item of raw) {
-    let label = "";
-    if (typeof item === "string") label = item.trim();
-    else if (item && typeof item === "object" && !Array.isArray(item)) {
-      const o = item as Record<string, unknown>;
-      label = String(o.name ?? o.title ?? o.label ?? o.tag ?? "").trim();
-    }
-    if (!label) continue;
-    const key = label.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ label });
-  }
-  return out;
+  return normalizePublicBlogTags(raw).map((t) => ({
+    label: t.label,
+    index: t.index,
+    follow: t.follow,
+  }));
 }
 
 function parseBenefitsBlock(
@@ -187,12 +181,13 @@ function parseBenefitsBlock(
   const benefitsSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
-    title: String(o.title ?? ""),
-    description: String(o.description ?? ""),
-    image: typeof o.image === "string" ? resolveMediaUrl(o.image) : "",
+    title: pickLocalizedField(o.title, locale),
+    description: pickLocalizedField(o.description, locale),
+    image: sectionImageUrl(o, locale) ?? "",
     image_alt: pickImageAlt(o.image_alt, locale) || null,
     is_active: o.is_active !== false,
     sort_order: Number.isFinite(benefitsSort) && benefitsSort > 0 ? benefitsSort : undefined,
+    link: pickSectionLink(o),
   };
 }
 
@@ -221,93 +216,106 @@ function parseSectionList(raw: unknown, locale: string): Section[] {
   return one ? [one] : [];
 }
 
-function parseToolsBlock(o: Record<string, unknown>): Tools {
+function parseToolsBlock(o: Record<string, unknown>, locale: string): Tools {
   const toolsSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
-    title: String(o.title ?? ""),
-    description: String(o.description ?? ""),
-    sub_title: typeof o.sub_title === "string" ? o.sub_title : null,
-    sub_description: typeof o.sub_description === "string" ? o.sub_description : null,
+    title: pickLocalizedField(o.title, locale),
+    description: pickLocalizedField(o.description, locale),
+    sub_title: pickLocalizedField(o.sub_title, locale) || null,
+    sub_description: pickLocalizedField(o.sub_description, locale) || null,
     is_active: o.is_active !== false,
     sort_order: Number.isFinite(toolsSort) && toolsSort > 0 ? toolsSort : undefined,
+    link: pickSectionLink(o),
   };
 }
 
-function parseToolsList(raw: unknown): Tools[] {
+function parseToolsList(raw: unknown, locale: string): Tools[] {
   if (!raw) return [];
   if (Array.isArray(raw)) {
     return raw
       .filter((item) => item && typeof item === "object")
-      .map((item) => parseToolsBlock(item as Record<string, unknown>));
+      .map((item) => parseToolsBlock(item as Record<string, unknown>, locale));
   }
   if (typeof raw === "object") {
-    return [parseToolsBlock(raw as Record<string, unknown>)];
+    return [parseToolsBlock(raw as Record<string, unknown>, locale)];
   }
   return [];
 }
 
-function parseCtaBlock(o: Record<string, unknown>): Cta {
+function parseCtaBlock(o: Record<string, unknown>, locale: string): Cta {
   const ctasSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
-    title: String(o.title ?? ""),
-    description: String(o.description ?? ""),
-    button_text: typeof o.button_text === "string" ? o.button_text : null,
+    title: pickLocalizedField(o.title, locale),
+    description: pickLocalizedField(o.description, locale),
+    button_text: pickLocalizedField(o.button_text, locale) || null,
     phone_number: String(o.phone_number ?? ""),
     sort_order: Number.isFinite(ctasSort) && ctasSort > 0 ? ctasSort : undefined,
+    link: pickSectionLink(o),
   };
 }
 
-function parseCtasList(raw: unknown): Cta[] {
+function parseCtasList(raw: unknown, locale: string): Cta[] {
   if (!raw) return [];
   if (Array.isArray(raw)) {
     return raw
       .filter((item) => item && typeof item === "object")
-      .map((item) => parseCtaBlock(item as Record<string, unknown>));
+      .map((item) => parseCtaBlock(item as Record<string, unknown>, locale));
   }
   if (typeof raw === "object") {
-    return [parseCtaBlock(raw as Record<string, unknown>)];
+    return [parseCtaBlock(raw as Record<string, unknown>, locale)];
   }
   return [];
 }
 
-function parseFaqsBlock(o: Record<string, unknown>): Faqs {
+function parseFaqsBlock(o: Record<string, unknown>, locale: string): Faqs {
   const items: FaqItem[] = Array.isArray(o.items)
     ? o.items
         .map((item) => {
           const row = item as Record<string, unknown>;
-          const question = String(row.question ?? "").trim();
-          const answer = String(row.answer ?? "").trim();
+          const question = pickLocalizedField(row.question, locale).trim();
+          const answer = pickLocalizedField(row.answer, locale).trim();
           if (!question) return null;
-          return { question, answer };
+          const sortOrder = Number.parseInt(String(row.sort_order ?? "0"), 10);
+          return {
+            question,
+            answer,
+            sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
+          };
         })
-        .filter((x): x is FaqItem => x != null)
+        .filter(
+          (x): x is { question: string; answer: string; sortOrder: number } =>
+            x != null,
+        )
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(({ question, answer }) => ({ question, answer }))
     : [];
   const faqsSort = Number(o.sort_order);
   return {
     id: Number(o.id ?? 0),
-    title: String(o.title ?? ""),
-    description: String(o.description ?? ""),
+    title: pickLocalizedField(o.title, locale),
+    description: pickLocalizedField(o.description, locale),
     items,
     sort_order: Number.isFinite(faqsSort) && faqsSort > 0 ? faqsSort : undefined,
+    link: pickSectionLink(o),
   };
 }
 
-function parseFaqs(raw: unknown): Faqs | null {
+function parseFaqs(raw: unknown, locale: string): Faqs | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  return parseFaqsBlock(raw as Record<string, unknown>);
+  return parseFaqsBlock(raw as Record<string, unknown>, locale);
 }
 
-function parseFaqsList(raw: unknown): Faqs[] {
+function parseFaqsList(raw: unknown, locale: string): Faqs[] {
   if (!raw) return [];
   if (Array.isArray(raw)) {
     return raw
       .filter((item) => item && typeof item === "object")
-      .map((item) => parseFaqsBlock(item as Record<string, unknown>));
+      .map((item) => parseFaqsBlock(item as Record<string, unknown>, locale));
   }
   if (typeof raw === "object") {
-    return [parseFaqsBlock(raw as Record<string, unknown>)];
+    return [parseFaqsBlock(raw as Record<string, unknown>, locale)];
   }
   return [];
 }
@@ -328,20 +336,15 @@ export function normalizeSingleService(
   raw: Record<string, unknown>,
   locale: string,
 ): SingleService {
-  const images = raw.images;
-  let image = typeof raw.image === "string" ? raw.image : "";
-  if (images && typeof images === "object" && !Array.isArray(images)) {
-    const localized = pickLoc(images, locale);
-    if (localized) image = localized;
-  }
+  const image = pickServiceCoverPath(raw.image, locale, raw.images);
 
   const benefitsList = parseBenefitsList(raw.benefits, locale);
   const offeringsList = parseSectionList(raw.offerings, locale);
   const stepsList = parseSectionList(raw.steps, locale);
-  const toolsList = parseToolsList(raw.tools);
-  const faqsList = parseFaqsList(raw.faqs);
+  const toolsList = parseToolsList(raw.tools, locale);
+  const faqsList = parseFaqsList(raw.faqs, locale);
   const packagesList = parsePackagesList(raw.packages, locale);
-  const ctasList = parseCtasList(raw.ctas);
+  const ctasList = parseCtasList(raw.ctas, locale);
   const articleTags = parseArticleTags(
     raw.tags ?? raw.blog_tags ?? raw.article_tags,
   );
@@ -360,26 +363,30 @@ export function normalizeSingleService(
   return {
     id: Number(raw.id ?? 0),
     slug: String(raw.slug ?? ""),
-    slug_local:
-      raw.slug_local && typeof raw.slug_local === "object"
-        ? {
-            ar: pickLoc((raw.slug_local as Record<string, unknown>).ar, "ar") || undefined,
-            en: pickLoc((raw.slug_local as Record<string, unknown>).en, "en") || undefined,
-          }
-        : undefined,
+    slug_local: pickSlugLocal(raw),
     image: resolveMediaUrl(image),
     image_alt: pickImageAlt(raw.image_alt, locale) || null,
-    title: String(raw.title ?? ""),
-    description: String(raw.description ?? ""),
-    inside_desc: String(raw.inside_desc ?? ""),
+    title: pickLocalizedField(raw.title, locale),
+    singlePageTitle:
+      pickLocalizedField(raw.single_page_title, locale) ||
+      pickLocalizedField(raw.singlePageTitle, locale),
+    pageScript:
+      typeof raw.page_script === "string" && raw.page_script.trim()
+        ? raw.page_script
+        : typeof raw.pageScript === "string" && raw.pageScript.trim()
+          ? raw.pageScript
+          : null,
+    subtitle: pickLocalizedField(raw.subtitle, locale),
+    description: pickLocalizedField(raw.description, locale),
+    inside_desc: pickLocalizedField(raw.inside_desc, locale),
     sort_order: Number(raw.sort_order ?? 0),
     show_footer: raw.show_footer !== false,
-    highlight_description: String(raw.highlight_description ?? ""),
+    highlight_description: pickLocalizedField(raw.highlight_description, locale),
     media_url: typeof raw.media_url === "string" ? raw.media_url : null,
     media_type: String(raw.media_type ?? "image"),
-    meta_title: String(raw.meta_title ?? ""),
-    meta_description: String(raw.meta_description ?? ""),
-    social: parseSocial(raw.social),
+    meta_title: pickLocalizedField(raw.meta_title, locale),
+    meta_description: pickLocalizedField(raw.meta_description, locale),
+    social: parseSocial(raw.social, locale),
     pageSections,
     /** @deprecated Use `pageSections` — first benefits block in display order only. */
     benefits: firstPageSectionData<Benefits>(pageSections, "benefits"),

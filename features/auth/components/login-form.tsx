@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/field";
 
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 
@@ -91,7 +92,7 @@ export default function LoginForm() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel>{t("password")}</FieldLabel>
-                    <Input className={inputStyle} type="password" {...field} />
+                    <PasswordInput className={inputStyle} {...field} />
                     {fieldState.error && (
                       <FieldError errors={[fieldState.error]} />
                     )}

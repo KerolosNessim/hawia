@@ -9,6 +9,7 @@ import {
 } from "@/features/services/lib/services-json-ld";
 import { localePath } from "@/features/blogs/lib/blog-routes";
 import {
+  pickServiceSlug,
   servicePostHref,
   servicesIndexHref,
   servicesIndexPath,
@@ -62,13 +63,14 @@ export async function generateMetadata({
   const countryId = parseCountryId(sp);
 
   const cookieStore = await cookies();
-  const userCountryCode = cookieStore.get("user_country")?.value ?? "EG";
+  const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
   const countries = await fetchPublicCountries();
   const defaultCountry = matchCountryByUserCode(countries, userCountryCode);
   const selectedCountryId = countryId ?? defaultCountry?.id;
 
   const { meta } = await fetchPublicServicesPaginated({
     paginationPath: localePath(locale, "/services"),
+    locale,
     page,
     per_page: SERVICES_LIST_PER_PAGE,
     country_id: selectedCountryId,
@@ -100,7 +102,7 @@ export default async function ServicesPage(props: {
   const locale = (await getLocale()) as Locale;
 
   const cookieStore = await cookies();
-  const userCountryCode = cookieStore.get("user_country")?.value ?? "EG";
+  const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
 
   const countries = await fetchPublicCountries();
   const countryIdParam = parseCountryId(sp);
@@ -111,6 +113,7 @@ export default async function ServicesPage(props: {
 
   const { services, meta } = await fetchPublicServicesPaginated({
     paginationPath,
+    locale,
     page,
     per_page: SERVICES_LIST_PER_PAGE,
     country_id: selectedCountryId,
@@ -138,7 +141,7 @@ export default async function ServicesPage(props: {
     url: listAbs,
     services,
     serviceUrl: (service) =>
-      `${siteUrl}${servicePostHref(locale, service.slug)}`,
+      `${siteUrl}${servicePostHref(locale, pickServiceSlug(service, locale))}`,
   });
 
   const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);

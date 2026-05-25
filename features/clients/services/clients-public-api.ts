@@ -1,4 +1,11 @@
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { apiClient } from "@/lib/api";
+
+export type PublicSolutionCategory = {
+  id: string;
+  slug: string;
+  name: string;
+};
 
 export type PublicClientCard = {
   id: string;
@@ -10,6 +17,13 @@ export type PublicClientCard = {
   imageUrls: string[];
   metaTitle: string | null;
   metaDescription: string | null;
+  categoryId: string | null;
+  categorySlug: string | null;
+  categoryName: string | null;
+};
+
+export type FetchPublicClientsOptions = {
+  categorySlug?: string;
 };
 
 export type PublicClientsPageData = {
@@ -104,6 +118,29 @@ function imageUrlsFromRecord(row: Record<string, unknown>): string[] {
   return urls;
 }
 
+function categoryFromRecord(
+  row: Record<string, unknown>,
+  locale: string,
+): { id: string | null; slug: string | null; name: string | null } {
+  const nested = asRecord(row.category);
+  const directId = row.category_id ?? row.solution_category_id;
+  const id =
+    nested?.id != null
+      ? String(nested.id)
+      : directId != null && String(directId).trim()
+        ? String(directId)
+        : null;
+  const slug = nested ? pickLoc(nested.slug, locale) : "";
+  const name = nested
+    ? pickLoc(nested.title, locale) || pickLoc(nested.name, locale)
+    : "";
+  return {
+    id,
+    slug: slug || null,
+    name: name || null,
+  };
+}
+
 function recordToClient(row: Record<string, unknown>, locale: string): PublicClientCard | null {
   const id = row.id != null ? String(row.id) : "";
   if (!id) return null;
@@ -115,6 +152,7 @@ function recordToClient(row: Record<string, unknown>, locale: string): PublicCli
   const title = pickLoc(row.title ?? content?.title, locale);
   const descriptionHtml = pickLoc(row.description ?? content?.description, locale);
   const images = imageUrlsFromRecord(row);
+  const category = categoryFromRecord(row, locale);
 
   return {
     id,
@@ -126,41 +164,112 @@ function recordToClient(row: Record<string, unknown>, locale: string): PublicCli
     imageUrls: images,
     metaTitle: seoString(row, "meta_title"),
     metaDescription: seoString(row, "meta_description"),
+    categoryId: category.id,
+    categorySlug: category.slug,
+    categoryName: category.name,
   };
 }
 
-export async function fetchPublicClients(locale: string): Promise<PublicClientCard[]> {
+function categoryRowFromApi(row: Record<string, unknown>, locale: string): PublicSolutionCategory | null {
+  const id = row.id != null ? String(row.id) : "";
+  if (!id) return null;
+  const active = row.is_active ?? row.isActive;
+  if (active === false || active === 0 || active === "0") return null;
+  const slug = pickLoc(row.slug, locale);
+  const name = pickLoc(row.title, locale) || pickLoc(row.name, locale);
+  if (!slug && !name) return null;
+  return { id, slug: slug || id, name: name || slug || id };
+}
+
+export async function fetchPublicSolutionCategories(
+  locale: string,
+): Promise<PublicSolutionCategory[]> {
   try {
-    const body = await apiClient.get<unknown>("/v1/solutions/singles");
+    const body = await apiClient.get<unknown>("/v1/solutions/categories", {
+      query: { per_page: 100 },
+    });
     return unwrapArray(body)
-      .map((row) => recordToClient(row, locale))
-      .filter((client): client is PublicClientCard => client != null);
+      .map((row) => categoryRowFromApi(row, locale))
+      .filter((c): c is PublicSolutionCategory => c != null);
   } catch {
     return [];
   }
 }
 
-export async function fetchPublicClientsPageData(locale: string): Promise<PublicClientsPageData> {
+export function countClientsByCategorySlug(
+  clients: PublicClientCard[],
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const client of clients) {
+    const slug = client.categorySlug?.trim();
+    if (!slug) continue;
+    counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export function filterClientsByCategorySlug(
+  clients: PublicClientCard[],
+  categorySlug: string | null | undefined,
+): PublicClientCard[] {
+  const slug = categorySlug?.trim();
+  if (!slug) return clients;
+  return clients.filter((c) => c.categorySlug === slug);
+}
+
+export async function fetchPublicClients(
+  locale: string,
+  options?: FetchPublicClientsOptions,
+): Promise<PublicClientCard[]> {
+  try {
+    const query: Record<string, string> = {};
+    const categorySlug = options?.categorySlug?.trim();
+    if (categorySlug) query.category_slug = categorySlug;
+    const body = await apiClient.get<unknown>("/v1/solutions/singles", {
+      ...(Object.keys(query).length ? { query } : {}),
+    });
+    const clients = unwrapArray(body)
+      .map((row) => recordToClient(row, locale))
+      .filter((client): client is PublicClientCard => client != null);
+    if (categorySlug) {
+      return filterClientsByCategorySlug(clients, categorySlug);
+    }
+    return clients;
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchPublicClientsPageData(
+  locale: string,
+  options?: FetchPublicClientsOptions,
+): Promise<PublicClientsPageData> {
   try {
     const body = await apiClient.get<unknown>("/v1/solutions");
     const row = unwrapObject(body);
     const content = asRecord(row?.content);
-    const clients = unwrapArray(row?.singles)
+    let clients = unwrapArray(row?.singles)
       .map((single) => recordToClient(single, locale))
       .filter((client): client is PublicClientCard => client != null);
+
+    if (!clients.length) {
+      clients = await fetchPublicClients(locale, options);
+    } else if (options?.categorySlug?.trim()) {
+      clients = filterClientsByCategorySlug(clients, options.categorySlug);
+    }
 
     return {
       id: row?.id != null ? String(row.id) : "",
       title: pickLoc(row?.title ?? content?.title, locale),
       description: plainTextFromHtml(pickLoc(row?.description ?? content?.description, locale)),
-      clients: clients.length ? clients : await fetchPublicClients(locale),
+      clients,
     };
   } catch {
     return {
       id: "",
       title: "",
       description: "",
-      clients: await fetchPublicClients(locale),
+      clients: await fetchPublicClients(locale, options),
     };
   }
 }
@@ -169,7 +278,7 @@ export async function fetchPublicClientDetail(
   slugOrId: string,
   locale: string,
 ): Promise<PublicClientCard | null> {
-  const decoded = decodeURIComponent(slugOrId);
+  const decoded = decodePathSegment(slugOrId);
   try {
     const body = await apiClient.get<unknown>(`/v1/solutions/singles/${encodeURIComponent(decoded)}`);
     const row = unwrapObject(body);

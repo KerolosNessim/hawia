@@ -1,5 +1,6 @@
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { getStaticResolvedCourse } from "@/features/courses/lib/static-course-mocks";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { apiClient } from "@/lib/api";
 
 export type CatalogCourseSummary = {
@@ -139,7 +140,7 @@ function recordMatchesIdentifier(
   r: Record<string, unknown>,
   identifier: string,
 ): boolean {
-  const decoded = decodeURIComponent(identifier);
+  const decoded = decodePathSegment(identifier);
   if (readId(r) === decoded || readId(r) === identifier) return true;
   return collectSlugVariants(r).some((s) => s === decoded || s === identifier);
 }
@@ -346,7 +347,7 @@ async function resolveCourseRow(
   identifier: string,
   locale: string,
 ): Promise<Record<string, unknown> | null> {
-  const decoded = decodeURIComponent(identifier);
+  const decoded = decodePathSegment(identifier);
 
   let row = await fetchCourseRowBySlug(decoded);
   if (row) return row;
