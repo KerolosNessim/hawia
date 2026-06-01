@@ -7,6 +7,21 @@ export type PublicSolutionCategory = {
   name: string;
 };
 
+/** Category card for the home “client samples” grid (`/v1/solutions/categories`). */
+export type PublicSolutionCategoryCard = {
+  id: string;
+  slug: string;
+  title: string;
+  imageUrl: string;
+  imageAlt: string;
+};
+
+export type SolutionCategoriesSectionData = {
+  title: string;
+  descriptionHtml: string;
+  categories: PublicSolutionCategoryCard[];
+};
+
 export type PublicClientCard = {
   id: string;
   slug: string;
@@ -170,15 +185,87 @@ function recordToClient(row: Record<string, unknown>, locale: string): PublicCli
   };
 }
 
+function pickCategorySlug(row: Record<string, unknown>, locale: string): string {
+  return (
+    pickLoc(row.slugs, locale) ||
+    pickLoc(row.slug_local, locale) ||
+    pickLoc(row.slug, locale) ||
+    pickString(row.slug)
+  );
+}
+
 function categoryRowFromApi(row: Record<string, unknown>, locale: string): PublicSolutionCategory | null {
   const id = row.id != null ? String(row.id) : "";
   if (!id) return null;
   const active = row.is_active ?? row.isActive;
   if (active === false || active === 0 || active === "0") return null;
-  const slug = pickLoc(row.slug, locale);
+  const slug = pickCategorySlug(row, locale);
   const name = pickLoc(row.title, locale) || pickLoc(row.name, locale);
   if (!slug && !name) return null;
   return { id, slug: slug || id, name: name || slug || id };
+}
+
+function categoryCardFromApi(
+  row: Record<string, unknown>,
+  locale: string,
+): PublicSolutionCategoryCard | null {
+  const id = row.id != null ? String(row.id) : "";
+  if (!id) return null;
+  const active = row.is_active ?? row.isActive;
+  if (active === false || active === 0 || active === "0") return null;
+
+  const slug = pickCategorySlug(row, locale) || id;
+  const title =
+    pickLoc(row.title, locale) || pickLoc(row.name, locale) || slug;
+  const media = asRecord(row.media);
+  const imageUrl =
+    mediaUrlFromApi(media?.image ?? row.image) || "/hero-bg.webp";
+  const imageAltRaw = media?.image_alt ?? row.image_alt;
+  const imageAlt =
+    typeof imageAltRaw === "string"
+      ? imageAltRaw.trim()
+      : pickLoc(imageAltRaw, locale) || title;
+
+  return { id, slug, title, imageUrl, imageAlt };
+}
+
+function sectionContentFromApi(
+  body: unknown,
+  locale: string,
+): { title: string; descriptionHtml: string } {
+  const root = asRecord(body);
+  const block = asRecord(root?.data) ?? root;
+  const content = asRecord(block?.content);
+  return {
+    title: pickLoc(content?.title, locale) || pickString(content?.title),
+    descriptionHtml:
+      pickLoc(content?.description, locale) || pickString(content?.description),
+  };
+}
+
+/** Home ads / samples block: section heading + category cards from `GET /v1/solutions/categories`. */
+export async function fetchSolutionCategoriesSection(
+  locale: string,
+): Promise<SolutionCategoriesSectionData | null> {
+  try {
+    const body = await apiClient.get<unknown>("/v1/solutions/categories", {
+      query: { per_page: 100 },
+    });
+    const { title, descriptionHtml } = sectionContentFromApi(body, locale);
+    const categories = unwrapArray(body)
+      .map((row) => categoryCardFromApi(row, locale))
+      .filter((c): c is PublicSolutionCategoryCard => c != null);
+
+    if (!title && categories.length === 0) return null;
+
+    return {
+      title,
+      descriptionHtml,
+      categories,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchPublicSolutionCategories(

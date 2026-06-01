@@ -14,19 +14,25 @@ import {
 } from "@/features/blogs/single-blog-page";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import {
-  buildBlogCategoryCollectionJsonLd,
-  buildBreadcrumbJsonLd,
   categoryDescriptionPlain,
-  jsonLdScript,
 } from "@/features/blogs/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import {
+  absoluteUrlFromPath,
+  buildCanonicalUrl,
+  jsonLdGraph,
+  buildCollectionPageSchemaGraph,
+  buildBreadcrumbList,
+} from "@/lib/seo/schema";
+import { applyBlogSlugRedirect } from "@/features/blogs/lib/blog-slug-redirect";
 import {
   blogToCardPayload,
-  fetchPublicBlogBySlug,
   fetchPublicBlogCategories,
   fetchPublicBlogsPaginated,
   fetchVisibleBlogCountByCategoryId,
   findPublicBlogCategoryBySlug,
 } from "@/features/blogs/server/public-blogs";
+import { resolveBlogPage } from "@/features/blogs/server/resolve-blog-page";
 import PageHeader from "@/features/shared/components/page-header";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "next-intl";
@@ -65,8 +71,10 @@ export async function generateMetadata({
   const categories = await fetchPublicBlogCategories(locale);
   const category = findPublicBlogCategoryBySlug(categories, slug);
   if (!category) {
-    const blog = await fetchPublicBlogBySlug(slug);
-    if (blog) return generateSingleBlogMetadata(locale, slug);
+    const resolved = await resolveBlogPage(slug, locale);
+    if (resolved?.kind === "ok" || resolved?.kind === "redirect") {
+      return generateSingleBlogMetadata(locale, slug);
+    }
     return { title: "—", robots: { index: false, follow: false } };
   }
 
@@ -136,11 +144,13 @@ export default async function BlogSlugPage(props: {
   const category = findPublicBlogCategoryBySlug(categories, slug);
 
   if (!category) {
-    const blog = await fetchPublicBlogBySlug(slug);
-    if (blog) {
-      return <SingleBlogPage locale={locale} slug={blog.slug} />;
+    const resolved = await resolveBlogPage(slug, locale);
+    if (!resolved) redirectToNotFound();
+    if (resolved.kind === "gone") redirectToNotFound();
+    if (resolved.kind === "redirect") {
+      applyBlogSlugRedirect(locale, resolved.toSlug, resolved.status);
     }
-    redirectToNotFound();
+    return <SingleBlogPage locale={locale} slug={resolved.blog.slug} />;
   }
 
   const t = await getTranslations("blogsPage");
@@ -162,41 +172,40 @@ export default async function BlogSlugPage(props: {
     key: String(b.id),
   }));
 
-  const blogIndexAbs = await getAbsoluteUrl(localePath(locale, "/blogs"));
-  const categoryAbs = await getAbsoluteUrl(
+  const blogIndexAbs = buildCanonicalUrl(locale, "/blogs");
+  const categoryAbs = absoluteUrlFromPath(
     blogCategoryHref(locale, category.slug, page, { search }),
   );
 
-  const blogItems = await Promise.all(
-    blogs.map(async (b) => ({
-      title: blogToCardPayload(b, visibleLocale).title,
-      url: await getAbsoluteUrl(blogPostHref(locale, b.slug)),
-      image: b.image,
-      datePublished: b.published_at,
-    })),
-  );
+  const blogItems = blogs.map((b) => ({
+    name: blogToCardPayload(b, visibleLocale).title,
+    url: absoluteUrlFromPath(blogPostHref(locale, b.slug)),
+    datePublished: b.published_at ?? undefined,
+  }));
 
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    {
-      name: t("breadcrumbHome"),
-      url: await getAbsoluteUrl(localePath(locale, "/")),
-    },
-    { name: t("breadcrumbBlog"), url: blogIndexAbs },
-    { name: category.name, url: categoryAbs },
+  const categorySchemaJson = jsonLdGraph([
+    ...buildCollectionPageSchemaGraph({
+      pageUrl: categoryAbs,
+      name: category.name,
+      description: categoryDescriptionPlain(category),
+      inLanguage: locale === "ar" ? "ar" : "en",
+      breadcrumbs: [],
+      items: blogItems,
+      listIdSuffix: "itemlist",
+    }),
+    buildBreadcrumbList(
+      [
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/") },
+        { name: t("breadcrumbBlog"), url: blogIndexAbs },
+        { name: category.name, url: categoryAbs },
+      ],
+      categoryAbs,
+    ),
   ]);
-
-  const collectionLds = buildBlogCategoryCollectionJsonLd({
-    name: category.name,
-    descriptionPlain: categoryDescriptionPlain(category),
-    url: categoryAbs,
-    blogItems,
-  });
-
-  const structuredData = jsonLdScript([breadcrumbLd, ...collectionLds]);
 
   return (
     <div className="space-y-12 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={categorySchemaJson} />
 
       <PageHeader
         title={category.name}
@@ -256,7 +265,7 @@ export default async function BlogSlugPage(props: {
                 article={article}
                 index={index}
                 isRtl={locale === "ar"}
-                isLight
+                theme="light"
               />
             ))}
           </div>

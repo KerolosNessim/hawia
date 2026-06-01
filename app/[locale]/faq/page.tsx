@@ -1,8 +1,7 @@
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
-import { localePath } from "@/features/blogs/lib/blog-routes";
-import { buildBreadcrumbJsonLd, jsonLdScript } from "@/features/blogs/lib/json-ld";
-import { buildFaqPageJsonLd } from "@/features/shared/lib/faq-json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { buildCanonicalUrl, serializeFaqPageSchema } from "@/lib/seo/schema";
 import { getFaqData } from "@/features/home/services/faq";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import {
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { getAbsoluteUrl, localePathname } from "@/lib/seo/metadata-helpers";
+import { localePathname } from "@/lib/seo/metadata-helpers";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import type { Metadata } from "next";
 
@@ -67,34 +66,25 @@ export default async function FaqPage() {
   const rightItems = items.slice(midPoint);
 
   const pageTitle = data.title || t("title");
-  const faqPath = localePath(locale, "/faq");
-  const pageAbs = await getAbsoluteUrl(faqPath);
-  const homeAbs = await getAbsoluteUrl(localePath(locale, "/"));
-
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: homeAbs },
-    { name: t("breadcrumbFaq"), url: pageAbs },
-  ]);
-
-  const faqLd = buildFaqPageJsonLd({
-    items: items.map((item) => ({
+  const pageAbs = buildCanonicalUrl(locale, "/faq");
+  const faqSchemaJson = serializeFaqPageSchema({
+    pageUrl: pageAbs,
+    name: plainTextFromHtml(pageTitle) || t("title"),
+    description: data.meta_description || data.description || t("description"),
+    inLanguage: locale === "ar" ? "ar" : "en",
+    breadcrumbs: [
+      { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/") },
+      { name: t("breadcrumbFaq"), url: pageAbs },
+    ],
+    faqItems: items.map((item) => ({
       question: item.question,
       answer: item.answer,
     })),
-    url: pageAbs,
-    name: plainTextFromHtml(pageTitle) || t("title"),
   });
-
-  const structuredData = jsonLdScript(
-    faqLd ? [breadcrumbLd, faqLd] : [breadcrumbLd],
-  );
 
   return (
     <div className="pb-16 space-y-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: structuredData }}
-      />
+      <PageSchemaScript json={faqSchemaJson} />
       <PageHeader
         title={data.title || t("title")}
         descriptionHtml={data.description || t("description")}

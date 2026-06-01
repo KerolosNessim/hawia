@@ -55,10 +55,16 @@ function parseSection(raw: unknown, locale: string): Section | null {
     ? o.items
         .map((item) => {
           const row = item as Record<string, unknown>;
+          const itemLink = pickSectionLink(row);
+          const iconRaw = row.icon;
+          const icon =
+            typeof iconRaw === "string" && iconRaw.trim() ? iconRaw.trim() : null;
           return {
             title: pickLocalizedField(row.title, locale),
             description: pickLocalizedField(row.description, locale),
             sort_order: String(row.sort_order ?? "0"),
+            link: itemLink,
+            icon,
           };
         })
         .sort(
@@ -102,6 +108,7 @@ function parsePackageItems(raw: unknown, locale: string): ServicePackageItem[] {
         currency: typeof o.currency === "string" && o.currency.trim() ? o.currency.trim() : null,
         sortOrder: Number.isFinite(sortOrder) ? sortOrder : idx,
         imageAlt: pickLocalizedField(o.image_alt, locale) || null,
+        link: pickSectionLink(o),
       };
     })
     .filter((x): x is Omit<ServicePackageItem, "icon" | "isFeatured"> => x != null)
@@ -282,14 +289,21 @@ function parseFaqsBlock(o: Record<string, unknown>, locale: string): Faqs {
             question,
             answer,
             sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
+            link: pickSectionLink(row),
           };
         })
         .filter(
-          (x): x is { question: string; answer: string; sortOrder: number } =>
-            x != null,
+          (
+            x,
+          ): x is {
+            question: string;
+            answer: string;
+            sortOrder: number;
+            link: string | null;
+          } => x != null,
         )
         .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map(({ question, answer }) => ({ question, answer }))
+        .map(({ question, answer, link }) => ({ question, answer, link }))
     : [];
   const faqsSort = Number(o.sort_order);
   return {

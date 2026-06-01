@@ -1,3 +1,5 @@
+import { assignHeadingIdsToArticleHtml } from "@/features/blogs/lib/assign-heading-ids";
+import { BlogTableOfContents } from "@/features/blogs/components/blog-table-of-contents";
 import RelatedBlogsSection from "@/features/blogs/components/related-blogs-section";
 import ShareSection from "@/features/blogs/components/share-sction";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
@@ -12,23 +14,22 @@ import {
 import { pickPrimaryBlogCategory } from "@/features/blogs/lib/pick-blog-category";
 import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
 import type { PublicBlogTag } from "@/features/blogs/lib/blog-tag";
+import { parseFaqPairsFromRichHtml } from "@/features/shared/lib/faq-json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
+import { buildCanonicalUrl, schemaMediaUrl, serializeBlogPostSchema } from "@/lib/seo/schema";
 import { Link } from "@/i18n/navigation";
-import {
-  blogExcerptPlain,
-  buildBlogPostingJsonLd,
-  buildBreadcrumbJsonLd,
-  jsonLdScript,
-} from "@/features/blogs/lib/json-ld";
+import { blogExcerptPlain } from "@/features/blogs/lib/json-ld";
 import RatingSection from "@/features/blogs/components/rating-section";
+import { applyBlogSlugRedirect } from "@/features/blogs/lib/blog-slug-redirect";
 import {
   blogToCardPayload,
-  fetchPublicBlogBySlug,
   fetchPublicBlogCategories,
   fetchPublicBlogs,
   pickLocalizedRichText,
   plainTextFromHtml,
 } from "@/features/blogs/server/public-blogs";
+import { resolveBlogPage } from "@/features/blogs/server/resolve-blog-page";
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { Calendar, Clock, HelpCircle } from "lucide-react";
@@ -62,69 +63,6 @@ async function absoluteBlogUrl(locale: Locale, slug: string): Promise<string | n
 }
 
 // ---------------------------------------------------------------------------
-// FAQ JSON-LD builder
-// ---------------------------------------------------------------------------
-
-/**
- * Parses the FAQ rich HTML and builds a Google-compliant FAQPage JSON-LD block.
- *
- * Convention: every <h2> (or <h3>) is treated as a question and the next
- * sibling block-level content up to the following heading is the answer.
- *
- * Falls back to treating every <p> as an answer to the previous heading if
- * the content doesn't follow the heading structure.
- */
-function buildFaqJsonLd(faqHtml: string): object | null {
-  if (!faqHtml.trim()) return null;
-
-  // Strip tags helper — keeps text content only
-  const strip = (html: string) =>
-    html
-      .replace(/<br\s*\/?>/gi, " ")
-      .replace(/<[^>]+>/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .trim();
-
-  // Split on heading tags to extract Q/A pairs
-  const headingRegex = /<h[2-4][^>]*>([\s\S]*?)<\/h[2-4]>/gi;
-  const pairs: Array<{ question: string; answer: string }> = [];
-
-  const parts = faqHtml.split(headingRegex);
-  // parts[0] = content before first heading (skip)
-  // parts[1,3,5...] = heading inner HTML (question)
-  // parts[2,4,6...] = content after heading until next heading (answer)
-
-  for (let i = 1; i < parts.length; i += 2) {
-    const question = strip(parts[i] ?? "");
-    const answerHtml = parts[i + 1] ?? "";
-    const answer = strip(answerHtml);
-    if (question && answer) {
-      pairs.push({ question, answer });
-    }
-  }
-
-  if (pairs.length === 0) return null;
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: pairs.map(({ question, answer }) => ({
-      "@type": "Question",
-      name: question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: answer,
-      },
-    })),
-  };
-}
-
-// ---------------------------------------------------------------------------
 // Metadata
 // ---------------------------------------------------------------------------
 
@@ -132,12 +70,18 @@ export async function generateSingleBlogMetadata(
   locale: Locale,
   slug: string,
 ): Promise<Metadata> {
-  const blog = await fetchPublicBlogBySlug(slug);
+  const resolved = await resolveBlogPage(slug, locale);
   const tNotFound = await getTranslations("blogDetail");
 
-  if (!blog) {
+  if (!resolved || resolved.kind === "gone") {
     return { title: tNotFound("notFoundTitle"), robots: { index: false, follow: false } };
   }
+
+  if (resolved.kind === "redirect") {
+    return { title: tNotFound("notFoundTitle"), robots: { index: false, follow: false } };
+  }
+
+  const blog = resolved.blog;
 
   const title =
     typeof blog.meta_title === "string" && blog.meta_title.trim()
@@ -192,22 +136,28 @@ export async function generateSingleBlogMetadata(
 // ---------------------------------------------------------------------------
 
 export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: string }) {
-  const blog = await fetchPublicBlogBySlug(slug);
+  const resolved = await resolveBlogPage(slug, locale);
+
+  if (!resolved) redirectToNotFound();
+  if (resolved.kind === "gone") redirectToNotFound();
+  if (resolved.kind === "redirect") {
+    applyBlogSlugRedirect(locale, resolved.toSlug, resolved.status);
+  }
+
+  const blog = resolved.blog;
 
   if (process.env.NODE_ENV === "development") {
     console.log("[SingleBlogPage]", {
       locale,
       routeSlug: slug,
       blog,
-      titleRichSource: blog?.titleRichSource,
-      descriptionRichSource: blog?.descriptionRichSource,
-      subtitleRichSource: blog?.subtitleRichSource,
-      contentRichSource: blog?.contentRichSource,
-      faqRichSource: blog?.faqRichSource,
+      titleRichSource: blog.titleRichSource,
+      descriptionRichSource: blog.descriptionRichSource,
+      subtitleRichSource: blog.subtitleRichSource,
+      contentRichSource: blog.contentRichSource,
+      faqRichSource: blog.faqRichSource,
     });
   }
-
-  if (!blog) redirectToNotFound();
 
   const t = await getTranslations("blogDetail");
   const tBlogs = await getTranslations("blogsPage");
@@ -280,7 +230,18 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     articleLang,
   ).trim();
 
-  const articleCombinedHtml =
+  const tocRich = pickLocalizedRichText(
+    blog.tableOfContentsRichSource ?? blog.table_of_contents,
+    articleLang,
+  ).trim();
+
+  const tocPlacement = blog.toc_placement || "before_body";
+  const showToc = blog.toc_enabled && Boolean(tocRich);
+  const tocNav = showToc ? (
+    <BlogTableOfContents html={tocRich} className="not-prose" />
+  ) : null;
+
+  const articleCombinedRaw =
     descRich || contentRich
       ? [
           descRich
@@ -292,16 +253,15 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
           .join("")
       : "";
 
-  const blogIndexAbs =
-    (await absoluteFromPath(localePath(locale, "/blogs"))) ?? localePath(locale, "/blogs");
-  const blogPostingAbs =
-    pageUrl ?? (await absoluteBlogUrl(locale, slug)) ?? blogIndexAbs;
-  const heroAbs =
-    (await absoluteFromPath(heroImage)) ??
-    (heroImage.startsWith("http") ? heroImage : undefined);
+  const articleCombinedHtml = articleCombinedRaw
+    ? assignHeadingIdsToArticleHtml(articleCombinedRaw, { tocHtml: tocRich || undefined })
+    : "";
 
-  const homeAbs =
-    (await absoluteFromPath(localePath(locale, "/"))) ?? localePath(locale, "/");
+  const blogIndexAbs = buildCanonicalUrl(locale, "/blogs");
+  const blogPostingAbs =
+    pageUrl?.trim() || buildCanonicalUrl(locale, blogPostPath(slug));
+  const heroAbs = schemaMediaUrl(heroImage);
+  const homeAbs = buildCanonicalUrl(locale, "/");
   const breadcrumbTrail: BreadcrumbTrailItem[] = [
     { href: "/", label: tBlogs("breadcrumbHome") },
     { href: "/blogs", label: tBlogs("breadcrumbBlog") },
@@ -326,43 +286,35 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     const catSlug = primaryCategory.slug?.trim();
     breadcrumbLdItems.push({
       name: primaryCategory.name,
-      url:
-        (catSlug
-          ? await absoluteFromPath(blogCategoryPath(catSlug))
-          : null) ?? blogIndexAbs,
+      url: catSlug ? buildCanonicalUrl(locale, blogCategoryPath(catSlug)) : blogIndexAbs,
     });
   }
   breadcrumbLdItems.push({ name: localizedTitle, url: blogPostingAbs });
-  const breadcrumbLd = buildBreadcrumbJsonLd(breadcrumbLdItems);
 
-  const postingLd = buildBlogPostingJsonLd({
-    url: blogPostingAbs,
+  const faqHeading = t("faqHeading");
+  const faqPairs = faqRich ? parseFaqPairsFromRichHtml(faqRich) : [];
+
+  const pageSchemaJson = serializeBlogPostSchema({
+    pageUrl: blogPostingAbs,
     headline: localizedTitle,
-    descriptionPlain: blogExcerptPlain(blog, localizedTitle),
+    description: blogExcerptPlain(blog, localizedTitle),
+    inLanguage: articleLang,
     datePublished: blog.published_at,
     dateModified: blog.created_at,
-    imageUrl: heroAbs ?? null,
-    authorName: blog.publisher_name,
-    keywords: blog.tags.map((t) => t.label),
+    imageUrls: heroAbs ? [heroAbs] : undefined,
+    authorName: blog.publisher_name || "Howeyah",
+    keywords: blog.tags.map((tag) => tag.label),
     articleSection: primaryCategory?.name ?? null,
-    inLanguage: articleLang === "ar" ? "ar" : "en",
+    contentHtml: articleCombinedHtml,
+    tagNames: blog.tags.map((tag) => tag.label),
+    breadcrumbs: breadcrumbLdItems,
+    faqItems: faqPairs.length ? faqPairs : undefined,
+    faqName: faqPairs.length ? faqHeading : undefined,
   });
-
-  // Build FAQ JSON-LD only when FAQ content exists
-  const faqLd = faqRich ? buildFaqJsonLd(faqRich) : null;
-
-  const allLdBlocks = [breadcrumbLd, postingLd, ...(faqLd ? [faqLd] : [])];
-  const structuredData = jsonLdScript(allLdBlocks);
-
-  // Translation keys with sensible fallbacks
-  const faqHeading =
-    articleLang === "ar"
-      ? t("faqHeading", { defaultValue: "الأسئلة الشائعة" })
-      : t("faqHeading", { defaultValue: "Frequently Asked Questions" });
 
   return (
     <div className="pb-16 space-y-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={pageSchemaJson} />
 
       <PageHeader
         image="/blogs-banner.jfif"
@@ -430,13 +382,21 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
         ) : null}
       </div>
 
+      {showToc && tocPlacement === "after_meta" ? (
+        <div className="container max-w-3xl">{tocNav}</div>
+      ) : null}
+
       {/* ── Main article body ──────────────────────────────────────────────── */}
       <article className="container max-w-3xl space-y-6 text-gray-900">
+        {showToc && tocPlacement === "before_body" ? tocNav : null}
+
         <RichHtml
           html={articleCombinedHtml || "<p></p>"}
           allowHorizontalScroll
           className="blog-content space-y-4 text-lg leading-relaxed [&_h1]:scroll-mt-24 [&_h1]:text-3xl [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h3]:scroll-mt-24 [&_h3]:text-xl [&_blockquote]:border-s-4 [&_blockquote]:border-brand [&_blockquote]:bg-muted/30 [&_blockquote]:py-2 [&_blockquote]:ps-4"
         />
+
+        {showToc && tocPlacement === "after_body" ? tocNav : null}
 
         {blog.tags.length ? (
           <div className="flex flex-wrap gap-2 pt-6">
@@ -454,14 +414,15 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
         ) : null}
       </article>
 
+      {showToc && tocPlacement === "before_faq" ? (
+        <div className="container max-w-3xl">{tocNav}</div>
+      ) : null}
+
       {/* ── FAQ section ───────────────────────────────────────────────────── */}
       {faqRich ? (
         <section
           aria-labelledby="faq-section-heading"
           className="container max-w-3xl"
-          // Signal to Google's crawler that this section contains FAQ content
-          itemScope
-          itemType="https://schema.org/FAQPage"
         >
           {/* Section header */}
           <div className="mb-8 flex items-center gap-3 border-b border-border pb-5">

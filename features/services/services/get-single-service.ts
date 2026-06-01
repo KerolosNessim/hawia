@@ -5,33 +5,41 @@ import { normalizeServiceForLocale } from "../lib/normalize-service";
 import { pickServiceSlug } from "../lib/services-routes";
 import type { GetSingleServiceResponse } from "../types";
 
+function asRecord(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+function pickServiceShowPayload(payload: unknown): Record<string, unknown> | null {
+  const rec = asRecord(payload);
+  if (!rec) return null;
+  const data = asRecord(rec.data);
+  const redirect = asRecord(data?.redirect) ?? asRecord(rec.redirect);
+  if (redirect) {
+    const status = Number(redirect.status ?? redirect.code ?? 0);
+    if (Number.isFinite(status) && status > 0) return data ?? { redirect };
+  }
+  if (data && !Array.isArray(data)) return data;
+  if (rec.id != null || rec.slug) return rec;
+  return null;
+}
+
 export async function fetchServiceRow(slug: string): Promise<Record<string, unknown> | null> {
   try {
     const catalog = await apiClient.get<unknown>(
       `/v1/service-catalog/${encodeURIComponent(slug)}`,
     );
-    if (catalog && typeof catalog === "object") {
-      const p = catalog as Record<string, unknown>;
-      const d = p.data;
-      if (d && typeof d === "object" && !Array.isArray(d) && Object.keys(d).length > 0) {
-        return d as Record<string, unknown>;
-      }
-    }
+    const row = pickServiceShowPayload(catalog);
+    if (row) return row;
   } catch {
     /* try legacy services API */
   }
 
   try {
     const body = await apiClient.get<unknown>(`/v1/services/${encodeURIComponent(slug)}`);
-    if (body && typeof body === "object") {
-      const p = body as Record<string, unknown>;
-      const d = p.data;
-      if (d && typeof d === "object" && !Array.isArray(d)) return d as Record<string, unknown>;
-    }
+    return pickServiceShowPayload(body);
   } catch {
     return null;
   }
-  return null;
 }
 
 async function resolveServiceRow(

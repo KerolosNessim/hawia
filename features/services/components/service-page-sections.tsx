@@ -13,6 +13,7 @@ import type {
   Faqs,
   Section,
   ServicePageSectionInstance,
+  ServicePageSectionKey,
   SingleService,
   Tools,
 } from "@/features/services/types";
@@ -29,6 +30,8 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   service: SingleService;
+  /** Sections rendered elsewhere on the page (e.g. article tags after related services). */
+  excludeKeys?: ServicePageSectionKey[];
 };
 
 function sectionLinkFromData(data: { link?: string | null }): string | undefined {
@@ -118,19 +121,11 @@ function renderSectionInstance(
       );
     case "offerings": {
       const offerings = section.data as Section;
-      return (
-        <SectionLinkShell key={blockKey} link={sectionLinkFromData(offerings)}>
-          <OfferServiceSection offerings={offerings} />
-        </SectionLinkShell>
-      );
+      return <OfferServiceSection key={blockKey} offerings={offerings} />;
     }
     case "steps": {
       const steps = section.data as Section;
-      return (
-        <SectionLinkShell key={blockKey} link={sectionLinkFromData(steps)}>
-          <SeoSteps steps={steps} />
-        </SectionLinkShell>
-      );
+      return <SeoSteps key={blockKey} steps={steps} />;
     }
     case "tools": {
       const tools = section.data as Tools;
@@ -142,19 +137,17 @@ function renderSectionInstance(
     }
     case "faqs": {
       const faq = section.data as Faqs;
-      return (
-        <SectionLinkShell key={blockKey} link={sectionLinkFromData(faq)}>
-          <SeoFaq faq={faq} />
-        </SectionLinkShell>
-      );
+      return <SeoFaq key={blockKey} faq={faq} />;
     }
     case "packages": {
       const packages = section.data as NonNullable<SingleService["packages"]>;
       if (!packages.items.length) return null;
       return (
-        <SectionLinkShell key={blockKey} link={sectionLinkFromData(packages)}>
-          <SeoPackages packages={packages} orderPhone={service.ctas?.phone_number} />
-        </SectionLinkShell>
+        <SeoPackages
+          key={blockKey}
+          packages={packages}
+          orderPhone={service.ctas?.phone_number}
+        />
       );
     }
     case "articleTags":
@@ -182,9 +175,12 @@ function renderSectionInstance(
   }
 }
 
-export function ServicePageSections({ service }: Props) {
+export function ServicePageSections({ service, excludeKeys = [] }: Props) {
   const t = useTranslations("singleService");
-  const order = getOrderedServicePageSections(service.pageSections);
+  const excluded = new Set(excludeKeys);
+  const order = getOrderedServicePageSections(service.pageSections).filter(
+    (section) => !excluded.has(section.key),
+  );
 
   return <>{order.map((section) => renderSectionInstance(section, service, t))}</>;
 }

@@ -1,12 +1,15 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
 
-import { jsonLdScript } from "@/features/blogs/lib/json-ld";
 
 import ServicePageScript from "@/features/services/components/service-page-script";
 
 import RelatedServicesSection from "@/features/services/components/related-services-section";
+import ServiceArticleTags from "@/features/services/components/service-article-tags";
 import { ServicePageSections } from "@/features/services/components/service-page-sections";
+import { parseCountryId } from "@/features/services/lib/parse-services-search-params";
+import { resolveServiceCountryId } from "@/features/services/lib/resolve-service-country-id";
 import { getServices } from "@/features/services/services/get-services";
+import { fetchPublicCountries } from "@/features/services/services/public-services-api";
 
 import { buildServiceMetadata } from "@/features/services/lib/service-metadata";
 
@@ -32,7 +35,8 @@ import PageHeader from "@/features/shared/components/page-header";
 
 import { RichHtml } from "@/features/shared/components/rich-html";
 
-import { buildFaqPageJsonLd } from "@/features/shared/lib/faq-json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { buildCanonicalUrl, serializeServicePageSchema } from "@/lib/seo/schema";
 
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 
@@ -48,13 +52,18 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import type { Metadata } from "next";
 
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 
 import { permanentRedirect } from "next/navigation";
 
+import type { ServicesSearchParams } from "@/features/services/lib/parse-services-search-params";
 
 
-type Props = { params: Promise<{ locale: Locale; slug: string }> };
+
+type Props = {
+  params: Promise<{ locale: Locale; slug: string }>;
+  searchParams?: Promise<ServicesSearchParams>;
+};
 
 
 
@@ -62,29 +71,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { locale, slug } = await params;
 
-  const res = await getSingleService(slug, locale);
+  const resolved = await resolveServicePage(slug, locale);
 
-  if (!res?.data) return { title: "Service", robots: { index: false, follow: false } };
+  if (!resolved || resolved.kind === "gone") {
+    return { title: "Service", robots: { index: false, follow: false } };
+  }
 
-  return buildServiceMetadata(res.data, locale);
+  if (resolved.kind === "redirect") {
+    return { title: "Service", robots: { index: false, follow: false } };
+  }
 
-}
-
-
-
-async function absolutePath(path: string): Promise<string | null> {
-
-  const h = await headers();
-
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-
-  if (!host) return null;
-
-  const proto = h.get("x-forwarded-proto") ?? "https";
-
-  if (path.startsWith("http")) return path;
-
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
+  return buildServiceMetadata(resolved.data, locale);
 
 }
 
@@ -114,9 +111,10 @@ function applySlugRedirect(locale: Locale, toSlug: string, status: number): neve
 
 
 
-export default async function ServicePage({ params }: Props) {
+export default async function ServicePage({ params, searchParams }: Props) {
 
   const { slug, locale: routeLocale } = await params;
+  const sp = searchParams ? await searchParams : {};
 
   const locale = (await getLocale()) as Locale;
 
@@ -144,23 +142,13 @@ export default async function ServicePage({ params }: Props) {
 
   const serviceSlug = pickServiceSlug(service, locale);
 
-  const servicePath = localePath(
-
-    locale,
-
-    `/services/${encodeURIComponent(serviceSlug)}`,
-
-  );
-
-  const serviceAbs = (await absolutePath(servicePath)) ?? servicePath;
-
-
+  const serviceAbs = buildCanonicalUrl(locale, `/services/${encodeURIComponent(serviceSlug)}`);
 
   const heroTitle =
 
     service.singlePageTitle?.trim() || service.title;
 
-
+  const tBreadcrumb = await getTranslations({ locale, namespace: "seo.breadcrumb" });
 
   const faqItems = service.pageSections
 
@@ -168,39 +156,45 @@ export default async function ServicePage({ params }: Props) {
 
     .flatMap((section) => (section.data as { items?: { question: string; answer: string }[] }).items ?? []);
 
-  const faqLd =
+  const serviceDescription = plainTextFromHtml(
+    service.meta_description?.trim() ||
+      service.description ||
+      service.subtitle ||
+      "",
+  ).slice(0, 320);
 
-    faqItems.length > 0
+  const serviceSchemaJson = serializeServicePageSchema({
+    pageUrl: serviceAbs,
+    name: plainTextFromHtml(heroTitle),
+    description: serviceDescription,
+    serviceType: plainTextFromHtml(service.meta_title || heroTitle),
+    inLanguage: locale === "ar" ? "ar" : "en",
+    areaServed: service.countries,
+    breadcrumbs: [
+      { name: tBreadcrumb("home"), url: buildCanonicalUrl(locale, "/") },
+      { name: tBreadcrumb("services"), url: buildCanonicalUrl(locale, "/services") },
+      { name: plainTextFromHtml(heroTitle), url: serviceAbs },
+    ],
+    faqItems: faqItems.length
+      ? faqItems.map((item) => ({ question: item.question, answer: item.answer }))
+      : undefined,
+    faqName:
+      faqItems.length > 0
+        ? plainTextFromHtml(service.faqs?.title ?? "") || plainTextFromHtml(service.title)
+        : undefined,
+  });
 
-      ? buildFaqPageJsonLd({
+  const cookieStore = await cookies();
+  const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
+  const countries = await fetchPublicCountries();
+  const relatedCountryId = resolveServiceCountryId({
+    serviceCountries: service.countries ?? [],
+    urlCountryId: parseCountryId(sp),
+    allCountries: countries,
+    userCountryCode,
+  });
 
-        items: faqItems.map((item) => ({
-
-          question: item.question,
-
-          answer: item.answer,
-
-        })),
-
-        url: serviceAbs,
-
-        name:
-
-          plainTextFromHtml(service.faqs?.title ?? "") ||
-
-          plainTextFromHtml(service.title) ||
-
-          undefined,
-
-      })
-
-      : null;
-
-
-
-  const faqStructuredData = faqLd ? jsonLdScript(faqLd) : null;
-
-  const servicesListRes = await getServices(locale);
+  const servicesListRes = await getServices(locale, { country_id: relatedCountryId });
   const relatedServices = (servicesListRes.data ?? []).filter((s) => s.id !== service.id);
 
 
@@ -211,17 +205,7 @@ export default async function ServicePage({ params }: Props) {
 
       {service.pageScript ? <ServicePageScript scriptHtml={service.pageScript} /> : null}
 
-      {faqStructuredData ? (
-
-        <script
-
-          type="application/ld+json"
-
-          dangerouslySetInnerHTML={{ __html: faqStructuredData }}
-
-        />
-
-      ) : null}
+      <PageSchemaScript json={serviceSchemaJson} />
 
       <PageHeader
 
@@ -283,11 +267,17 @@ export default async function ServicePage({ params }: Props) {
 
 
 
-        <ServicePageSections service={service} />
+        <ServicePageSections service={service} excludeKeys={["articleTags"]} />
 
       </div>
 
-      <RelatedServicesSection services={relatedServices} />
+      <div className="space-y-16 pb-16">
+        <RelatedServicesSection services={relatedServices} countryId={relatedCountryId} />
+
+        {service.articleTags.length > 0 ? (
+          <ServiceArticleTags tags={service.articleTags} heading={t("articleTagsHeading")} />
+        ) : null}
+      </div>
 
     </div>
 

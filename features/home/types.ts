@@ -110,7 +110,15 @@ export interface WhyUsContent {
 }
 
 export interface WhyUsMedia {
-    image: string;
+    image?: string | { ar?: string; en?: string } | null;
+    images?: { ar?: string; en?: string } | null;
+    image_alt?: { ar?: string | null; en?: string | null } | string | null;
+}
+
+export interface WhyUsGalleryImage {
+    id: number;
+    url: string;
+    image_alt?: { ar?: string | null; en?: string | null } | string | null;
 }
 
 export interface WhyUsItem {
@@ -128,6 +136,8 @@ export interface WhyUsData {
     id: number;
     slug: string;
     content: WhyUsContent;
+    media?: WhyUsMedia;
+    images?: WhyUsGalleryImage[];
     items: WhyUsItem[];
     seo: WhyUsSeo;
 }

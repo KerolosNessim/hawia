@@ -5,30 +5,17 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   categories: PublicSolutionCategory[];
-  activeCategorySlug: string | null;
-  allLabel: string;
+  activeCategorySlug: string;
   countByCategorySlug: ReadonlyMap<string, number>;
 };
 
 export default function ClientsCategoryFilter({
   categories,
   activeCategorySlug,
-  allLabel,
   countByCategorySlug,
 }: Props) {
   return (
     <div className="flex flex-wrap justify-center gap-2">
-      <Link
-        href={clientsIndexPath()}
-        className={cn(
-          "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-          activeCategorySlug == null
-            ? "border-brand bg-brand text-white"
-            : "border-border bg-white text-foreground hover:border-brand/50",
-        )}
-      >
-        {allLabel}
-      </Link>
       {categories.map((c) => {
         const isActive = activeCategorySlug === c.slug;
         const badgeCount = countByCategorySlug.get(c.slug) ?? 0;

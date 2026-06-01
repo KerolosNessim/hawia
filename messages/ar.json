@@ -216,6 +216,7 @@
   "adsSection": {
     "title": "حلولنا الإعلانية المبتكرة",
     "subtitle":"كل لقطة هنا تعكس قوة هوية أفضل شركة حملات إعلانية في السعودية في تحويل استراتيجيات التسويق الرقمي إلى نتائج حقيقية. نشاهد من خلالها تأثير حملاتنا المدفوعة وتحسين محركات البحث (SEO) في زيادة ظهور موقع العملاء، ورفع ترتيبهم في نتائج البحث، وجذب جمهور مستهدف، مما يضمن نمو سريع ومستدام لأعمالهم.",
+    "showAll": "عرض الكل",
     "seo":"نماذج عملاء (SEO)",
     "ads":"نماذج عملاء (ADS)",
     "programming":"نماذج عملاء (برمجة)",
@@ -382,7 +383,8 @@
     "ratingTitle": "كيف كان هذا المحتوى؟",
     "ratingHint": "انقر على النجوم للتقييم.",
     "averageRating": "المتوسط: {average} / {max}",
-    "ratingsCount": "عدد التقييمات: {count}"
+    "ratingsCount": "عدد التقييمات: {count}",
+    "faqHeading": "الأسئلة الشائعة"
   },
   "contactSection": {
     "title": "تواصل معنا الآن",
@@ -443,6 +445,21 @@
         "label": "مكتب سلطنة عمان",
         "address": "بركاء شارع السوق"
       }
+    ],
+    "pagesTitle": "روابط مهمة",
+    "pageLinks": [
+      { "href": "/about", "label": "من نحن" },
+      { "href": "/clients", "label": "أعمالنا" },
+      { "href": "/blogs", "label": "المدونة" },
+      { "href": "/courses", "label": "الدورات" },
+      { "href": "/packages", "label": "الباقات" },
+      { "href": "/services", "label": "خدماتنا" },
+      { "href": "/faq", "label": "أسئلة شائعة" },
+      { "href": "/contact-us", "label": "تواصل معنا" },
+      { "href": "/contact-us", "label": "التوظيف والتدريب" },
+      { "href": "/terms-of-use", "label": "الشروط والأحكام" },
+      { "href": "/privacy-policy", "label": "سياسة الخصوصية" },
+      { "href": "/refund-policy", "label": "سياسة استرجاع الأموال" }
     ],
     "contactTitle": "جوال / واتس آب",
     "phones": [

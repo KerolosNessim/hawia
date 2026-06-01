@@ -14,6 +14,45 @@ function parseBool(v: unknown, fallback: boolean): boolean {
   return fallback;
 }
 
+function hasExplicitFollowField(rec: Record<string, unknown>): boolean {
+  return (
+    rec.follow !== undefined ||
+    rec.is_followable !== undefined ||
+    rec.allow_follow !== undefined
+  );
+}
+
+/** Resolves index/follow from API tag objects (legacy `is_searchable`, `no_index`, or explicit flags). */
+export function parseTagIndexAndFollow(rec: Record<string, unknown>): {
+  index: boolean;
+  follow: boolean;
+} {
+  if (rec.is_searchable !== undefined) {
+    const searchable = parseBool(rec.is_searchable, true);
+    return { index: searchable, follow: searchable };
+  }
+
+  const noIndex = rec.no_index ?? rec.noindex ?? rec.is_noindex;
+  let index: boolean;
+  if (noIndex === true || noIndex === 1 || noIndex === "1") {
+    index = false;
+  } else if (rec.allow_indexing === false || rec.indexable === false) {
+    index = false;
+  } else {
+    index = parseBool(rec.index ?? rec.is_indexable ?? rec.allow_index, true);
+  }
+
+  if (hasExplicitFollowField(rec)) {
+    return {
+      index,
+      follow: parseBool(rec.follow ?? rec.is_followable ?? rec.allow_follow, true),
+    };
+  }
+
+  // API often omits `follow` when indexing is disabled — default to nofollow, not follow.
+  return { index, follow: index };
+}
+
 /** Normalizes API tag entries (string legacy or `{ name, index, follow }`). */
 export function normalizePublicBlogTag(raw: unknown): PublicBlogTag | null {
   if (typeof raw === "string") {
@@ -28,16 +67,8 @@ export function normalizePublicBlogTag(raw: unknown): PublicBlogTag | null {
   const label = String(rec.name ?? rec.label ?? rec.tag ?? "").trim();
   if (!label) return null;
 
-  if (rec.is_searchable !== undefined) {
-    const searchable = parseBool(rec.is_searchable, true);
-    return { label, index: searchable, follow: searchable };
-  }
-
-  return {
-    label,
-    index: parseBool(rec.index ?? rec.is_indexable ?? rec.allow_index, true),
-    follow: parseBool(rec.follow ?? rec.is_followable ?? rec.allow_follow, true),
-  };
+  const { index, follow } = parseTagIndexAndFollow(rec);
+  return { label, index, follow };
 }
 
 export function normalizePublicBlogTags(raw: unknown): PublicBlogTag[] {

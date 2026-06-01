@@ -3,7 +3,13 @@ import { PublicPackageCardGrid } from "@/features/packages/components/public-pac
 import {
   fetchPublicPackagesByCategorySlug,
 } from "@/features/packages/services/packages-public-api";
-import { buildBreadcrumbJsonLd, buildPackageCollectionJsonLd, jsonLdScript } from "@/features/packages/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import {
+  buildBreadcrumbList,
+  buildCollectionPageSchemaGraph,
+  buildCanonicalUrl,
+  jsonLdGraph,
+} from "@/lib/seo/schema";
 import { Link } from "@/i18n/navigation";
 import {
   buildPageMetadata,
@@ -63,34 +69,42 @@ export default async function PackageCategoryPage({ params }: Props) {
   if (!category) redirectToNotFound();
 
   const loc = locale as Locale;
-  const packagesUrl = await getAbsoluteUrl(localePathname(loc, "/packages"));
-  const categoryUrl = await getAbsoluteUrl(
-    localePathname(loc, `/packages/categories/${encodeURIComponent(category.slug)}`),
+  const packagesUrl = buildCanonicalUrl(loc, "/packages");
+  const categoryUrl = buildCanonicalUrl(
+    loc,
+    `/packages/categories/${encodeURIComponent(category.slug)}`,
   );
   const description =
     category.metaDescription?.trim() || categoryDescription(category.title, packages.length, locale);
-  const packageBaseUrl = packagesUrl;
+  const categoriesUrl = buildCanonicalUrl(loc, "/packages/categories");
 
-  const categoriesUrl = await getAbsoluteUrl(localePathname(loc, "/packages/categories"));
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: await getAbsoluteUrl(localePathname(loc, "/")) },
-    { name: t("breadcrumbPackages"), url: packagesUrl },
-    { name: t("breadcrumbCategories"), url: categoriesUrl },
-    { name: category.title, url: categoryUrl },
+  const categorySchemaJson = jsonLdGraph([
+    ...buildCollectionPageSchemaGraph({
+      pageUrl: categoryUrl,
+      name: category.title,
+      description,
+      inLanguage: loc === "ar" ? "ar" : "en",
+      breadcrumbs: [],
+      items: packages.map((pkg) => ({
+        name: pkg.title,
+        url: buildCanonicalUrl(loc, `/packages/${encodeURIComponent(pkg.slug)}`),
+      })),
+      listIdSuffix: "packages",
+    }),
+    buildBreadcrumbList(
+      [
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/") },
+        { name: t("breadcrumbPackages"), url: packagesUrl },
+        { name: t("breadcrumbCategories"), url: categoriesUrl },
+        { name: category.title, url: categoryUrl },
+      ],
+      categoryUrl,
+    ),
   ]);
-  const collectionLd = buildPackageCollectionJsonLd({
-    name: category.title,
-    description,
-    url: categoryUrl,
-    packages,
-    packageUrl: (pkg) =>
-      `${packageBaseUrl}/${encodeURIComponent(pkg.slug)}`,
-  });
-  const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);
 
   return (
     <div className="space-y-16 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={categorySchemaJson} />
       <PageHeader title={category.title} description={description} image="/hero-bg.webp" />
       <div className="container mx-auto space-y-8 px-4">
         <Link

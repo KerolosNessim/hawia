@@ -1,18 +1,12 @@
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { ServiceSectionItemCard } from "@/features/services/components/service-section-item-card";
 import { hasSectionImage } from "@/features/services/lib/has-section-image";
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { useTranslations } from "next-intl";
 import * as motion from "framer-motion/client";
 import Image from "next/image";
-import { Section } from "../types";
-
-interface OfferServiceItemProps {
-  id: string;
-  title: string;
-  description: string;
-  points: string[];
-}
+import type { Section, SectionItem } from "../types";
 
 export default function OfferServiceSection({
   offerings,
@@ -20,7 +14,6 @@ export default function OfferServiceSection({
   offerings: Section;
 }) {
   const t = useTranslations("singleService.whatWeOffer");
-  const items = t.raw("cards") as OfferServiceItemProps[];
   const hasImage = hasSectionImage(offerings?.image);
 
   return (
@@ -44,21 +37,30 @@ export default function OfferServiceSection({
         </div>
       ) : null}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {offerings?.items?.map((item: any, index: number) => (
+        {offerings?.items?.map((item: SectionItem, index: number) => (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 * index }}
             viewport={{ once: true }}
-            key={item.id}
-            className=" p-6 rounded-xl  space-y-4 leading-loose border-2 border-brand hover:bg-gray-900 hover:text-white transition-all duration-300 group"
+            key={`${item.sort_order ?? index}-${index}`}
+            className="h-full"
           >
-            <RichHtml
-              html={item?.title}
-              as="h2"
-              className="text-lg font-bold text-brand"
-            />
-            <RichHtml html={item?.description} />
+            <ServiceSectionItemCard
+              link={item.link}
+              icon={item.icon}
+              className="rounded-xl border-2 border-brand p-6 leading-loose transition-all duration-300 group hover:bg-gray-900 hover:text-white"
+            >
+              <RichHtml
+                html={item.title}
+                as="h2"
+                className="text-lg font-bold text-brand group-hover:text-white [&_strong]:text-inherit"
+              />
+              <RichHtml
+                html={item.description}
+                className="group-hover:text-white/90 [&_a]:text-brand group-hover:[&_a]:text-white"
+              />
+            </ServiceSectionItemCard>
           </motion.div>
         ))}
       </div>

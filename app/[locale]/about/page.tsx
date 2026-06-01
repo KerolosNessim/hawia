@@ -17,9 +17,13 @@ import Values from "@/features/about/components/values";
 import SectionHeader from "@/features/shared/components/section-header";
 import PageContact from "@/features/shared/components/page-contact";
 import { getAboutData } from "@/features/about/services/about";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { localePathname } from "@/lib/seo/metadata-helpers";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
+import { buildCanonicalUrl, serializeStaticPageSchema } from "@/lib/seo/schema";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { Locale } from "next-intl";
+import { getLocale } from "next-intl/server";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -53,6 +57,8 @@ export async function generateMetadata({
 
 export default async function AboutPage() {
   const t = await getTranslations("about");
+  const locale = (await getLocale()) as Locale;
+  const tSeo = await getTranslations({ locale, namespace: "seo.breadcrumb" });
 
   let data;
   try {
@@ -62,8 +68,26 @@ export default async function AboutPage() {
     console.error("Failed to fetch About Us data:", error);
   }
 
+  const pageTitle = data?.meta_title || data?.title || t("title");
+  const pageDescription =
+    data?.meta_description ||
+    (data?.description ? plainTextFromHtml(data.description) : t("description"));
+  const pageUrl = buildCanonicalUrl(locale, "/about");
+  const aboutSchemaJson = serializeStaticPageSchema({
+    pageType: "AboutPage",
+    pageUrl,
+    name: plainTextFromHtml(pageTitle) || t("title"),
+    description: plainTextFromHtml(String(pageDescription)).slice(0, 320),
+    inLanguage: locale === "ar" ? "ar" : "en",
+    breadcrumbs: [
+      { name: tSeo("home"), url: buildCanonicalUrl(locale, "/") },
+      { name: tSeo("about"), url: pageUrl },
+    ],
+  });
+
   return (
     <div className="space-y-16 pb-16">
+      <PageSchemaScript json={aboutSchemaJson} />
       <PageHeader
         title={data?.title || t("title")}
         image={data?.image || "/hero-bg.webp"}

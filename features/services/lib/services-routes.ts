@@ -11,8 +11,12 @@ export function pickServiceSlug(
   return (local ?? service.slug ?? "").trim();
 }
 
-export function servicePostPath(slug: string): string {
-  return `/services/${encodeURIComponent(slug)}`;
+export function servicePostPath(slug: string, opts?: { countryId?: number }): string {
+  const base = `/services/${encodeURIComponent(slug)}`;
+  if (opts?.countryId != null && opts.countryId > 0) {
+    return `${base}?country_id=${opts.countryId}`;
+  }
+  return base;
 }
 
 export function servicePostHref(locale: Locale, slug: string): string {

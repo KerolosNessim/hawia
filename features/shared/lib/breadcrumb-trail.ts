@@ -75,7 +75,8 @@ export function getBreadcrumbTrailItems(
 
   let acc = "";
   for (const segment of segments) {
-    acc += `/${encodeURIComponent(segment)}`;
+    const decoded = decodeURIComponent(segment);
+    acc += `/${encodeURIComponent(decoded)}`;
     items.push({ href: acc, label: resolveLabel(segment) });
   }
 

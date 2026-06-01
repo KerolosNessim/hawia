@@ -1,13 +1,15 @@
 import PageHeader from "@/features/shared/components/page-header";
 import { PublicPackageCardGrid } from "@/features/packages/components/public-package-cards";
 import { fetchPackagesSectionData } from "@/features/packages/services/packages-public-api";
-import {
-  buildBreadcrumbJsonLd,
-  buildPackageCollectionJsonLd,
-  jsonLdScript,
-} from "@/features/packages/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { Link } from "@/i18n/navigation";
-import { getAbsoluteUrl, localePathname } from "@/lib/seo/metadata-helpers";
+import { localePathname } from "@/lib/seo/metadata-helpers";
+import {
+  buildBreadcrumbList,
+  buildCollectionPageSchemaGraph,
+  buildCanonicalUrl,
+  jsonLdGraph,
+} from "@/lib/seo/schema";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
@@ -42,32 +44,34 @@ export default async function PackagesPage() {
     ...sectionData.uncategorized,
   ];
   const loc = locale as Locale;
-  const pageUrl = await getAbsoluteUrl(localePathname(loc, "/packages"));
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    {
-      name: t("breadcrumbHome"),
-      url: await getAbsoluteUrl(localePathname(loc, "/")),
-    },
-    { name: t("breadcrumbPackages"), url: pageUrl },
+  const pageUrl = buildCanonicalUrl(loc, "/packages");
+  const packagesSchemaJson = jsonLdGraph([
+    ...buildCollectionPageSchemaGraph({
+      pageUrl,
+      name: t("title"),
+      description: t("metaDescription"),
+      inLanguage: loc === "ar" ? "ar" : "en",
+      breadcrumbs: [],
+      items: items.map((pkg) => ({
+        name: pkg.title,
+        url: pkg.slug
+          ? buildCanonicalUrl(loc, `/packages/${encodeURIComponent(pkg.slug)}`)
+          : buildCanonicalUrl(loc, `/packages/${encodeURIComponent(String(pkg.id))}`),
+      })),
+      listIdSuffix: "packages",
+    }),
+    buildBreadcrumbList(
+      [
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/") },
+        { name: t("breadcrumbPackages"), url: pageUrl },
+      ],
+      pageUrl,
+    ),
   ]);
-  const collectionLd = buildPackageCollectionJsonLd({
-    name: t("title"),
-    description: t("metaDescription"),
-    url: pageUrl,
-    packages: items,
-    packageUrl: (pkg) =>
-      pkg.slug
-        ? `${pageUrl}/${encodeURIComponent(pkg.slug)}`
-        : `${pageUrl}/${encodeURIComponent(pkg.id)}`,
-  });
-  const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);
 
   return (
     <div className="min-w-0 space-y-16 overflow-x-clip pb-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: structuredData }}
-      />
+      <PageSchemaScript json={packagesSchemaJson} />
       <PageHeader
         title={t("title")}
         description={t("description")}

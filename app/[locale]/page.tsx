@@ -15,11 +15,17 @@ import { getAccreditations } from "@/features/home/services/accreditations";
 import { getLandingPageData } from "@/features/home/services/hero";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import type { Accreditation } from "@/features/home/types";
+import { getServices } from "@/features/services/services/get-services";
+import { pickServiceSlug } from "@/features/services/lib/services-routes";
 import { getSettings } from "@/features/settings/services/settings-service";
+import { resolveSettingsPageSeo } from "@/features/settings/lib/resolve-settings-seo";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { localePathname } from "@/lib/seo/metadata-helpers";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
+import { buildCanonicalUrl, schemaMediaUrl, serializeHomePageSchema } from "@/lib/seo/schema";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { Locale } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
 type PageProps = { params: Promise<{ locale: string }> };
@@ -75,8 +81,46 @@ export default async function Home() {
     accreditationsRes?.data ?? data.data.accreditation,
   );
 
+  const tSeo = await getTranslations({ locale, namespace: "seo" });
+  const homeUrl = buildCanonicalUrl(locale, "/");
+  let homeTitle = "Howeyah";
+  let homeDescription = tSeo("organizationDescription");
+  try {
+    const settingsRes = await getSettings();
+    const homeSeo = await resolveSettingsPageSeo("home");
+    homeTitle =
+      homeSeo?.title?.trim() ||
+      settingsRes.data.general.home_meta_title?.trim() ||
+      settingsRes.data.general.site_name ||
+      homeTitle;
+    homeDescription =
+      homeSeo?.description?.trim() ||
+      settingsRes.data.general.home_meta_description?.trim() ||
+      settingsRes.data.general.site_description?.trim() ||
+      homeDescription;
+  } catch {
+    // use defaults
+  }
+
+  const servicesRes = await getServices(locale).catch(() => null);
+  const serviceItems = (servicesRes?.data ?? []).slice(0, 12).map((service) => ({
+    name: plainTextFromHtml(service.title),
+    url: buildCanonicalUrl(locale, `/services/${encodeURIComponent(pickServiceSlug(service, locale))}`),
+  }));
+
+  const homeSchemaJson = serializeHomePageSchema({
+    pageUrl: homeUrl,
+    name: homeTitle,
+    description: homeDescription,
+    inLanguage: locale === "ar" ? "ar" : "en",
+    primaryImageUrl: schemaMediaUrl("/images/home-hero.webp"),
+    breadcrumbs: [],
+    services: serviceItems,
+  });
+
   return (
-    <main className="overflow-x-hidden max-w-full">
+    <main className="max-w-full overflow-x-clip">
+      <PageSchemaScript json={homeSchemaJson} />
       <HeroSection heroData={data?.data?.hero} />
       <div className="bg-gray-900">
         <div className="container mx-auto min-w-0 max-w-full overflow-x-hidden lg:-translate-y-16 max-lg:pt-16">
@@ -88,8 +132,8 @@ export default async function Home() {
       <StepsSection />
       <DependenciesSection accreditation={accreditation} />
       <AdsSection />
-      <TestimonialsSection />
       <ClientsSection />
+      <TestimonialsSection />
       <PackagesSection />
       <ArticlesSection items={latestBlogs} />
       <ContactSection />

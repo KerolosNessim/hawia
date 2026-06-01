@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { SectionLinkShell } from "@/features/services/components/section-link-shell";
 import type { ServicePackageItem, ServicePackagesSection } from "@/features/services/types";
 import * as motion from "framer-motion/client";
 import { CheckCircle2, Gem, Rocket, Target, X } from "lucide-react";
@@ -142,19 +143,13 @@ export default function SeoPackages({ packages, orderPhone }: Props) {
         />
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {packages.items.map((pkg, index) => (
-            <motion.div
-              key={`${pkg.title}-${pkg.sortOrder}`}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: index * 0.08 }}
-              viewport={{ once: true }}
-              className="h-full"
-            >
+          {packages.items.map((pkg, index) => {
+            const cardHref = pkg.link?.trim();
+            const cardBody = (
               <Card
                 className={`flex h-full flex-col rounded-2xl border bg-white shadow-sm transition-shadow hover:shadow-lg ${
                   pkg.isFeatured ? "border-2 border-brand shadow-md md:scale-[1.03]" : "border-border/70"
-                }`}
+                } ${cardHref ? "cursor-pointer" : ""}`}
               >
                 <CardContent className="flex h-full flex-col items-center p-8 text-center">
                   <div className="mb-6 rounded-full border border-border/80 bg-muted/40 p-4">
@@ -176,17 +171,38 @@ export default function SeoPackages({ packages, orderPhone }: Props) {
                     <div className="mb-8 flex-1" />
                   )}
 
-                  <Button
-                    type="button"
-                    className="h-11 min-w-[8rem] rounded-full bg-brand px-8 font-bold text-white hover:bg-brand/90"
-                    onClick={() => setActivePkg(pkg)}
-                  >
-                    {t("detailsBtn")}
-                  </Button>
+                  {cardHref ? null : (
+                    <Button
+                      type="button"
+                      className="h-11 min-w-[8rem] rounded-full bg-brand px-8 font-bold text-white hover:bg-brand/90"
+                      onClick={() => setActivePkg(pkg)}
+                    >
+                      {t("detailsBtn")}
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
-            </motion.div>
-          ))}
+            );
+
+            return (
+              <motion.div
+                key={`${pkg.title}-${pkg.sortOrder}`}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: index * 0.08 }}
+                viewport={{ once: true }}
+                className="h-full"
+              >
+                {cardHref ? (
+                  <SectionLinkShell link={cardHref} className="block h-full">
+                    {cardBody}
+                  </SectionLinkShell>
+                ) : (
+                  cardBody
+                )}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 

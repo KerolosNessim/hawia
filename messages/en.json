@@ -216,6 +216,7 @@
   "adsSection": {
     "title": "Our Innovative Advertising Solutions",
     "subtitle":"Every shot here reflects the strength of Howeyah, the best advertising company in Saudi Arabia, in turning digital marketing strategies into real results. Through it, we see the impact of our paid campaigns and SEO in increasing our clients' website visibility, improving their search rankings, and attracting a targeted audience, ensuring rapid and sustainable growth for their businesses.",
+    "showAll": "Show all",
     "seo":"Client Samples (SEO)",
     "ads":"Client Samples (ADS)",
     "programming":"Client Samples (Programming)",
@@ -382,7 +383,8 @@
     "ratingTitle": "How was this content?",
     "ratingHint": "Click the stars to rate.",
     "averageRating": "Average: {average} / {max}",
-    "ratingsCount": "Ratings: {count}"
+    "ratingsCount": "Ratings: {count}",
+    "faqHeading": "Frequently Asked Questions"
   },
   "contactSection": {
     "title": "Contact Us Now",
@@ -443,6 +445,21 @@
         "label": "Sultanate of Oman Office",
         "address": "Barka, Souq Street"
       }
+    ],
+    "pagesTitle": "Quick links",
+    "pageLinks": [
+      { "href": "/about", "label": "About us" },
+      { "href": "/clients", "label": "Our work" },
+      { "href": "/blogs", "label": "Blog" },
+      { "href": "/courses", "label": "Courses" },
+      { "href": "/packages", "label": "Packages" },
+      { "href": "/services", "label": "Services" },
+      { "href": "/faq", "label": "FAQ" },
+      { "href": "/contact-us", "label": "Contact us" },
+      { "href": "/contact-us", "label": "Employment & training" },
+      { "href": "/terms-of-use", "label": "Terms & conditions" },
+      { "href": "/privacy-policy", "label": "Privacy policy" },
+      { "href": "/refund-policy", "label": "Refund policy" }
     ],
     "contactTitle": "Mobile / WhatsApp",
     "phones": [

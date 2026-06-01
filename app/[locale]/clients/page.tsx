@@ -7,15 +7,19 @@ import {
   fetchPublicClientsPageData,
   fetchPublicSolutionCategories,
 } from "@/features/clients/services/clients-public-api";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { localePathname } from "@/lib/seo/metadata-helpers";
 import {
-  buildBreadcrumbJsonLd,
-  buildClientsCollectionJsonLd,
-  jsonLdScript,
-} from "@/features/clients/lib/json-ld";
-import { getAbsoluteUrl, localePathname } from "@/lib/seo/metadata-helpers";
+  buildBreadcrumbList,
+  buildCollectionPageSchemaGraph,
+  buildCanonicalUrl,
+  jsonLdGraph,
+} from "@/lib/seo/schema";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
+import { clientsIndexPath } from "@/features/clients/lib/clients-routes";
+import { redirect } from "@/i18n/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
 type Props = Readonly<{
@@ -40,12 +44,22 @@ function metaDescription(value: string, fallback: string): string {
   return (value.trim() || fallback).slice(0, 160);
 }
 
+async function resolveCategorySlug(
+  locale: string,
+  sp: SearchParamsType,
+): Promise<string | null> {
+  const fromQuery = parseCategorySlug(sp);
+  if (fromQuery) return fromQuery;
+  const categories = await fetchPublicSolutionCategories(locale);
+  return categories[0]?.slug ?? null;
+}
+
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   await params;
   const loc = (await getLocale()) as Locale;
   const t = await getTranslations("clients");
   const sp = searchParams ? await searchParams : {};
-  const categorySlug = parseCategorySlug(sp);
+  const categorySlug = await resolveCategorySlug(loc, sp);
   const pageData = await fetchPublicClientsPageData(loc, { categorySlug: categorySlug ?? undefined });
   const title = pageData.title ? `${pageData.title} | Howeyah` : t("metaTitle");
   const description = metaDescription(pageData.description, t("metaDescription"));
@@ -62,41 +76,58 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function ClientsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const sp = searchParams ? await searchParams : {};
-  const categorySlug = parseCategorySlug(sp);
+  const categories = await fetchPublicSolutionCategories(locale);
+  const parsedCategory = parseCategorySlug(sp);
+
+  if (!parsedCategory && categories[0]?.slug) {
+    redirect({
+      href: clientsIndexPath({ categorySlug: categories[0].slug }),
+      locale,
+    });
+  }
+
+  const categorySlug = parsedCategory ?? categories[0]?.slug ?? null;
   const t = await getTranslations("clients");
-  const [pageData, categories, allClients] = await Promise.all([
+  const [pageData, allClients] = await Promise.all([
     fetchPublicClientsPageData(locale, { categorySlug: categorySlug ?? undefined }),
-    fetchPublicSolutionCategories(locale),
     fetchPublicClients(locale),
   ]);
   const countByCategorySlug = countClientsByCategorySlug(allClients);
   const title = pageData.title || t("title");
   const description = pageData.description || t("description");
   const loc = locale as Locale;
-  const pageUrl = await getAbsoluteUrl(localePathname(loc, "/clients"));
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: await getAbsoluteUrl(localePathname(loc, "/")) },
-    { name: t("breadcrumbClients"), url: pageUrl },
+  const pageUrl = buildCanonicalUrl(loc, "/clients");
+  const clientsSchemaJson = jsonLdGraph([
+    ...buildCollectionPageSchemaGraph({
+      pageUrl,
+      name: title,
+      description: metaDescription(description, t("metaDescription")),
+      inLanguage: loc === "ar" ? "ar" : "en",
+      breadcrumbs: [],
+      items: pageData.clients.map((client) => ({
+        name: client.title,
+        url: buildCanonicalUrl(loc, `/clients/${encodeURIComponent(client.slug)}`),
+      })),
+      listIdSuffix: "clients",
+    }),
+    buildBreadcrumbList(
+      [
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/") },
+        { name: t("breadcrumbClients"), url: pageUrl },
+      ],
+      pageUrl,
+    ),
   ]);
-  const collectionLd = buildClientsCollectionJsonLd({
-    name: title,
-    description: metaDescription(description, t("metaDescription")),
-    url: pageUrl,
-    clients: pageData.clients,
-    clientUrl: (client) => `${pageUrl}/${encodeURIComponent(client.slug)}`,
-  });
-  const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);
 
   return (
     <div className="space-y-16 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={clientsSchemaJson} />
       <PageHeader title={title} description={description} image="/hero-bg.webp" />
       <div className="container mx-auto space-y-10 px-4">
-        {categories.length > 0 ? (
+        {categories.length > 0 && categorySlug ? (
           <ClientsCategoryFilter
             categories={categories}
             activeCategorySlug={categorySlug}
-            allLabel={t("filterAll")}
             countByCategorySlug={countByCategorySlug}
           />
         ) : null}
@@ -115,7 +146,7 @@ export default async function ClientsPage({ params, searchParams }: Props) {
           </div>
         ) : (
           <p className="rounded-3xl border border-dashed border-gray-200 bg-white p-10 text-center text-muted-foreground">
-            {categorySlug ? t("emptyFiltered") : t("empty")}
+            {t("emptyFiltered")}
           </p>
         )}
       </div>

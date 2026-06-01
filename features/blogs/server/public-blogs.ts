@@ -50,6 +50,18 @@ export type PublicBlog = {
   subtitleRichSource?: unknown;
   /** Raw API `content` for bilingual HTML bodies. */
   contentRichSource?: unknown;
+  /** Resolved default (English) FAQ HTML when API returns bilingual `faq`. */
+  faq?: string;
+  /** Raw API `faq` for bilingual FAQ HTML — use with `pickLocalizedRichText`. */
+  faqRichSource?: unknown;
+  /** Show dedicated table of contents block on the post page. */
+  toc_enabled: boolean;
+  /** `after_meta` | `before_body` | `after_body` | `before_faq` */
+  toc_placement: string;
+  /** Resolved default (English) TOC HTML when API returns bilingual `table_of_contents`. */
+  table_of_contents?: string;
+  /** Raw API `table_of_contents` — use with `pickLocalizedRichText`. */
+  tableOfContentsRichSource?: unknown;
   image: string | null;
   image_alt: string | null;
   canonical_url: string | null;
@@ -98,10 +110,32 @@ function isApiEnvelopeFailure(payload: Record<string, unknown>): boolean {
  * Resolves a single blog JSON body whether the backend uses `{ data: blog }`, `{ blog }`,
  * nests again, returns the model at the root (no envelope), or uses `data: [blog]` for show.
  */
+function redirectOnlyRow(rec: Record<string, unknown>): Record<string, unknown> | null {
+  const data = asRecord(rec.data);
+  const redirect = asRecord(data?.redirect) ?? asRecord(rec.redirect);
+  if (!redirect) return null;
+  const status = Number(redirect.status ?? redirect.code ?? 0);
+  if (!Number.isFinite(status) || status <= 0) return null;
+  return data ?? { redirect };
+}
+
+/**
+ * Blog show payload: full post, or `{ redirect }` when deleted / slug retired (failure envelope).
+ */
+function pickBlogShowPayload(payload: unknown): Record<string, unknown> | null {
+  const rec = asRecord(payload);
+  if (!rec) return null;
+
+  const redirectRow = redirectOnlyRow(rec);
+  if (redirectRow) return redirectRow;
+
+  return pickBlogPayloadRecord(payload);
+}
+
 function pickBlogPayloadRecord(payload: unknown): Record<string, unknown> | null {
   const rec = asRecord(payload);
   if (!rec) return null;
-  if (isApiEnvelopeFailure(rec)) return null;
+  if (isApiEnvelopeFailure(rec)) return redirectOnlyRow(rec);
 
   const id = rec.id;
   const slugVal = rec.slug;
@@ -235,7 +269,7 @@ function normalizeCategory(raw: Record<string, unknown>, locale: Locale): Public
   };
 }
 
-function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
+export function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
   const id = raw.id;
   if (typeof id !== "number" && typeof id !== "string") return null;
   const slug = typeof raw.slug === "string" ? raw.slug : "";
@@ -257,6 +291,21 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
       ? raw.description
       : pickLocalizedRichText(raw.description, "en");
   const content = typeof raw.content === "string" ? raw.content : pickLocalizedRichText(raw.content, "en");
+  const faq = typeof raw.faq === "string" ? raw.faq : pickLocalizedRichText(raw.faq, "en");
+  const table_of_contents =
+    typeof raw.table_of_contents === "string"
+      ? raw.table_of_contents
+      : pickLocalizedRichText(raw.table_of_contents, "en");
+
+  const tocEnabledRaw = raw.toc_enabled ?? raw.tocEnabled;
+  const toc_enabled =
+    tocEnabledRaw === true || tocEnabledRaw === 1 || tocEnabledRaw === "1";
+
+  const tocPlacementRaw = raw.toc_placement ?? raw.tocPlacement;
+  const toc_placement =
+    typeof tocPlacementRaw === "string" && tocPlacementRaw.trim()
+      ? tocPlacementRaw.trim()
+      : "before_body";
 
   return {
     id: typeof id === "number" ? id : Number(id),
@@ -269,6 +318,12 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
     descriptionRichSource: raw.description,
     subtitleRichSource: raw.subtitle,
     contentRichSource: raw.content,
+    faq,
+    faqRichSource: raw.faq,
+    toc_enabled,
+    toc_placement,
+    table_of_contents,
+    tableOfContentsRichSource: raw.table_of_contents,
     image: typeof raw.image === "string" ? raw.image : null,
     image_alt: typeof raw.image_alt === "string" ? raw.image_alt : null,
     canonical_url: typeof raw.canonical_url === "string" ? raw.canonical_url : null,
@@ -606,23 +661,34 @@ export async function fetchVisibleBlogCountByCategoryId(): Promise<Map<number, n
   return map;
 }
 
+/** Raw show payload (blog row or redirect-only object). */
+export async function fetchBlogShowRow(slugParam: string): Promise<Record<string, unknown> | null> {
+  const slug = normalizeBlogSlugFromRoute(slugParam);
+  try {
+    const raw = await apiClient.get<unknown>(`/v1/blogs/${encodeURIComponent(slug)}`);
+    return pickBlogShowPayload(raw);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBlog | null> {
   const slug = normalizeBlogSlugFromRoute(slugParam);
 
   try {
-    const raw = await apiClient.get<unknown>(`/v1/blogs/${encodeURIComponent(slug)}`);
-    const data = pickBlogPayloadRecord(raw);
+    const data = await fetchBlogShowRow(slug);
     const one = data ? normalizeBlog(data) : null;
     if (process.env.NODE_ENV === "development") {
       console.log("[fetchPublicBlogBySlug] API", {
         slugParam,
         slug,
-        raw,
+        data,
         normalized: one,
         visible: one ? isPublicBlogVisible(one) : false,
       });
     }
     if (one && isPublicBlogVisible(one)) return one;
+    if (data && asRecord(data.redirect)) return null;
   } catch (err) {
     if (process.env.NODE_ENV === "development") {
       console.log("[fetchPublicBlogBySlug] API error", { slugParam, slug, err });

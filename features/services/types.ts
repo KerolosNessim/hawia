@@ -75,6 +75,10 @@ export type SectionItem = {
   title: string;
   description: string;
   sort_order?: string;
+  /** Per-card link (not the whole section). */
+  link?: string | null;
+  /** Optional Lucide icon key — see `section-card-icons.ts`. */
+  icon?: string | null;
 };
 
 // 🔹 Offerings / Steps
@@ -100,6 +104,8 @@ export type ServicePackageItem = {
   icon: "rocket" | "gem" | "target";
   isFeatured: boolean;
   imageAlt?: string | null;
+  /** When set, clicking the package card navigates here. */
+  link?: string | null;
 };
 
 export type ServicePackagesSection = {
@@ -145,6 +151,8 @@ export type Tools = {
 export type FaqItem = {
   question: string
   answer: string
+  /** When set, the FAQ row is clickable (no accordion). */
+  link?: string | null
 }
 
 // 🔹 FAQs

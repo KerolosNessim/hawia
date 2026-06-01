@@ -1,20 +1,15 @@
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { ServiceSectionItemCard } from "@/features/services/components/service-section-item-card";
 import { hasSectionImage } from "@/features/services/lib/has-section-image";
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Section } from "../types";
+import type { Section, SectionItem } from "../types";
 
-interface Item {
-  id: string;
-  title: string;
-  description: string;
-}
 export default function SeoSteps({ steps }: { steps: Section }) {
   const t = useTranslations("singleService.seoSteps");
-  const items = t.raw("steps") as Item[];
   const hasImage = hasSectionImage(steps?.image);
 
   return (
@@ -37,17 +32,16 @@ export default function SeoSteps({ steps }: { steps: Section }) {
               hasImage ? "lg:grid-cols-2 flex-1" : "w-full max-w-4xl",
             )}
           >
-            {steps?.items?.map((item: any, index: number) => (
-              <div
-                key={index}
+            {steps?.items?.map((item: SectionItem, index: number) => (
+              <ServiceSectionItemCard
+                key={`${item.sort_order ?? index}-${index}`}
+                link={item.link}
+                icon={item.icon}
                 className="rounded-xl border border-brand bg-gray-700 p-4 text-white"
               >
-                <RichHtml html={item?.title} as="p" className="font-bold" />
-                <RichHtml
-                  html={item?.description}
-                  className="mt-2 text-gray-200"
-                />
-              </div>
+                <RichHtml html={item.title} as="p" className="font-bold" />
+                <RichHtml html={item.description} className="mt-2 text-gray-200" />
+              </ServiceSectionItemCard>
             ))}
           </div>
           {hasImage && steps.image ? (

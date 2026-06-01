@@ -23,20 +23,34 @@ interface Blog {
   link: string;
 }
 
+export type BlogCardTheme = "light" | "dark";
+
 interface BlogCardProps {
   article: Blog;
   index: number;
   isRtl: boolean;
+  /** Match the parent section: dark sections → `"dark"`, light pages → `"light"`. */
+  theme?: BlogCardTheme;
+  /** @deprecated Prefer `theme="light"` */
   isLight?: boolean;
+}
+
+function resolveBlogCardTheme(theme?: BlogCardTheme, isLight?: boolean): BlogCardTheme {
+  if (theme) return theme;
+  return isLight ? "light" : "dark";
 }
 
 export default function BlogCard({
   article,
   index,
   isRtl,
-  isLight = false,
+  theme,
+  isLight,
 }: BlogCardProps) {
   const t = useTranslations("articlesSection");
+  const cardTheme = resolveBlogCardTheme(theme, isLight);
+  const isDark = cardTheme === "dark";
+
   return (
     <motion.div
       key={index}
@@ -47,7 +61,10 @@ export default function BlogCard({
       className="h-full"
     >
       <Card
-        className={`p-0 h-full flex flex-col ${isLight ? "bg-white" : "bg-gray-900  border "} border-brand overflow-hidden hover:shadow-xl hover:border-brand/50 transition-all duration-300`}
+        data-blog-card-theme={cardTheme}
+        className={`flex h-full flex-col overflow-hidden border border-brand p-0 transition-all duration-300 hover:border-brand/50 hover:shadow-xl ${
+          isDark ? "bg-gray-900" : "bg-white"
+        }`}
       >
         <CardHeader className="p-0 border-b-2 border-brand">
           <div className="relative w-full h-[240px]  overflow-hidden">
@@ -63,10 +80,14 @@ export default function BlogCard({
         </CardHeader>
 
         <CardContent className="flex min-w-0 flex-1 flex-col overflow-hidden p-6 pt-8">
-          <h3 className={`mb-4 text-xl leading-snug line-clamp-2 ${isLight ? "text-gray-900" : "text-white"}`}>
+          <h3
+            className={`mb-4 line-clamp-2 text-xl leading-snug ${isDark ? "text-white" : "text-gray-900"}`}
+          >
             <Link
               href={article.link}
-              className={`block font-bold transition-colors hover:text-brand focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${isLight ? "text-gray-900" : "text-white"}`}
+              className={`block font-bold transition-colors hover:text-brand focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
             >
               {article.title}
             </Link>
@@ -74,7 +95,9 @@ export default function BlogCard({
           {article.description.trim() ? (
             <RichHtml
               html={article.description}
-              className={`blog-card-excerpt mb-6 line-clamp-3 max-w-none text-sm leading-relaxed [&_p+_p]:mt-1 ${isLight ? "text-gray-500" : "text-gray-300"}`}
+              className={`blog-card-excerpt mb-6 line-clamp-3 max-w-none text-sm leading-relaxed [&_p+_p]:mt-1 ${
+                isDark ? "text-white" : "text-gray-600"
+              }`}
             />
           ) : null}
 
@@ -93,8 +116,12 @@ export default function BlogCard({
           </div>
         </CardContent>
 
-        <CardFooter className={`border-t border-brand p-4 ${isLight ? "bg-brand text-white" : "bg-gray-900"}`}>
-          <span className={`text-xs font-medium w-full  ${isLight ? "text-white" : "text-brand"}`}>
+        <CardFooter
+          className={`border-t border-brand p-4 ${isDark ? "bg-gray-900" : "bg-brand text-white"}`}
+        >
+          <span
+            className={`w-full text-xs font-medium ${isDark ? "text-brand" : "text-white"}`}
+          >
             {article.date}
           </span>
         </CardFooter>

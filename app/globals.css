@@ -268,6 +268,23 @@
     color: inherit;
   }
 
+  /* Blog cards: excerpt color follows section theme (overrides CMS inline colors) */
+  [data-blog-card-theme="dark"] .blog-card-excerpt.cms-rich-html :is(p, span, strong, em, li, div) {
+    color: rgb(255 255 255) !important;
+  }
+
+  [data-blog-card-theme="dark"] .blog-card-excerpt.cms-rich-html a {
+    color: var(--color-brand) !important;
+  }
+
+  [data-blog-card-theme="light"] .blog-card-excerpt.cms-rich-html :is(p, span, strong, em, li, div) {
+    color: rgb(75 85 99) !important;
+  }
+
+  [data-blog-card-theme="light"] .blog-card-excerpt.cms-rich-html a {
+    color: var(--color-brand) !important;
+  }
+
   .cms-rich-html img,
   .cms-rich-html video,
   .cms-rich-html iframe,

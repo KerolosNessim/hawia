@@ -1,7 +1,8 @@
 import BlogCard from "@/features/blogs/components/blog-card";
 import { BlogListPagination } from "@/features/blogs/components/blog-list-pagination";
 import { blogTagHref, blogTagPath, localePath } from "@/features/blogs/lib/blog-routes";
-import { buildBreadcrumbJsonLd, jsonLdScript } from "@/features/blogs/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { absoluteUrlFromPath, buildCanonicalUrl, serializeStaticPageSchema } from "@/lib/seo/schema";
 import {
   blogToCardPayload,
   fetchPublicBlogsByTag,
@@ -84,21 +85,25 @@ export default async function BlogTagPage(props: {
     per_page: BLOG_LIST_PER_PAGE,
   });
 
-  const tagAbs = await getAbsoluteUrl(blogTagHref(locale, tagLabel, page > 1 ? page : 1));
-  const blogIndexAbs = await getAbsoluteUrl(localePath(locale, "/blogs"));
-  const homeAbs = await getAbsoluteUrl(localePath(locale, "/"));
+  const tagAbs = absoluteUrlFromPath(blogTagHref(locale, tagLabel, page > 1 ? page : 1));
+  const blogIndexAbs = buildCanonicalUrl(locale, "/blogs");
 
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: homeAbs },
-    { name: t("breadcrumbBlog"), url: blogIndexAbs },
-    { name: tagLabel, url: tagAbs },
-  ]);
-
-  const structuredData = jsonLdScript(breadcrumbLd);
+  const tagSchemaJson = serializeStaticPageSchema({
+    pageType: "CollectionPage",
+    pageUrl: tagAbs,
+    name: t("tagTitle", { tag: tagLabel }),
+    description: t("tagDescription", { tag: tagLabel }),
+    inLanguage: locale === "ar" ? "ar" : "en",
+    breadcrumbs: [
+      { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/") },
+      { name: t("breadcrumbBlog"), url: blogIndexAbs },
+      { name: tagLabel, url: tagAbs },
+    ],
+  });
 
   return (
     <div className="pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={tagSchemaJson} />
       <PageHeader
         title={t("tagTitle", { tag: tagLabel })}
         description={t("tagDescription", { tag: tagLabel })}
@@ -124,7 +129,7 @@ export default async function BlogTagPage(props: {
                   article={blogToCardPayload(blog, locale)}
                   index={index}
                   isRtl={locale === "ar"}
-                  isLight
+                  theme="light"
                 />
               </li>
             ))}

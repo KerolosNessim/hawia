@@ -3,8 +3,8 @@ import { normalizeSingleService } from "../lib/normalize-single-service";
 import {
   isGoneStatus,
   isPermanentRedirectStatus,
-  parseServiceSlugRedirect,
-} from "../lib/service-slug-redirect";
+  parseSlugRedirect,
+} from "@/features/shared/lib/slug-redirect";
 import type { SingleService } from "../types";
 import { fetchServiceRow } from "./get-single-service";
 
@@ -24,7 +24,7 @@ export async function resolveServicePage(
   const row = await fetchServiceRow(decoded);
   if (!row) return null;
 
-  const redirect = parseServiceSlugRedirect(row, decoded, locale);
+  const redirect = parseSlugRedirect(row, decoded, locale);
   if (redirect) {
     if (isGoneStatus(redirect.status)) {
       return { kind: "gone", status: redirect.status };
@@ -33,6 +33,8 @@ export async function resolveServicePage(
       return { kind: "redirect", toSlug: redirect.toSlug, status: redirect.status };
     }
   }
+
+  if (row.redirect != null && row.id == null && row.slug == null) return null;
 
   return {
     kind: "ok",

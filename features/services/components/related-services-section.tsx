@@ -13,14 +13,19 @@ import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { SERVICE_CARD_ICONS } from "../lib/service-icons";
+import { servicesIndexPath } from "../lib/services-routes";
 import type { Service } from "../types";
 import ServicesCard from "./services-card";
 
 type RelatedServicesSectionProps = {
   services: Service[];
+  countryId?: number;
 };
 
-export default function RelatedServicesSection({ services }: RelatedServicesSectionProps) {
+export default function RelatedServicesSection({
+  services,
+  countryId,
+}: RelatedServicesSectionProps) {
   const t = useTranslations("servicesSection");
   const tPage = useTranslations("servicesPage");
   const locale = useLocale();
@@ -64,6 +69,8 @@ export default function RelatedServicesSection({ services }: RelatedServicesSect
                   item={item}
                   icon={SERVICE_CARD_ICONS[index % SERVICE_CARD_ICONS.length]}
                   index={index}
+                  countryId={countryId}
+                  titleAsPlainH3
                 />
               </CarouselItem>
             ))}
@@ -82,7 +89,7 @@ export default function RelatedServicesSection({ services }: RelatedServicesSect
 
       <div className="flex justify-center pt-4">
         <Link
-          href="/services"
+          href={servicesIndexPath(1, { countryId })}
           className="rounded-full border-2 border-brand bg-brand/5 px-8 py-3 text-sm font-bold text-brand transition hover:bg-brand hover:text-white"
         >
           {tPage("viewAll")}

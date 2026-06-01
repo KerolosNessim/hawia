@@ -2,11 +2,13 @@ import { ServicesCountryFilter } from "@/features/services/components/services-c
 import { ServicesGrid } from "@/features/services/components/services-grid";
 import { ServicesListPagination } from "@/features/services/components/services-list-pagination";
 import { matchCountryByUserCode } from "@/features/services/lib/country-match";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import {
-  buildBreadcrumbJsonLd,
-  buildServiceCollectionJsonLd,
-  jsonLdScript,
-} from "@/features/services/lib/services-json-ld";
+  buildBreadcrumbList,
+  buildCollectionPageSchemaGraph,
+  buildCanonicalUrl,
+  jsonLdGraph,
+} from "@/lib/seo/schema";
 import { localePath } from "@/features/blogs/lib/blog-routes";
 import {
   pickServiceSlug,
@@ -15,12 +17,15 @@ import {
   servicesIndexPath,
 } from "@/features/services/lib/services-routes";
 import {
+  parseCountryId,
+  parsePage,
+} from "@/features/services/lib/parse-services-search-params";
+import {
   fetchPublicCountries,
   fetchPublicServicesPaginated,
 } from "@/features/services/services/public-services-api";
 import PageHeader from "@/features/shared/components/page-header";
-import { getAbsoluteUrl } from "@/lib/seo/metadata-helpers";
-import { getSiteUrl } from "@/lib/seo/site-url";
+import { absoluteUrlFromPath } from "@/lib/seo/schema";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -30,25 +35,6 @@ import { cookies } from "next/headers";
 const SERVICES_LIST_PER_PAGE = 12;
 
 type SearchParamsType = Record<string, string | string[] | undefined>;
-
-function parsePage(sp: SearchParamsType): number {
-  const raw =
-    typeof sp.page === "string" ? sp.page : Array.isArray(sp.page) ? sp.page[0] : "1";
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) && n > 0 ? n : 1;
-}
-
-function parseCountryId(sp: SearchParamsType): number | undefined {
-  const raw =
-    typeof sp.country_id === "string"
-      ? sp.country_id
-      : Array.isArray(sp.country_id)
-        ? sp.country_id[0]
-        : undefined;
-  if (!raw) return undefined;
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) && n > 0 ? n : undefined;
-}
 
 export async function generateMetadata({
   searchParams,
@@ -122,36 +108,37 @@ export default async function ServicesPage(props: {
   const listPath =
     servicesIndexHref(locale, page, { countryId: selectedCountryId }) ??
     localePath(locale, "/services");
-  const listAbs = await getAbsoluteUrl(listPath);
-  const indexAbs = await getAbsoluteUrl(localePath(locale, "/services"));
+  const listAbs = absoluteUrlFromPath(listPath);
+  const indexAbs = buildCanonicalUrl(locale, "/services");
 
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    {
-      name: t("breadcrumbHome"),
-      url: await getAbsoluteUrl(localePath(locale, "/")),
-    },
-    { name: t("breadcrumbServices"), url: indexAbs },
+  const servicesSchemaJson = jsonLdGraph([
+    ...buildCollectionPageSchemaGraph({
+      pageUrl: listAbs,
+      name: t("title"),
+      description: t("metaDescription"),
+      inLanguage: locale === "ar" ? "ar" : "en",
+      breadcrumbs: [],
+      items: services.map((service) => ({
+        name: service.title.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
+        url: buildCanonicalUrl(
+          locale,
+          `/services/${encodeURIComponent(pickServiceSlug(service, locale))}`,
+        ),
+      })),
+      listIdSuffix: "services",
+    }),
+    buildBreadcrumbList(
+      [
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/") },
+        { name: t("breadcrumbServices"), url: indexAbs },
+      ],
+      listAbs,
+    ),
   ]);
-
-  const siteUrl = getSiteUrl();
-
-  const collectionLd = buildServiceCollectionJsonLd({
-    name: t("title"),
-    description: t("metaDescription"),
-    url: listAbs,
-    services,
-    serviceUrl: (service) =>
-      `${siteUrl}${servicePostHref(locale, pickServiceSlug(service, locale))}`,
-  });
-
-  const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);
 
   return (
     <div className="space-y-12 pb-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: structuredData }}
-      />
+      <PageSchemaScript json={servicesSchemaJson} />
 
       <PageHeader
         title={t("title")}
@@ -177,7 +164,7 @@ export default async function ServicesPage(props: {
           {services.length === 0 ? (
             <p className="py-16 text-center text-lg text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ServicesGrid services={services} />
+            <ServicesGrid services={services} countryId={selectedCountryId} />
           )}
         </section>
 

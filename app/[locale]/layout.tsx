@@ -11,10 +11,9 @@ import { cairoLocal, fontPreloadByLocale, geistLocal } from "@/lib/fonts";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
-import BreadcrumbJsonLd from "@/features/shared/components/seo/breadcrumb-json-ld";
 import { CustomHeadFromSettings } from "@/features/shared/components/seo/custom-head-from-settings";
+import GlobalSchemaScript from "@/features/shared/components/seo/global-schema-script";
 import { HeadTagsFromMarkup } from "@/features/shared/components/seo/head-tags-from-markup";
-import OrganizationJsonLd from "@/features/shared/components/seo/organization-json-ld";
 import { partitionBodyScripts } from "@/lib/seo/partition-body-scripts";
 import { SITE_REFERRER_POLICY } from "@/lib/seo/metadata-helpers";
 
@@ -96,14 +95,13 @@ export default async function RootLayout({
           type={fontPreload.type}
           crossOrigin="anonymous"
         />
-        <OrganizationJsonLd locale={locale} />
+        <GlobalSchemaScript locale={locale} />
         <HeadTagsFromMarkup markup={hoistedHeadTags} />
         <CustomHeadFromSettings markup={scripts?.custom_head_scripts} />
       </head>
       <body className="relative max-w-full min-h-dvh overflow-x-clip">
         <QueryProvider>
           <NextIntlClientProvider messages={messages}>
-            <BreadcrumbJsonLd />
             <DirectionProvider direction={dir}>
               <Navbar />
               {children}

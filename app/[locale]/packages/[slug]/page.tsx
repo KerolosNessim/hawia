@@ -13,11 +13,8 @@ import {
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
-import {
-  buildBreadcrumbJsonLd,
-  buildPackageProductJsonLd,
-  jsonLdScript,
-} from "@/features/packages/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { buildCanonicalUrl, serializePackageProductSchema } from "@/lib/seo/schema";
 import {
   DEFAULT_INLINE_IMG_HEIGHT,
   DEFAULT_INLINE_IMG_WIDTH,
@@ -98,46 +95,43 @@ export default async function PackageDetailPage({ params }: Props) {
   const routeLoc = routeLocale as Locale;
   const pageUrl =
     pkg.canonicalUrl?.trim() ||
-    (await getAbsoluteUrl(
-      localePathname(routeLoc, `/packages/${encodeURIComponent(pkg.slug)}`),
-    ));
-  const packagesUrl = await getAbsoluteUrl(localePathname(routeLoc, "/packages"));
+    buildCanonicalUrl(routeLoc, `/packages/${encodeURIComponent(pkg.slug)}`);
+  const packagesUrl = buildCanonicalUrl(routeLoc, "/packages");
   const breadcrumbItems = [
     {
       name: packagesT("breadcrumbHome"),
-      url: await getAbsoluteUrl(localePathname(routeLoc, "/")),
+      url: buildCanonicalUrl(routeLoc, "/"),
     },
     { name: packagesT("breadcrumbPackages"), url: packagesUrl },
   ];
   if (pkg.category?.slug) {
     breadcrumbItems.push({
       name: pkg.category.title,
-      url: await getAbsoluteUrl(
-        localePathname(
-          routeLoc,
-          `/packages/categories/${encodeURIComponent(pkg.category.slug)}`,
-        ),
+      url: buildCanonicalUrl(
+        routeLoc,
+        `/packages/categories/${encodeURIComponent(pkg.category.slug)}`,
       ),
     });
   }
   breadcrumbItems.push({ name: pkg.title, url: pageUrl });
-  const breadcrumbLd = buildBreadcrumbJsonLd(breadcrumbItems);
-  const productLd = buildPackageProductJsonLd({
-    pkg,
-    url: pageUrl,
+  const packageSchemaJson = serializePackageProductSchema({
+    pageUrl,
+    name: pkg.title,
     description: pkg.metaDescription?.trim() || packageDescription(pkg),
     inLanguage: routeLocale === "ar" ? "ar" : "en",
+    imageUrl: pkg.imageUrl,
+    categoryTitle: pkg.categoryTitle,
+    features: pkg.features,
+    price: pkg.price ? Number(pkg.price) : null,
+    currency: pkg.currency,
+    breadcrumbs: breadcrumbItems,
   });
-  const structuredData = jsonLdScript([breadcrumbLd, productLd]);
 
   return (
     <>
       <SiteBreadcrumbBar />
       <div className="container mx-auto max-w-3xl px-4 py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: structuredData }}
-      />
+      <PageSchemaScript json={packageSchemaJson} />
       <Button variant="ghost" asChild className="mb-8 rounded-full gap-2">
         <Link href="/packages">
           <ArrowLeft className="size-4" />

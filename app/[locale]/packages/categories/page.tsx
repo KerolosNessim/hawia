@@ -8,7 +8,8 @@ import {
 
 } from "@/features/packages/services/packages-public-api";
 
-import { buildBreadcrumbJsonLd, jsonLdScript } from "@/features/packages/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { buildCanonicalUrl, serializeStaticPageSchema } from "@/lib/seo/schema";
 
 import PageHeader from "@/features/shared/components/page-header";
 
@@ -90,43 +91,25 @@ export default async function PackageCategoriesIndexPage() {
 
   const loc = locale as Locale;
 
-  const pageUrl = await getAbsoluteUrl(localePathname(loc, "/packages/categories"));
+  const pageUrl = buildCanonicalUrl(loc, "/packages/categories");
+  const packagesUrl = buildCanonicalUrl(loc, "/packages");
 
-  const packagesUrl = await getAbsoluteUrl(localePathname(loc, "/packages"));
-
-
-
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-
-    {
-
-      name: t("breadcrumbHome"),
-
-      url: await getAbsoluteUrl(localePathname(loc, "/")),
-
-    },
-
-    { name: t("breadcrumbPackages"), url: packagesUrl },
-
-    { name: t("breadcrumbCategories"), url: pageUrl },
-
-  ]);
-
-  const structuredData = jsonLdScript([breadcrumbLd]);
-
-
+  const categoriesSchemaJson = serializeStaticPageSchema({
+    pageType: "CollectionPage",
+    pageUrl,
+    name: t("breadcrumbCategories"),
+    description: t("metaDescription"),
+    inLanguage: loc === "ar" ? "ar" : "en",
+    breadcrumbs: [
+      { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/") },
+      { name: t("breadcrumbPackages"), url: packagesUrl },
+      { name: t("breadcrumbCategories"), url: pageUrl },
+    ],
+  });
 
   return (
-
     <div className="min-w-0 space-y-16 overflow-x-clip pb-16">
-
-      <script
-
-        type="application/ld+json"
-
-        dangerouslySetInnerHTML={{ __html: structuredData }}
-
-      />
+      <PageSchemaScript json={categoriesSchemaJson} />
 
       <PageHeader
 

@@ -7,6 +7,39 @@ export type FaqJsonLdInputItem = {
   answer: string;
 };
 
+/** Matches opening/closing heading tags at the same level (h2–h4). */
+const FAQ_HEADING_RE = /<h([2-4])[^>]*>([\s\S]*?)<\/h\1>/gi;
+
+/**
+ * Splits CMS FAQ rich HTML into Q/A pairs.
+ * Each h2–h4 heading is a question; following markup until the next heading is the answer.
+ */
+export function parseFaqPairsFromRichHtml(faqHtml: string): FaqJsonLdInputItem[] {
+  const trimmed = faqHtml.trim();
+  if (!trimmed) return [];
+
+  const headings: { start: number; end: number; questionHtml: string }[] = [];
+  let match: RegExpExecArray | null;
+  const re = new RegExp(FAQ_HEADING_RE.source, FAQ_HEADING_RE.flags);
+  while ((match = re.exec(trimmed)) !== null) {
+    headings.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      questionHtml: match[2] ?? "",
+    });
+  }
+
+  if (!headings.length) return [];
+
+  return headings.map((heading, i) => ({
+    question: heading.questionHtml,
+    answer: trimmed.slice(
+      heading.end,
+      i + 1 < headings.length ? headings[i + 1].start : trimmed.length,
+    ),
+  }));
+}
+
 function toQuestionEntity(item: FaqJsonLdInputItem): JsonLd | null {
   const name = plainTextFromHtml(item.question);
   const text = plainTextFromHtml(item.answer);

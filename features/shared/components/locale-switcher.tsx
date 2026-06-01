@@ -13,6 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 function hreflangTarget(newLocale: string): string | null {
   if (typeof document === "undefined") return null;
@@ -66,20 +67,26 @@ export default function LocaleSwitcher({ triggerClassName }: LocaleSwitcherProps
       disabled={isPending}
     >
       <SelectTrigger
-        className={
+        className={cn(
           triggerClassName ??
-          "flex size-14! w-fit items-center justify-center rounded-full bg-brand px-3 text-base font-semibold transition-all duration-300 hover:bg-main-navy"
-        }
+            "flex size-14! w-fit items-center justify-center rounded-full bg-brand px-3 text-base font-semibold transition-all duration-300 hover:bg-main-navy",
+          triggerClassName &&
+            "p-0! overflow-hidden border-0 shadow-none [&_img]:size-full [&_svg]:size-full",
+        )}
         withArrow={false}
       >
         <ReactCountryFlag
           countryCode={locale === "ar" ? "SA" : "US"}
           svg
-          style={{
-            width: "25px",
-            height: "25px",
-          }}
-          className="rounded-full object-cover"
+          style={
+            triggerClassName
+              ? { width: "100%", height: "100%" }
+              : { width: "25px", height: "25px" }
+          }
+          className={cn(
+            "rounded-full object-cover",
+            triggerClassName && "size-full",
+          )}
         />
       </SelectTrigger>
       <SelectContent position="popper">

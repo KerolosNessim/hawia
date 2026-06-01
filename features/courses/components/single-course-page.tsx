@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import type { ResolvedCourseLesson, ResolvedPublicCourse } from "@/features/courses/services/courses-public-api";
+import { useSettings } from "@/features/settings/hooks/use-settings";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { CheckCircle2, ChevronDown, ChevronUp, PlayCircle, ShoppingCart } from "lucide-react";
 import Image from "next/image";
@@ -54,8 +55,18 @@ function CurriculumFlat({ lessons }: { lessons: ResolvedCourseLesson[] }) {
   );
 }
 
+function whatsappSendHref(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  return `https://api.whatsapp.com/send?phone=${digits}`;
+}
+
 function CourseSidebar({ course }: { course: ResolvedPublicCourse }) {
   const t = useTranslations("courses");
+  const { data: settings, isPending } = useSettings();
+  const coursesPhone = settings?.contact?.courses_phone?.trim();
+  const whatsappHref = coursesPhone ? whatsappSendHref(coursesPhone) : null;
+  const enrollButtonClassName =
+    "h-12 w-full gap-2 rounded-xl bg-brand text-base font-bold text-white shadow-md transition-all hover:bg-brand/90 hover:shadow-lg";
 
   return (
     <div className="sticky top-24 space-y-4">
@@ -78,10 +89,23 @@ function CourseSidebar({ course }: { course: ResolvedPublicCourse }) {
           )}
         </div>
 
-        <Button className="h-12 w-full gap-2 rounded-xl bg-brand text-base font-bold text-white shadow-md transition-all hover:bg-brand/90 hover:shadow-lg">
-          <ShoppingCart size={18} />
-          {t("enroll_cta")}
-        </Button>
+        {whatsappHref ? (
+          <Button asChild className={enrollButtonClassName}>
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+              <ShoppingCart size={18} />
+              {t("enroll_cta")}
+            </a>
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            disabled={isPending || !coursesPhone}
+            className={enrollButtonClassName}
+          >
+            <ShoppingCart size={18} />
+            {t("enroll_cta")}
+          </Button>
+        )}
       </div>
     </div>
   );

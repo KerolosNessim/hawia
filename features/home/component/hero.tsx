@@ -5,6 +5,10 @@ import { FileText, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Hero } from "../types";
 import BookingDialog from "@/features/booking/components/booking-dialog";
+
+const heroCtaBtnClass =
+  "h-auto min-h-11 w-full justify-center gap-1.5 rounded-full bg-brand px-6 py-4 text-sm font-medium text-background max-xl:min-h-10 max-xl:px-5 max-xl:py-3.5";
+
 export default function HeroSection({heroData}:{heroData:Hero}) {
   const t = useTranslations("hero");
   return (
@@ -54,22 +58,19 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 2 }}
-            className="flex max-xl:flex-col flex-row items-center justify-center max-xl:gap-4 gap-4 max-xl:mt-3 mt-6 w-full max-xl:max-w-sm max-xl:px-4"
+            className="mx-auto mt-4 grid w-full max-w-xs grid-cols-1 gap-3 max-xl:mt-2 max-xl:px-4 xl:max-w-lg xl:grid-cols-2"
           >
-            <Button
-              asChild
-              className="rounded-full bg-brand text-background max-xl:h-auto max-xl:w-full px-10 py-6 max-xl:px-8 max-xl:py-5 text-lg max-xl:text-base"
-            >
+            <Button asChild className={heroCtaBtnClass}>
               <a href={`tel:${heroData?.phone}`}>
-                <Phone className="size-6 max-xl:size-5 rtl:rotate-y-180" />
+                <Phone className="size-4 rtl:rotate-y-180" />
                 {t("contactUs")}
               </a>
             </Button>
-            <div className="max-xl:w-full max-xl:[&_span]:block max-xl:[&_button]:w-full">
+            <div className="w-full min-w-0 [&_span]:block [&_span]:w-full [&_button]:w-full">
               <BookingDialog
                 trigger={
-                  <Button className="h-auto w-full rounded-full bg-brand px-10 py-6 text-lg text-white max-xl:px-8 max-xl:py-5 max-xl:text-base">
-                    <FileText className="size-6 max-xl:size-5 rtl:rotate-y-180" />
+                  <Button className={heroCtaBtnClass}>
+                    <FileText className="size-4 rtl:rotate-y-180" />
                     {t("bookNow") || "Book Now"}
                   </Button>
                 }

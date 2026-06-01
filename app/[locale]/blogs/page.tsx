@@ -2,7 +2,8 @@ import BlogCard from "@/features/blogs/components/blog-card";
 import BlogCategoriesFilter from "@/features/blogs/components/blog-categories-filter";
 import { BlogListPagination } from "@/features/blogs/components/blog-list-pagination";
 import { blogCategoryPath, blogIndexHref, localePath } from "@/features/blogs/lib/blog-routes";
-import { buildBreadcrumbJsonLd, jsonLdScript } from "@/features/blogs/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { absoluteUrlFromPath, buildCanonicalUrl, serializeBlogIndexSchema } from "@/lib/seo/schema";
 import {
   blogToCardPayload,
   fetchPublicBlogCategories,
@@ -15,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { getAbsoluteUrl } from "@/lib/seo/metadata-helpers";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Metadata } from "next";
@@ -104,32 +104,24 @@ export default async function BlogPage(props: {
     key: String(b.id),
   }));
 
-  const blogIndexAbs = await getAbsoluteUrl(localePath(locale, "/blogs"));
-  const listAbs = await getAbsoluteUrl(blogIndexHref(locale, page, { search }));
+  const blogIndexAbs = buildCanonicalUrl(locale, "/blogs");
+  const listAbs = absoluteUrlFromPath(blogIndexHref(locale, page > 1 ? page : 1, { search }));
 
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    {
-      name: t("breadcrumbHome"),
-      url: await getAbsoluteUrl(localePath(locale, "/")),
-    },
-    { name: t("breadcrumbBlog"), url: blogIndexAbs },
-  ]);
-
-  const webPageLd = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "@id": `${listAbs}#webpage`,
-    url: listAbs,
+  const blogSchemaJson = serializeBlogIndexSchema({
+    pageUrl: page > 1 || search ? listAbs : blogIndexAbs,
     name: t("title"),
     description: t("metaDescription"),
-    isPartOf: { "@type": "WebSite", name: "Howeyah" },
-  };
-
-  const structuredData = jsonLdScript([breadcrumbLd, webPageLd]);
+    blogName: t("title"),
+    inLanguage: locale === "ar" ? "ar" : "en",
+    breadcrumbs: [
+      { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/") },
+      { name: t("breadcrumbBlog"), url: blogIndexAbs },
+    ],
+  });
 
   return (
     <div className="space-y-12 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={blogSchemaJson} />
 
       <PageHeader title={t("title")} description={t("description")} image="/blogs-banner.jfif" />
 
@@ -212,7 +204,7 @@ export default async function BlogPage(props: {
                   article={article}
                   index={index}
                   isRtl={locale === "ar"}
-                  isLight
+                  theme="light"
                 />
               ))}
             </div>

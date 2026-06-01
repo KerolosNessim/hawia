@@ -1,12 +1,7 @@
 import { Button } from "@/components/ui/button";
-import {
-  buildBreadcrumbJsonLd,
-  buildClientCreativeWorkJsonLd,
-  jsonLdScript,
-} from "@/features/clients/lib/json-ld";
-import {
-  fetchPublicClientDetail,
-} from "@/features/clients/services/clients-public-api";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { fetchPublicClientDetail } from "@/features/clients/services/clients-public-api";
+import { buildCanonicalUrl, serializeClientWorkSchema } from "@/lib/seo/schema";
 import PageHeader from "@/features/shared/components/page-header";
 import { Link } from "@/i18n/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -68,27 +63,25 @@ export default async function SingleClientPage({ params }: Props) {
 
   const isRtl = locale.startsWith("ar");
   const loc = locale as Locale;
-  const pageUrl = await getAbsoluteUrl(
-    localePathname(loc, `/clients/${encodeURIComponent(client.slug)}`),
-  );
-  const clientsUrl = await getAbsoluteUrl(localePathname(loc, "/clients"));
+  const pageUrl = buildCanonicalUrl(loc, `/clients/${encodeURIComponent(client.slug)}`);
+  const clientsUrl = buildCanonicalUrl(loc, "/clients");
   const description = client.metaDescription?.trim() || metaDescription(client.descriptionPlain, t("metaDescription"));
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: await getAbsoluteUrl(localePathname(loc, "/")) },
-    { name: t("breadcrumbClients"), url: clientsUrl },
-    { name: client.title, url: pageUrl },
-  ]);
-  const clientLd = buildClientCreativeWorkJsonLd({
-    client,
-    url: pageUrl,
+  const clientSchemaJson = serializeClientWorkSchema({
+    pageUrl,
+    name: client.title,
     description,
     inLanguage: isRtl ? "ar" : "en",
+    imageUrls: client.imageUrls,
+    breadcrumbs: [
+      { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/") },
+      { name: t("breadcrumbClients"), url: clientsUrl },
+      { name: client.title, url: pageUrl },
+    ],
   });
-  const structuredData = jsonLdScript([breadcrumbLd, clientLd]);
 
   return (
     <div className="space-y-16 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={clientSchemaJson} />
       <PageHeader title={client.title} description={client.descriptionPlain} image={client.imageUrl || "/hero-bg.webp"} />
 
       <div className="container mx-auto space-y-10 px-4">
