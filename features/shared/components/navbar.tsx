@@ -60,7 +60,8 @@ export default function Navbar() {
 
   const t = useTranslations("navbar");
 
-  const { path, links, serviceLinks, tServicesPage } = useNavbarNavigation();
+  const { path, links, serviceLinks, aiServiceLinks, tServicesPage } =
+    useNavbarNavigation();
 
   const { data: settings } = useSettings();
 
@@ -113,13 +114,7 @@ export default function Navbar() {
       <Link
         href="/"
         className={cn(
-          "inline-flex shrink-0 items-center justify-center",
-          "rounded-full bg-white/90 p-1.5 shadow-lg shadow-black/10 ring-1 ring-border/50",
-          "backdrop-blur-2xl backdrop-saturate-150",
-          "transition-[box-shadow,ring-color,backdrop-filter] duration-200",
-          "hover:bg-white/95 hover:shadow-xl hover:shadow-black/15 hover:ring-border/70",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
-          "sm:p-2",
+          "h-full shrink-0 items-center justify-center  px-6 py-2 bg-white rounded-full",
         )}
       >
         <Image
@@ -127,8 +122,7 @@ export default function Navbar() {
           alt={settings?.general?.site_name || "logo"}
           width={100}
           height={100}
-          className="h-10 w-auto object-contain sm:h-12 xl:h-14"
-          style={{ width: "auto", height: "auto" }}
+          className="  object-contain "
           priority
         />
       </Link>
@@ -234,6 +228,27 @@ export default function Navbar() {
                   </Link>
 
                 ))}
+
+                {aiServiceLinks.length ? (
+                  <>
+                    <div className="mt-2 border-t border-border/60 pt-3 text-center text-brand font-semibold text-sm">
+                      {t("aiServices")}
+                    </div>
+                    {aiServiceLinks.map((service) => (
+                      <Link
+                        key={service.id}
+                        href={service.href}
+                        className={navLinkClassName(
+                          path,
+                          service.href,
+                          "whitespace-normal text-start",
+                        )}
+                      >
+                        {service.label}
+                      </Link>
+                    ))}
+                  </>
+                ) : null}
 
                 <Link
 

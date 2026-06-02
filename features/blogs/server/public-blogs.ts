@@ -52,6 +52,8 @@ export type PublicBlog = {
   contentRichSource?: unknown;
   /** Resolved default (English) FAQ HTML when API returns bilingual `faq`. */
   faq?: string;
+  /** New API shape: FAQ accordion items from backend. */
+  faq_items?: { question: string; answer: string }[];
   /** Raw API `faq` for bilingual FAQ HTML — use with `pickLocalizedRichText`. */
   faqRichSource?: unknown;
   /** Show dedicated table of contents block on the post page. */
@@ -67,6 +69,14 @@ export type PublicBlog = {
   canonical_url: string | null;
   is_searchable: boolean;
   publisher_name: string;
+  author_id: number | null;
+  author: {
+    id: number;
+    name: string;
+    job_title: string | null;
+    image: string | null;
+    slug: string | null;
+  } | null;
   tags: PublicBlogTag[];
   reading_time: number | null;
   meta_title: string | null;
@@ -228,6 +238,35 @@ function pickLocalizedDescription(field: unknown, lang: "ar" | "en"): string {
   return pickLocalizedRichText(field, lang);
 }
 
+function faqArrayToHtml(field: unknown): string {
+  if (!Array.isArray(field)) return "";
+  const chunks: string[] = [];
+  for (const item of field) {
+    const row = asRecord(item);
+    if (!row) continue;
+    const question = typeof row.question === "string" ? row.question.trim() : "";
+    const answer = typeof row.answer === "string" ? row.answer.trim() : "";
+    if (!question && !answer) continue;
+    if (question) chunks.push(question);
+    if (answer) chunks.push(answer);
+  }
+  return chunks.join("");
+}
+
+function normalizeFaqItems(field: unknown): { question: string; answer: string }[] {
+  if (!Array.isArray(field)) return [];
+  return field
+    .map((item) => {
+      const row = asRecord(item);
+      if (!row) return null;
+      const question = typeof row.question === "string" ? row.question.trim() : "";
+      const answer = typeof row.answer === "string" ? row.answer.trim() : "";
+      if (!question && !answer) return null;
+      return { question, answer };
+    })
+    .filter((x): x is { question: string; answer: string } => x != null);
+}
+
 function normalizeCategory(raw: Record<string, unknown>, locale: Locale): PublicBlogCategory | null {
   const id = raw.id;
   if (typeof id !== "number" && typeof id !== "string") return null;
@@ -291,7 +330,11 @@ export function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
       ? raw.description
       : pickLocalizedRichText(raw.description, "en");
   const content = typeof raw.content === "string" ? raw.content : pickLocalizedRichText(raw.content, "en");
-  const faq = typeof raw.faq === "string" ? raw.faq : pickLocalizedRichText(raw.faq, "en");
+  const faq =
+    typeof raw.faq === "string"
+      ? raw.faq
+      : pickLocalizedRichText(raw.faq, "en") || faqArrayToHtml(raw.faq);
+  const faq_items = normalizeFaqItems(raw.faq);
   const table_of_contents =
     typeof raw.table_of_contents === "string"
       ? raw.table_of_contents
@@ -319,7 +362,8 @@ export function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
     subtitleRichSource: raw.subtitle,
     contentRichSource: raw.content,
     faq,
-    faqRichSource: raw.faq,
+    ...(faq_items.length ? { faq_items } : {}),
+    faqRichSource: Array.isArray(raw.faq) ? undefined : raw.faq,
     toc_enabled,
     toc_placement,
     table_of_contents,
@@ -330,6 +374,28 @@ export function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
     is_searchable:
       raw.is_searchable !== false && raw.is_searchable !== 0 && raw.is_searchable !== "0",
     publisher_name: typeof raw.publisher_name === "string" ? raw.publisher_name : "",
+    author_id:
+      typeof raw.author_id === "number"
+        ? raw.author_id
+        : raw.author_id != null
+          ? Number(raw.author_id) || null
+          : null,
+    author:
+      raw.author && typeof raw.author === "object" && !Array.isArray(raw.author)
+        ? (() => {
+            const a = raw.author as Record<string, unknown>;
+            const id =
+              typeof a.id === "number" ? a.id : a.id != null ? Number(a.id) || 0 : 0;
+            if (!id) return null;
+            return {
+              id,
+              name: typeof a.name === "string" ? a.name : "",
+              job_title: typeof a.job_title === "string" ? a.job_title : null,
+              image: typeof a.image === "string" ? a.image : null,
+              slug: typeof a.slug === "string" ? a.slug : null,
+            };
+          })()
+        : null,
     tags,
     reading_time:
       typeof raw.reading_time === "number"

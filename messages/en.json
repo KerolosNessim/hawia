@@ -48,7 +48,9 @@
     "navbar": {
     "home": "home",
     "about": "about",
+    "careers": "careers",
     "services": "services",
+    "aiServices": "AI services",
     "contact": "contact",
     "clients": "clients",
     "blog": "blog",
@@ -293,6 +295,11 @@
     "paginationPrevious": "Previous",
     "paginationNext": "Next",
     "viewAll": "View all services"
+  },
+  "aiServicesPage": {
+    "title": "AI Services",
+    "description": "I want to sculpt all the details related to features, including SEO, catalog, packages, section builder, schema, etc.",
+    "empty": "No AI services are available at the moment."
   },
   "packagesPage": {
     "title": "Our Packages",

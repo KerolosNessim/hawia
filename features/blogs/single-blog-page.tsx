@@ -32,6 +32,12 @@ import {
 import { resolveBlogPage } from "@/features/blogs/server/resolve-blog-page";
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Calendar, Clock, HelpCircle } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -207,6 +213,15 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
   const localizedTitle =
     pickLocalizedRichText(blog.titleRichSource ?? blog.title, articleLang).trim() || blog.title;
+  const authorName = blog.author?.name?.trim() || blog.publisher_name || "Howeyah";
+  const authorImage = resolveMediaUrl(blog.author?.image || "/logo.png");
+  const authorSlug =
+    blog.author?.slug?.trim() ||
+    (authorName || "howeyah-team")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+  const authorProfilePath = `/authors/${encodeURIComponent(authorSlug)}`;
   const localizedSubtitleHtml =
     pickLocalizedRichText(blog.subtitleRichSource ?? blog.subtitle, articleLang).trim();
   const subtitlePlainBanner = localizedSubtitleHtml
@@ -225,10 +240,8 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   ).trim();
 
   // FAQ rich HTML for the current locale
-  const faqRich = pickLocalizedRichText(
-    blog.faqRichSource ?? blog.faq,
-    articleLang,
-  ).trim();
+  const localizedFaq = pickLocalizedRichText(blog.faqRichSource, articleLang).trim();
+  const faqRich = (localizedFaq || blog.faq || "").trim();
 
   const tocRich = pickLocalizedRichText(
     blog.tableOfContentsRichSource ?? blog.table_of_contents,
@@ -292,7 +305,16 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   breadcrumbLdItems.push({ name: localizedTitle, url: blogPostingAbs });
 
   const faqHeading = t("faqHeading");
-  const faqPairs = faqRich ? parseFaqPairsFromRichHtml(faqRich) : [];
+  const faqAccordionItems =
+    blog.faq_items?.length
+      ? blog.faq_items
+      : faqRich
+        ? parseFaqPairsFromRichHtml(faqRich).map((f) => ({
+            question: f.question,
+            answer: f.answer,
+          }))
+        : [];
+  const faqPairs = faqAccordionItems;
 
   const pageSchemaJson = serializeBlogPostSchema({
     pageUrl: blogPostingAbs,
@@ -302,7 +324,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     datePublished: blog.published_at,
     dateModified: blog.created_at,
     imageUrls: heroAbs ? [heroAbs] : undefined,
-    authorName: blog.publisher_name || "Howeyah",
+    authorName,
     keywords: blog.tags.map((tag) => tag.label),
     articleSection: primaryCategory?.name ?? null,
     contentHtml: articleCombinedHtml,
@@ -337,21 +359,28 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
-          <div className="flex items-center gap-4">
+          <Link
+            href={authorProfilePath}
+            className="group inline-flex items-center gap-4 rounded-xl transition-colors hover:bg-brand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 p-1"
+          >
             <Image
-              src="/logo.png"
+              src={authorImage}
               width={200}
               height={200}
-              alt=""
+              alt={authorName || "Author"}
               className="size-12 rounded-full bg-white object-contain ring-2 ring-offset-2 ring-brand"
             />
             <div>
-              <p className="text-gray-900 font-bold">{blog.publisher_name}</p>
-              {primaryCategory?.name ? (
-                <p className="text-sm text-muted-foreground">{primaryCategory.name}</p>
+              <p className="text-gray-900 font-bold group-hover:text-brand transition-colors">
+                {authorName}
+              </p>
+              {blog.author?.job_title || primaryCategory?.name ? (
+                <p className="text-sm text-muted-foreground">
+                  {blog.author?.job_title || primaryCategory?.name}
+                </p>
               ) : null}
             </div>
-          </div>
+          </Link>
           <div className="flex flex-wrap items-center gap-4 text-gray-900">
             {publishedLabel ? (
               <div className="flex items-center gap-2">
@@ -398,8 +427,62 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
         {showToc && tocPlacement === "after_body" ? tocNav : null}
 
-        {blog.tags.length ? (
-          <div className="flex flex-wrap gap-2 pt-6">
+      </article>
+
+      {showToc && tocPlacement === "before_faq" ? (
+        <div className="container max-w-3xl">{tocNav}</div>
+      ) : null}
+
+      {/* ── FAQ section ───────────────────────────────────────────────────── */}
+      {faqAccordionItems.length ? (
+        <section
+          aria-labelledby="faq-section-heading"
+          className="container max-w-3xl"
+        >
+          {/* Section header */}
+          <div className="mb-8 flex items-center gap-3 border-b border-border pb-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+              <HelpCircle className="h-5 w-5" />
+            </div>
+            <h2
+              id="faq-section-heading"
+              className="text-2xl font-bold text-gray-900"
+            >
+              {faqHeading}
+            </h2>
+          </div>
+
+          <Accordion type="single" collapsible className="gap-4">
+            {faqAccordionItems.map((item, index) => (
+              <AccordionItem key={index} value={`faq-${index}`}>
+                <AccordionTrigger className="text-lg font-semibold text-start [&_svg]:shrink-0">
+                  <RichHtml
+                    html={item.question}
+                    as="span"
+                    className="flex-1 pe-2 text-start [&_p]:mb-0 [&_h2]:text-lg [&_h3]:text-base [&_strong]:font-semibold"
+                  />
+                </AccordionTrigger>
+                <AccordionContent>
+                  <RichHtml
+                    html={item.answer}
+                    className="faq-content text-base leading-relaxed text-gray-800 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ps-6 [&_ol]:list-decimal [&_ol]:ps-6 [&_a]:font-semibold [&_a]:text-brand"
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </section>
+      ) : null}
+
+      <RatingSection />
+
+      <ShareSection shareUrl={pageUrl ?? undefined} shareLabel={t("shareArticle")} />
+
+      <RelatedBlogsSection articles={related} />
+
+      {blog.tags.length ? (
+        <section className="container max-w-3xl">
+          <div className="flex flex-wrap gap-2 pt-2">
             {blog.tags.map((tag: PublicBlogTag) => (
               <Link
                 key={tag.label}
@@ -411,62 +494,8 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
               </Link>
             ))}
           </div>
-        ) : null}
-      </article>
-
-      {showToc && tocPlacement === "before_faq" ? (
-        <div className="container max-w-3xl">{tocNav}</div>
-      ) : null}
-
-      {/* ── FAQ section ───────────────────────────────────────────────────── */}
-      {faqRich ? (
-        <section
-          aria-labelledby="faq-section-heading"
-          className="container max-w-3xl"
-        >
-          {/* Section header */}
-          <div className="mb-8 flex items-center gap-3 border-b border-border pb-5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600">
-              <HelpCircle className="h-5 w-5" />
-            </div>
-            <h2
-              id="faq-section-heading"
-              className="text-2xl font-bold text-gray-900"
-            >
-              {faqHeading}
-            </h2>
-          </div>
-
-          {/* Rich HTML FAQ content — styles mirror the article body but add
-              question/answer visual treatment via heading + paragraph targets */}
-          <RichHtml
-            html={faqRich}
-            className={[
-              "faq-content space-y-0 text-base leading-relaxed text-gray-800",
-              // Question headings get a distinct left accent and bold weight
-              "[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:scroll-mt-24 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-gray-900",
-              "[&_h2]:border-s-4 [&_h2]:border-violet-400 [&_h2]:ps-4",
-              "[&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:scroll-mt-24 [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-gray-900",
-              "[&_h3]:border-s-4 [&_h3]:border-violet-300 [&_h3]:ps-4",
-              // Answer paragraphs get left padding to align with headings
-              "[&_p]:ps-4 [&_p]:mb-3 [&_p]:text-muted-foreground",
-              // Lists inside answers
-              "[&_ul]:ps-8 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:text-muted-foreground",
-              "[&_ol]:ps-8 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:text-muted-foreground",
-              // Links
-              "[&_a]:font-semibold [&_a]:text-brand [&_a]:underline-offset-2 [&_a]:hover:underline",
-              // Strong
-              "[&_strong]:font-semibold [&_strong]:text-gray-900",
-            ].join(" ")}
-          />
         </section>
       ) : null}
-
-      <RatingSection />
-
-      <ShareSection shareUrl={pageUrl ?? undefined} shareLabel={t("shareArticle")} />
-
-      <RelatedBlogsSection articles={related} />
     </div>
   );
 }

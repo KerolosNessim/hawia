@@ -38,7 +38,7 @@ type NavbarSheetProps = {
 
 export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
   const t = useTranslations("navbar");
-  const { locale, path, links, serviceLinks, tServicesPage } =
+  const { locale, path, links, serviceLinks, aiServiceLinks, tServicesPage } =
     useNavbarNavigation();
   const { data: settings } = useSettings();
   const { isAuthenticated } = useAuthStore();
@@ -97,7 +97,9 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
                 variant="ghost"
                 className={cn(
                   "group/services h-auto w-full justify-center gap-2 rounded-full py-2 font-semibold",
-                  path.startsWith("/services") ? "bg-brand text-white" : "",
+                path.startsWith("/services") || path.startsWith("/ai-services")
+                  ? "bg-brand text-white"
+                  : "",
                 )}
               >
                 {t("services")}
@@ -119,6 +121,27 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
                   </Link>
                 </SheetClose>
               ))}
+              {aiServiceLinks.length ? (
+                <>
+                  <div className="mt-2 border-t border-border/60 pt-3 text-center text-brand font-semibold text-sm">
+                    {t("aiServices")}
+                  </div>
+                  {aiServiceLinks.map((service) => (
+                    <SheetClose asChild key={service.id}>
+                      <Link
+                        href={service.href}
+                        className={navLinkClassName(
+                          path,
+                          service.href,
+                          "text-center text-sm",
+                        )}
+                      >
+                        {service.label}
+                      </Link>
+                    </SheetClose>
+                  ))}
+                </>
+              ) : null}
               <SheetClose asChild>
                 <Link
                   href="/services"

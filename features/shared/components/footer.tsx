@@ -244,12 +244,12 @@ export default function Footer() {
             <h3 className="mb-6 inline-block border-b-2 border-brand pb-2 text-2xl font-bold text-gray-900">
               {t("contactTitle")}
             </h3>
-            <div className="mb-6 w-full max-w-[240px] space-y-3">
+            <div className="mb-6 w-full max-w-[240px] space-y-3 text-end">
               {footerPhones.map((phone) => (
                 <a
                   key={phone}
                   href={`tel:${phone}`}
-                  className="flex items-center justify-center gap-2 text-lg font-bold text-brand hover:underline md:justify-end"
+                  className="flex items-center justify-center gap-2 text-lg font-bold text-brand hover:underline md:justify-start"
                   dir="ltr"
                 >
                   <Phone className="h-5 w-5 shrink-0" aria-hidden />
