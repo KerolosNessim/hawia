@@ -4,6 +4,8 @@ import { pickImageAlt } from "@/lib/image-alt";
 import { pickLocalizedField, pickSlugLocal } from "./pick-localized-field";
 import { pickServiceCoverPath, resolveLocalizedImageUrl } from "./pick-service-cover";
 import { buildPageSections } from "./collect-page-sections";
+import { parseClientPortfolio } from "./parse-client-portfolio";
+import type { Accreditation } from "@/features/home/types";
 import type {
   Benefits,
   Cta,
@@ -15,6 +17,7 @@ import type {
   ServicePackageItem,
   ServicePageSectionInstance,
   ServicePageSectionKey,
+  ServiceClientPortfolio,
   ServiceSocial,
   Tools,
   SingleService,
@@ -345,6 +348,38 @@ function parsePackagesList(raw: unknown, locale: string): ServicePackagesSection
   return one && one.items.length > 0 ? [one] : [];
 }
 
+function parseOurAccreditations(raw: unknown, locale: string): Accreditation | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const row = raw as Record<string, unknown>;
+  const imagesRaw = Array.isArray(row.images) ? row.images : [];
+  const images = imagesRaw
+    .map((item, index) => {
+      const img = item as Record<string, unknown>;
+      const url = resolveMediaUrl(
+        typeof img.url === "string" ? img.url : pickLocalizedField(img.url, locale),
+      );
+      if (!url || url === "/blog.webp") return null;
+      return {
+        id: Number(img.id ?? index),
+        url,
+        image_alt: pickImageAlt(img.image_alt, locale) ?? null,
+      };
+    })
+    .filter((x): x is Accreditation["images"][number] => x != null);
+
+  if (!images.length) return null;
+
+  const title = pickLocalizedField(row.title, locale).trim();
+  const description = pickLocalizedField(row.description, locale).trim();
+
+  return {
+    id: Number(row.id ?? 0),
+    title: title || "",
+    description,
+    images,
+  };
+}
+
 /** Maps raw `/v1/services/{slug}` payload to `SingleService`. */
 export function normalizeSingleService(
   raw: Record<string, unknown>,
@@ -363,6 +398,8 @@ export function normalizeSingleService(
     raw.tags ?? raw.blog_tags ?? raw.article_tags,
   );
 
+  const clientPortfolio = parseClientPortfolio(raw.client_portfolio, locale);
+
   const pageSections = buildPageSections({
     benefits: benefitsList,
     offerings: offeringsList,
@@ -372,6 +409,7 @@ export function normalizeSingleService(
     packages: packagesList,
     ctas: ctasList,
     articleTags,
+    clientPortfolio,
   });
 
   return {
@@ -421,6 +459,10 @@ export function normalizeSingleService(
     countries: Array.isArray(raw.countries)
       ? (raw.countries as SingleService["countries"])
       : [],
+    ourAccreditations: parseOurAccreditations(raw.our_accreditations, locale),
+    clientPortfolio:
+      firstPageSectionData<ServiceClientPortfolio>(pageSections, "clientPortfolio") ??
+      clientPortfolio,
     created_at: String(raw.created_at ?? ""),
   };
 }

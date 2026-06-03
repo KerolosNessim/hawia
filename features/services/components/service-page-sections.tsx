@@ -6,6 +6,7 @@ import SeoPackages from "@/features/services/components/seo-packages";
 import ServiceArticleTags from "@/features/services/components/service-article-tags";
 import SeoSteps from "@/features/services/components/seo-steps";
 import SeoTools from "@/features/services/components/seo-tools";
+import ServiceClientPortfolioSection from "@/features/services/components/service-client-portfolio-section";
 import { getOrderedServicePageSections } from "@/features/services/lib/collect-page-sections";
 import type {
   Benefits,
@@ -16,6 +17,7 @@ import type {
   ServicePageSectionKey,
   SingleService,
   Tools,
+  ServiceClientPortfolio,
 } from "@/features/services/types";
 import { SectionLinkShell } from "@/features/services/components/section-link-shell";
 import PageContact from "@/features/shared/components/page-contact";
@@ -133,6 +135,13 @@ function renderSectionInstance(
         <SectionLinkShell key={blockKey} link={sectionLinkFromData(tools)}>
           <SeoTools tools={tools} />
         </SectionLinkShell>
+      );
+    }
+    case "clientPortfolio": {
+      const portfolio = section.data as ServiceClientPortfolio;
+      if (!portfolio.items.length) return null;
+      return (
+        <ServiceClientPortfolioSection key={blockKey} portfolio={portfolio} />
       );
     }
     case "faqs": {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useGetServices } from "@/features/services/hooks/useGetServices";
-import { useGetServiceAis } from "@/features/services/hooks/useGetServiceAis";
 import { filterServicesByCountryCode } from "@/features/services/lib/filter-services-by-country";
 import { pickServiceDisplayTitle } from "@/features/services/lib/service-display-title";
 import { pickServiceSlug } from "@/features/services/lib/services-routes";
@@ -35,16 +34,13 @@ export function useNavbarNavigation() {
   const tServicesPage = useTranslations("servicesPage");
   const path = usePathname();
   const { data } = useGetServices();
-  const { data: aiData } = useGetServiceAis();
   const userCountryCode = useCountry();
   const allServices = Array.isArray(data?.data) ? data.data : [];
   const services = filterServicesByCountryCode(allServices, userCountryCode);
-  const allAiServices = Array.isArray(aiData?.data) ? aiData.data : [];
 
   const links = [
     { href: "/", label: t("home") },
     { href: "/about", label: t("about") },
-    { href: "/ai-services", label: t("aiServices") },
     { href: "/clients", label: t("clients") },
     { href: "/blogs", label: t("blog") },
     { href: "/courses", label: t("courses") },
@@ -66,29 +62,6 @@ export function useNavbarNavigation() {
     })
     .filter((item) => item.label.length > 0);
 
-  type AiLink = { id: number; href: string; label: string; slug: string };
-  const aiServiceLinks = allAiServices.reduce<AiLink[]>((acc, service) => {
-    const slug =
-      (service.slug_local && typeof service.slug_local === "object"
-        ? (locale.startsWith("ar") ? service.slug_local.ar : service.slug_local.en) ??
-          service.slug_local.ar ??
-          service.slug_local.en
-        : undefined) ??
-      service.slug ??
-      "";
-
-    const label = String(service.title ?? "").trim();
-    if (!slug || !label) return acc;
-
-    acc.push({
-      id: service.id,
-      href: `/ai-services/${encodeURIComponent(slug)}`,
-      label,
-      slug,
-    });
-    return acc;
-  }, []);
-
   return {
     locale,
     t,
@@ -97,7 +70,6 @@ export function useNavbarNavigation() {
     links,
     services,
     serviceLinks,
-    aiServiceLinks,
   };
 }
 

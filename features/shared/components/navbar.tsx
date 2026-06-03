@@ -37,22 +37,20 @@ import { useAuthStore } from "@/features/auth/store/auth-store";
 import { useLogoutMutation } from "@/features/auth/hooks/use-auth-mutation";
 
 import {
-
+  NAV_ACTIVE_CLASS,
   navLinkClassName,
-
   useNavbarNavigation,
-
 } from "@/features/shared/hooks/use-navbar-navigation";
 
 import React from "react";
 
 import { cn } from "@/lib/utils";
+import { RichHtml } from "./rich-html";
 
 
 
 const actionBtnClass =
-
-  "size-10! sm:size-12! xl:size-14! rounded-full shrink-0";
+  "size-9! sm:size-10! md:size-12! xl:size-14! rounded-full shrink-0";
 
 
 
@@ -60,7 +58,7 @@ export default function Navbar() {
 
   const t = useTranslations("navbar");
 
-  const { path, links, serviceLinks, aiServiceLinks, tServicesPage } =
+  const { path, links, serviceLinks, tServicesPage } =
     useNavbarNavigation();
 
   const { data: settings } = useSettings();
@@ -101,7 +99,7 @@ export default function Navbar() {
 
         "container fixed inset-x-0 top-0 z-50 mx-auto",
 
-        "flex min-h-14 items-center justify-between gap-2 px-3 py-2 sm:min-h-16 sm:gap-3 sm:px-4 sm:py-2.5",
+        "flex min-h-12 items-center justify-between gap-1.5 px-2 py-1.5 sm:min-h-14 sm:gap-2 sm:px-3 sm:py-2 md:min-h-16 md:gap-3 md:px-4 md:py-2.5",
 
         "xl:top-2 xl:min-h-0 xl:gap-4 xl:bg-transparent xl:py-0",
 
@@ -114,7 +112,7 @@ export default function Navbar() {
       <Link
         href="/"
         className={cn(
-          "h-full shrink-0 items-center justify-center  px-6 py-2 bg-white rounded-full",
+          "flex h-full shrink-0 items-center justify-center rounded-full bg-white px-2.5 py-1 sm:px-4 sm:py-1.5 md:px-6 md:py-2",
         )}
       >
         <Image
@@ -122,7 +120,7 @@ export default function Navbar() {
           alt={settings?.general?.site_name || "logo"}
           width={100}
           height={100}
-          className="  object-contain "
+          className="h-8 w-auto object-contain sm:h-9 md:h-10 lg:h-11"
           priority
         />
       </Link>
@@ -189,17 +187,19 @@ export default function Navbar() {
 
             <HoverCardTrigger asChild>
 
-              <Button className="group/btn shrink-0 bg-transparent px-2 text-sm font-semibold text-primary 2xl:text-base">
-
+              <Button
+                className={cn(
+                  "group/btn shrink-0 bg-transparent px-2 text-sm font-semibold text-primary 2xl:text-base",
+                  path.startsWith("/services") && NAV_ACTIVE_CLASS,
+                )}
+              >
                 {t("services")}
-
                 <ChevronDown className="size-4 transition-all duration-300 ease-in-out group-hover/btn:rotate-180" />
-
               </Button>
 
             </HoverCardTrigger>
 
-            <HoverCardContent className="max-h-[min(70vh,24rem)] overflow-y-auto">
+            <HoverCardContent className="max-h-[min(70vh,24rem)] overflow-y-auto no-scrollbar">
 
               <div className="flex flex-col gap-1">
 
@@ -229,26 +229,7 @@ export default function Navbar() {
 
                 ))}
 
-                {aiServiceLinks.length ? (
-                  <>
-                    <div className="mt-2 border-t border-border/60 pt-3 text-center text-brand font-semibold text-sm">
-                      {t("aiServices")}
-                    </div>
-                    {aiServiceLinks.map((service) => (
-                      <Link
-                        key={service.id}
-                        href={service.href}
-                        className={navLinkClassName(
-                          path,
-                          service.href,
-                          "whitespace-normal text-start",
-                        )}
-                      >
-                        {service.label}
-                      </Link>
-                    ))}
-                  </>
-                ) : null}
+
 
                 <Link
 
@@ -275,8 +256,15 @@ export default function Navbar() {
             </HoverCardContent>
 
           </HoverCard>
-
-
+          <Link
+                  href="/ai-services"
+                  className={navLinkClassName(
+                    path,
+                    "/ai-services",
+                  )}
+                  >
+                    {t("aiServices")}
+                </Link>
 
           {secondaryLinks.map((link) => (
 
@@ -310,7 +298,7 @@ export default function Navbar() {
 
 
 
-      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 md:gap-2">
 
         <LocaleSwitcher
 

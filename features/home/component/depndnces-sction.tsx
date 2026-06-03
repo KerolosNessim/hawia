@@ -37,12 +37,14 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
   if (images.length === 0) return null;
 
   return (
-    <section className="container py-16 space-y-8 overflow-hidden">
+    <section className=" py-16 space-y-8 overflow-hidden">
+      <div className="container max-w-6xl ">
       <SectionHeader
         title={accreditation?.title || t("title")}
         subtitleHtml={accreditation?.description || t("subtitle")}
         subtitleColor="text-gray-500"
       />
+      </div>
 
       <div dir="ltr" className="relative max-w-full space-y-8 overflow-x-hidden">
         {/* Gradient Masks */}

@@ -2,6 +2,7 @@
 
 import SiteBreadcrumb from "@/features/shared/components/site-breadcrumb";
 import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
+import { cn } from "@/lib/utils";
 import * as motion from "framer-motion/client";
 
 interface PageHeaderProps {
@@ -27,6 +28,32 @@ interface PageHeaderProps {
   /** Custom breadcrumb trail (e.g. blog post: Home › Blog › Category › Title). */
   breadcrumbItems?: BreadcrumbTrailItem[];
 }
+
+/** Hero title — compact on mobile, large on desktop (matches legacy blog hero). */
+const titleSizeClass =
+  "max-w-6xl text-xl font-bold leading-snug text-brand sm:text-2xl md:text-3xl md:leading-tight lg:text-4xl ";
+
+const titleRichClass = cn(
+  "cms-rich-html font-bold leading-snug text-brand",
+  titleSizeClass,
+  "[&_*]:text-inherit [&_*]:leading-inherit",
+  "lg:[&_*]:!text-inherit lg:[&_*]:!leading-inherit",
+  "[&_p]:mb-0 [&_strong]:font-bold",
+  "[&_h1]:text-inherit [&_h2]:text-inherit [&_h3]:text-inherit",
+);
+
+const titlePlainClass = titleSizeClass;
+
+/** Subtitle ~25–30% of title scale on large screens */
+const descriptionSizeClass =
+  "mt-2 max-w-3xl text-sm text-white sm:mt-3 sm:text-base md:mt-4 md:text-lg lg:mt-5  ";
+
+const descriptionRichClass = cn(
+  "cms-rich-html",
+  descriptionSizeClass,
+  "[&_p]:mb-1 sm:[&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold",
+  "[&_*]:text-inherit lg:[&_*]:!text-inherit",
+);
 
 export default function PageHeader({
   title,
@@ -56,90 +83,104 @@ export default function PageHeader({
     (hasRichDescription || Boolean(description?.trim()));
 
   return (
-    <section className="relative overflow-hidden lg:h-[60vh] md:h-[40vh] h-[30vh]">
-      {/* Background image */}
+    <section
+      className={cn(
+        "relative overflow-hidden",
+        /* Mobile: grow with content; desktop: fixed hero height */
+        "md:h-[40vh] lg:h-[60vh]",
+      )}
+    >
       <img
         src={image}
         alt={imageAlt}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover"
+        onError={(e) => {
+          e.currentTarget.src = "/hero-bg.webp";
+        }}
       />
 
-      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/70" />
 
-      {/* Breadcrumb — bottom of hero, clear of fixed navbar */}
       <div className="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/40 backdrop-blur-sm">
-        <div className="container py-2.5 md:py-3">
-          <SiteBreadcrumb variant="hero" items={breadcrumbItems} />
+        <div className="container py-1.5 sm:py-2 md:py-3">
+          <SiteBreadcrumb
+            variant="hero"
+            items={breadcrumbItems}
+            className="max-w-full text-xs sm:text-sm [&_[data-slot=breadcrumb-link]]:truncate [&_[data-slot=breadcrumb-page]]:truncate"
+          />
         </div>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex h-full items-center pb-12 md:pb-14">
-        <div className="container">
-          {descriptionAsHeader ? (
-            headerHtml ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-4xl text-4xl font-bold text-brand cms-rich-html [&_p]:mb-0 [&_h1]:text-4xl [&_h2]:text-3xl [&_h3]:text-2xl [&_strong]:font-bold"
-                dangerouslySetInnerHTML={{ __html: headerHtml }}
-              />
-            ) : headerPlain ? (
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-4xl text-4xl font-bold text-brand"
-              >
-                {headerPlain}
-              </motion.h1>
-            ) : null
-          ) : showTitle ? (
-            hasRichTitle ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-4xl font-bold text-brand cms-rich-html [&_p]:mb-0 [&_h1]:text-4xl [&_h2]:text-3xl [&_h3]:text-2xl [&_strong]:font-bold"
-                dangerouslySetInnerHTML={{ __html: titleHtml!.trim() }}
-              />
-            ) : title ? (
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-4xl font-bold text-brand"
-              >
-                {title}
-              </motion.h1>
-            ) : null
-          ) : null}
+      {/* pt: clear fixed navbar; pb: clear breadcrumb bar */}
+      <div
+        className={cn(
+          "relative z-10 container",
+          "pt-14 pb-11 sm:pt-16 sm:pb-12",
+          "md:flex md:h-full md:flex-col md:justify-center md:pb-14 md:pt-0",
+        )}
+      >
+        {descriptionAsHeader ? (
+          headerHtml ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className={titleRichClass}
+              dangerouslySetInnerHTML={{ __html: headerHtml }}
+            />
+          ) : headerPlain ? (
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className={cn("max-w-6xl", titlePlainClass)}
+            >
+              {headerPlain}
+            </motion.h1>
+          ) : null
+        ) : showTitle ? (
+          hasRichTitle ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className={titleRichClass}
+              dangerouslySetInnerHTML={{ __html: titleHtml!.trim() }}
+            />
+          ) : title ? (
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className={titlePlainClass}
+            >
+              {title}
+            </motion.h1>
+          ) : null
+        ) : null}
 
-          {showDescriptionBelow ? (
-            hasRichDescription ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="cms-rich-html text-lg text-white mt-4 max-w-3xl [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold"
-                dangerouslySetInnerHTML={{
-                  __html: descriptionHtml!.trim(),
-                }}
-              />
-            ) : (
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-lg text-white mt-4"
-              >
-                {description}
-              </motion.p>
-            )
-          ) : null}
-        </div>
+        {showDescriptionBelow ? (
+          hasRichDescription ? (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className={descriptionRichClass}
+              dangerouslySetInnerHTML={{
+                __html: descriptionHtml!.trim(),
+              }}
+            />
+          ) : (
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className={descriptionSizeClass}
+            >
+              {description}
+            </motion.p>
+          )
+        ) : null}
       </div>
     </section>
   );

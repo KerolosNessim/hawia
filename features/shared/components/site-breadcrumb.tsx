@@ -62,6 +62,7 @@ export default function SiteBreadcrumb({
     <Breadcrumb className={className}>
       <BreadcrumbList
         className={cn(
+          "flex-nowrap gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           isHero &&
             "text-white/75 [&_[data-slot=breadcrumb-link]]:text-white/75 [&_[data-slot=breadcrumb-link]]:hover:text-white [&_[data-slot=breadcrumb-page]]:text-white [&_svg]:text-white/50",
         )}
@@ -73,7 +74,7 @@ export default function SiteBreadcrumb({
           if (index > 0) {
             nodes.push(
               <BreadcrumbSeparator key={`sep-${item.href}`}>
-                <SeparatorIcon className="size-3.5" />
+                <SeparatorIcon className="size-3 shrink-0 sm:size-3.5" />
               </BreadcrumbSeparator>,
             );
           }
@@ -102,7 +103,7 @@ export function SiteBreadcrumbBar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "border-b border-border/60 bg-background pt-20 md:pt-24",
+        "border-b border-border/60 bg-background pt-14 sm:pt-16 md:pt-24",
         className,
       )}
     >

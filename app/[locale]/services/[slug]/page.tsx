@@ -1,6 +1,7 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
 
 
+import DependenciesSection from "@/features/home/component/depndnces-sction";
 import ServicePageScript from "@/features/services/components/service-page-script";
 
 import RelatedServicesSection from "@/features/services/components/related-services-section";
@@ -23,13 +24,9 @@ import {
 
 } from "@/features/services/lib/service-slug-redirect";
 
-import { getSingleService } from "@/features/services/services/get-single-service";
+import { resolveServicePage } from "@/features/services/services/resolve-service-page";
 
-import {
-
-  resolveServicePage,
-
-} from "@/features/services/services/resolve-service-page";
+export const dynamic = "force-dynamic";
 
 import PageHeader from "@/features/shared/components/page-header";
 
@@ -229,6 +226,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
         imageAlt={service.image_alt || ""}
 
+
       />
 
       {service.description?.trim() && service.pageSections.length === 0 ? (
@@ -270,6 +268,10 @@ export default async function ServicePage({ params, searchParams }: Props) {
         <ServicePageSections service={service} excludeKeys={["articleTags"]} />
 
       </div>
+
+      {service.ourAccreditations ? (
+        <DependenciesSection accreditation={service.ourAccreditations} />
+      ) : null}
 
       <div className="space-y-16 pb-16">
         <RelatedServicesSection services={relatedServices} countryId={relatedCountryId} />

@@ -2,6 +2,7 @@ import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 
 export const BREADCRUMB_SEGMENTS = [
   "about",
+  "ai-services",
   "blog",
   "blogs",
   "clients",

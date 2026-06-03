@@ -159,11 +159,23 @@
   --cms-heading-h6: #6b7280;
 
   /* ====== Screens' sizes like bootstrap ====== */
-  --breakpoint-sm: 576px;
+  /* --breakpoint-sm: 576px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 992px;
   --breakpoint-xl: 1200px;
-  --breakpoint-2xl: 1400px;
+  --breakpoint-2xl: 1400px; */
+
+  /*
+   * Site container max-widths (edit these — NOT --breakpoint-* alone).
+   * Breakpoints only control when sm:/md:/… utilities kick in.
+   */
+  --container-padding: 1rem;
+  --container-max: 100%;
+  --container-max-sm: 540px;
+  --container-max-md: 720px;
+  --container-max-lg: 960px;
+  --container-max-xl: 1140px;
+  --container-max-2xl: 1320px;
 }
 
 @layer components {
@@ -226,7 +238,40 @@
   }
 
   .container {
-    @apply w-full max-w-full px-4 mx-auto sm:w-[540px] md:w-[720px] lg:w-[960px] xl:w-[1180px] 2xl:w-[1380px];
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: var(--container-padding);
+  }
+
+  @media (min-width: 576px) {
+    .container {
+      max-width: var(--container-max-sm);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .container {
+      max-width: var(--container-max-md);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .container {
+      max-width: var(--container-max-lg);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .container {
+      max-width: var(--container-max-xl);
+    }
+  }
+
+  @media (min-width: 1400px) {
+    .container {
+      max-width: var(--container-max-2xl);
+    }
   }
 
   .cms-rich-html {
@@ -285,6 +330,16 @@
     color: var(--color-brand) !important;
   }
 
+  /* Home promo slides: brand background — readable CMS copy (override inline editor colors) */
+  [data-promo-banner="slide"] .promo-banner-rich.cms-rich-html :is(p, span, strong, em, li, div, h1, h2, h3, h4) {
+    color: rgb(255 255 255) !important;
+  }
+
+  [data-promo-banner="slide"] .promo-banner-rich.cms-rich-html a {
+    color: rgb(255 255 255) !important;
+    text-decoration: underline;
+  }
+
   .cms-rich-html img,
   .cms-rich-html video,
   .cms-rich-html iframe,
@@ -302,6 +357,21 @@
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
+  }
+
+  /* CMS body scripts (GTM, WhatsApp, etc.) must not add height after the footer */
+  .cms-body-scripts {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    line-height: 0;
+  }
+
+  .cms-body-scripts #whatsapp-chat {
+    position: fixed;
+    z-index: 40;
   }
 }
 

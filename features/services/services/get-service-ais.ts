@@ -32,7 +32,11 @@ function unwrapListRows(raw: unknown): unknown[] {
   if (data && typeof data === "object" && !Array.isArray(data)) {
     const d = data as Record<string, unknown>;
     if (Array.isArray(d.data)) return d.data;
+    // GET /v1/service_ais returns one full ServiceAi object in `data`, not an array
+    if (d.id != null || d.slug != null) return [d];
   }
+  const single = pickSinglePayload(raw);
+  if (single) return [single];
   return [];
 }
 
@@ -172,6 +176,44 @@ export async function getSingleServiceAi(
       );
     });
     return found ? { status: "true", data: found } : { status: "false" };
+  }
+}
+
+/** Full ServiceAi payload(s) from `GET /v1/service_ais` for the public `/ai-services` page. */
+export async function getAllServiceAisFull(locale: Locale = "ar"): Promise<SingleService[]> {
+  try {
+    const raw = await apiClient.get<unknown>("/v1/service_ais");
+    const rows = unwrapListRows(raw);
+
+    const fromIndex = rows
+      .map((row) => {
+        const rec = asRecord(row);
+        if (!rec) return null;
+        const normalized = normalizeSingleService(rec, locale);
+        return normalized.id > 0 ? normalized : null;
+      })
+      .filter((s): s is SingleService => s != null);
+
+    if (fromIndex.some((s) => s.pageSections.length > 0)) {
+      return fromIndex.sort((a, b) => a.sort_order - b.sort_order);
+    }
+
+    const resolved = await Promise.all(
+      rows.map(async (row) => {
+        const rec = asRecord(row);
+        if (!rec) return null;
+        const slug = pickAiSlug(rec, locale);
+        if (!slug) return null;
+        const detail = await getSingleServiceAiAsService(slug, locale);
+        return detail.data ?? null;
+      }),
+    );
+
+    return resolved
+      .filter((s): s is SingleService => s != null)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  } catch {
+    return [];
   }
 }
 

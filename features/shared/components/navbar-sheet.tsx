@@ -38,8 +38,7 @@ type NavbarSheetProps = {
 
 export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
   const t = useTranslations("navbar");
-  const { locale, path, links, serviceLinks, aiServiceLinks, tServicesPage } =
-    useNavbarNavigation();
+  const { locale, path, links, serviceLinks, tServicesPage } = useNavbarNavigation();
   const { data: settings } = useSettings();
   const { isAuthenticated } = useAuthStore();
   const { mutate: logout } = useLogoutMutation();
@@ -49,20 +48,23 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
     setMounted(true);
   }, []);
 
-  const menuBtnClass = cn(actionBtnClass, "xl:hidden bg-brand text-white");
+  const menuBtnClass = cn(
+    actionBtnClass,
+    "xl:hidden bg-brand text-white hover:bg-brand/90",
+  );
 
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button className={menuBtnClass} aria-label="Open navigation menu">
-          <Menu className="size-5 sm:size-6" />
+          <Menu className="size-4 sm:size-5 md:size-6" />
         </Button>
       </SheetTrigger>
       <SheetContent
         side={locale === "ar" ? "right" : "left"}
         className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-sm"
       >
-        <SheetHeader className="shrink-0 border-b border-border/40 px-4 py-4">
+        <SheetHeader className="shrink-0 border-b border-border/40 px-4 py-3">
           <SheetTitle className="sr-only">{t("home")}</SheetTitle>
           <Link href="/" className="mx-auto block w-fit">
             <Image
@@ -70,7 +72,7 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
               alt={settings?.general?.site_name || "logo"}
               width={100}
               height={100}
-              className="h-14 w-auto object-contain sm:h-16"
+              className="h-10 w-auto object-contain sm:h-12"
               style={{ width: "auto", height: "auto" }}
             />
           </Link>
@@ -97,9 +99,7 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
                 variant="ghost"
                 className={cn(
                   "group/services h-auto w-full justify-center gap-2 rounded-full py-2 font-semibold",
-                path.startsWith("/services") || path.startsWith("/ai-services")
-                  ? "bg-brand text-white"
-                  : "",
+                path.startsWith("/services") ? "bg-brand text-white" : "",
                 )}
               >
                 {t("services")}
@@ -121,27 +121,6 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
                   </Link>
                 </SheetClose>
               ))}
-              {aiServiceLinks.length ? (
-                <>
-                  <div className="mt-2 border-t border-border/60 pt-3 text-center text-brand font-semibold text-sm">
-                    {t("aiServices")}
-                  </div>
-                  {aiServiceLinks.map((service) => (
-                    <SheetClose asChild key={service.id}>
-                      <Link
-                        href={service.href}
-                        className={navLinkClassName(
-                          path,
-                          service.href,
-                          "text-center text-sm",
-                        )}
-                      >
-                        {service.label}
-                      </Link>
-                    </SheetClose>
-                  ))}
-                </>
-              ) : null}
               <SheetClose asChild>
                 <Link
                   href="/services"
@@ -156,6 +135,15 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
               </SheetClose>
             </CollapsibleContent>
           </Collapsible>
+
+          <SheetClose asChild>
+            <Link
+              href="/ai-services"
+              className={navLinkClassName(path, "/ai-services", "text-center")}
+            >
+              {t("aiServices")}
+            </Link>
+          </SheetClose>
 
           {links.slice(2).map((link) => (
             <SheetClose asChild key={link.href}>

@@ -65,8 +65,10 @@ export default function FloatingSocials() {
   ];
 
   return (
-    <div className={`fixed bottom-6 ${locale === "ar" ? "left-6" : "right-6"} z-50`}>
-      <div className="relative flex flex-col items-center gap-1.5">
+    <div
+      className={`fixed bottom-4 z-40 max-md:scale-90 sm:bottom-6 ${locale === "ar" ? "left-3 sm:left-6" : "right-3 sm:right-6"}`}
+    >
+      <div className="relative flex flex-col items-center gap-1 max-md:gap-1 sm:gap-1.5">
         <AnimatePresence>
           {open &&
             socials.map((item, i) => {
@@ -82,7 +84,7 @@ export default function FloatingSocials() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
                     transition={{ delay: i * 0.05 }}
-                    className="bg-white shadow-sm rounded-full size-16 border border-brand/50 flex items-center justify-center hover:scale-110 transition-transform"
+                    className="flex size-12 items-center justify-center rounded-full border border-brand/50 bg-white shadow-sm transition-transform hover:scale-110 sm:size-14 md:size-16"
                     title={item.name}
                   >
                     {item.icon}
@@ -93,7 +95,7 @@ export default function FloatingSocials() {
         </AnimatePresence>
         <button
           onClick={() => setOpen(!open)}
-          className="bg-brand text-white size-16 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          className="flex size-12 items-center justify-center rounded-full bg-brand text-white shadow-lg transition-transform hover:scale-110 sm:size-14 md:size-16"
         >
           {open ? <FaTimes /> : <FaPlus />}
         </button>

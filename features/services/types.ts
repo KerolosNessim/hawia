@@ -1,3 +1,5 @@
+import type { Accreditation } from "@/features/home/types";
+
 /** Country as returned by GET /v1/countries — name is already a localized plain string */
 export interface Country {
   id: number;
@@ -183,11 +185,47 @@ export type Cta = {
   link?: string | null
 }
 
+export type ServiceClientPortfolioItem = {
+  id: number;
+  sortOrder: number;
+  category: string;
+  clientTag: string;
+  headline: string;
+  period: string;
+  client: string;
+  challenge: string;
+  whatWeDid: string;
+  results: string;
+  metrics: string[];
+  image: string;
+  imageAlt: string | null;
+  caseStudyLink: { href: string; external: boolean } | null;
+  readCaseStudyButtonText: string | null;
+};
+
+export type ServiceClientPortfolio = {
+  id: number;
+  title: string;
+  subtitle: string;
+  sort_order?: number;
+  viewAllLink: { href: string; external: boolean } | null;
+  viewAllButtonText: string | null;
+  viewAllCard: {
+    title: string;
+    description: string;
+    buttonText: string | null;
+    link: { href: string; external: boolean } | null;
+  } | null;
+  defaultReadCaseStudyText: string | null;
+  items: ServiceClientPortfolioItem[];
+};
+
 export type ServicePageSectionKey =
   | "benefits"
   | "offerings"
   | "steps"
   | "tools"
+  | "clientPortfolio"
   | "faqs"
   | "packages"
   | "articleTags"
@@ -204,6 +242,7 @@ export type ServicePageSectionInstance = {
     | Tools
     | Cta
     | ServicePackagesSection
+    | ServiceClientPortfolio
     | ServiceArticleTag[];
 };
 
@@ -254,6 +293,12 @@ export type SingleService = {
   articleTags: ServiceArticleTag[];
 
   countries: ServiceCountry[];
+
+  /** Per-service accreditations block from API `our_accreditations`. */
+  ourAccreditations?: Accreditation | null;
+
+  /** @deprecated Use `pageSections` */
+  clientPortfolio?: ServiceClientPortfolio | null;
 
   created_at: string;
 };

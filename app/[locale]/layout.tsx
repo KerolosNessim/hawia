@@ -113,7 +113,10 @@ export default async function RootLayout({
         </QueryProvider>
 
         {bodyScriptsOnly ? (
-          <div dangerouslySetInnerHTML={{ __html: bodyScriptsOnly }} />
+          <div
+            className="cms-body-scripts"
+            dangerouslySetInnerHTML={{ __html: bodyScriptsOnly }}
+          />
         ) : null}
       </body>
     </html>

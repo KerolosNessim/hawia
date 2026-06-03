@@ -211,8 +211,14 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
   const heroImage = resolveMediaUrl(blog.image);
 
-  const localizedTitle =
-    pickLocalizedRichText(blog.titleRichSource ?? blog.title, articleLang).trim() || blog.title;
+  const localizedTitleRich =
+    pickLocalizedRichText(blog.titleRichSource ?? blog.title, articleLang).trim() ||
+    blog.title;
+  const titleLooksLikeHtml =
+    localizedTitleRich.length > 0 && /<[a-z][\s\S]*>/i.test(localizedTitleRich);
+  const localizedTitle = titleLooksLikeHtml
+    ? plainTextFromHtml(localizedTitleRich).trim() || blog.title
+    : localizedTitleRich;
   const authorName = blog.author?.name?.trim() || blog.publisher_name || "Howeyah";
   const authorImage = resolveMediaUrl(blog.author?.image || "/logo.png");
   const authorSlug =
@@ -340,7 +346,8 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
       <PageHeader
         image="/blogs-banner.jfif"
-        title={localizedTitle}
+        title={titleLooksLikeHtml ? undefined : localizedTitle}
+        titleHtml={titleLooksLikeHtml ? localizedTitleRich : undefined}
         description={subtitleLooksLikeHtml ? undefined : subtitlePlainBanner || undefined}
         descriptionHtml={subtitleLooksLikeHtml ? localizedSubtitleHtml : undefined}
         breadcrumbItems={breadcrumbTrail}

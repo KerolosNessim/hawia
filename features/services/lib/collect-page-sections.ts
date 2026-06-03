@@ -4,6 +4,7 @@ import type {
   Faqs,
   Section,
   ServiceArticleTag,
+  ServiceClientPortfolio,
   ServicePackagesSection,
   ServicePageSectionInstance,
   ServicePageSectionKey,
@@ -15,6 +16,7 @@ const DEFAULT_BLOCK_ORDER: Record<ServicePageSectionKey, number> = {
   offerings: 20,
   steps: 30,
   tools: 40,
+  clientPortfolio: 45,
   faqs: 50,
   packages: 60,
   articleTags: 65,
@@ -37,6 +39,7 @@ export function buildPageSections(input: {
   packages: ServicePackagesSection[];
   ctas: Cta[];
   articleTags: ServiceArticleTag[];
+  clientPortfolio?: ServiceClientPortfolio | null;
 }): ServicePageSectionInstance[] {
   const blocks: ServicePageSectionInstance[] = [];
 
@@ -75,6 +78,18 @@ export function buildPageSections(input: {
       data,
     });
   });
+
+  if (input.clientPortfolio?.items.length) {
+    blocks.push({
+      key: "clientPortfolio",
+      index: 0,
+      sort_order: resolveSortOrder(
+        input.clientPortfolio.sort_order,
+        DEFAULT_BLOCK_ORDER.clientPortfolio,
+      ),
+      data: input.clientPortfolio,
+    });
+  }
 
   input.faqs.forEach((data, index) => {
     blocks.push({

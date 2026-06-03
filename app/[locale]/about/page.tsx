@@ -1,22 +1,22 @@
+import AboutVideoDialog from "@/features/about/components/about-video-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import PageHeader from "@/features/shared/components/page-header";
-import { Play } from "lucide-react";
-import { getTranslations } from "next-intl/server";
-import Image from "next/image";
-import * as motion from "framer-motion/client";
+  accreditationToLogoTiles,
+  getPartnersListFromResponse,
+  normalizeAccreditationForAbout,
+  partnersToLogoTiles,
+} from "@/features/about/lib/normalize-about-logos";
+import { getAccreditations } from "@/features/home/services/accreditations";
+import { getPartners } from "@/features/home/services/partners";
 import Identity from "@/features/about/components/identity";
 import VissionAndMession from "@/features/about/components/vision-and-mession";
 import ServicesSection from "@/features/services/components/services-section";
 import Values from "@/features/about/components/values";
-import SectionHeader from "@/features/shared/components/section-header";
 import PageContact from "@/features/shared/components/page-contact";
+import PageHeader from "@/features/shared/components/page-header";
+import LogoMarqueeSection from "@/features/shared/components/logo-marquee-section";
+import LogoTilesSection from "@/features/shared/components/logo-tiles-section";
 import { getAboutData } from "@/features/about/services/about";
+import { getTranslations } from "next-intl/server";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { localePathname } from "@/lib/seo/metadata-helpers";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
@@ -60,13 +60,33 @@ export default async function AboutPage() {
   const locale = (await getLocale()) as Locale;
   const tSeo = await getTranslations({ locale, namespace: "seo.breadcrumb" });
 
+  const tClients = await getTranslations("clientsSection");
+  const tAccreditations = await getTranslations("dependenciesSection");
+
   let data;
+  let accreditation;
+  let partnerTiles: ReturnType<typeof partnersToLogoTiles> = [];
+  let partnersSectionTitle = tClients("title");
+  let partnersSectionSubtitle = tClients("subtitle");
+
   try {
-    const response = await getAboutData();
-    data = response.data;
+    const [aboutRes, accreditationsRes, partnersRes] = await Promise.all([
+      getAboutData(),
+      getAccreditations().catch(() => null),
+      getPartners().catch(() => null),
+    ]);
+    data = aboutRes.data;
+    accreditation = normalizeAccreditationForAbout(accreditationsRes?.data);
+
+    const partners = getPartnersListFromResponse(partnersRes);
+    partnerTiles = partnersToLogoTiles(partners, locale);
+    if (partners[0]?.title?.trim()) partnersSectionTitle = partners[0].title.trim();
+    if (partners[0]?.description?.trim()) partnersSectionSubtitle = partners[0].description.trim();
   } catch (error) {
     console.error("Failed to fetch About Us data:", error);
   }
+
+  const accreditationTiles = accreditationToLogoTiles(accreditation, locale);
 
   const pageTitle = data?.meta_title || data?.title || t("title");
   const pageDescription =
@@ -93,47 +113,10 @@ export default async function AboutPage() {
         image={data?.image || "/hero-bg.webp"}
         descriptionHtml={data?.description || t("description")}
       />
-      {/* video */}
-      <Dialog>
-        <DialogTrigger asChild>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className=" w-full lg:h-[500px]  lg:w-4xl mx-auto relative"
-          >
-            <Image
-              src="/video-thub.webp"
-              alt="video"
-              width={500}
-              height={500}
-              className="rounded-lg shadow-lg w-full"
-            />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2  flex items-center justify-center bg-brand rounded-full p-4 hover:bg-brand/80 transition-colors cursor-pointer">
-              <Play className="w-10 h-10 text-white" />
-            </div>
-          </motion.div>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-4xl w-full">
-          <DialogHeader className="w-full">
-            <DialogDescription className="w-full">
-              <iframe
-                width="100%"
-                height="500"
-                src={
-                  data?.video_url ||
-                  "https://www.youtube.com/embed/pQ4dZ-GftNM?si=6uEa7nAEqcJo3Kj_"
-                }
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              ></iframe>
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      <AboutVideoDialog
+        videoUrl={data?.video_url}
+        watchLabel={t("watchVideo")}
+      />
       {/* identity */}
       <Identity
         title={data?.sections[0]?.title || t("identity.title")}
@@ -153,7 +136,20 @@ export default async function AboutPage() {
           subtitle={t("ideal_client")}
         />
       </div> */}
-      {/* contact */}
+      <LogoMarqueeSection
+        title={accreditation?.title || tAccreditations("title")}
+        subtitleHtml={accreditation?.description || tAccreditations("subtitle")}
+        images={accreditationTiles}
+      />
+
+      <LogoMarqueeSection
+        variant="white"
+        title={partnersSectionTitle}
+        subtitleHtml={partnersSectionSubtitle}
+        images={partnerTiles}
+        rowCount={3}
+      />
+
       <PageContact
         title={data?.contact_sections[0]?.title || t("contact.title")}
         description={data?.contact_sections[0]?.description || t("contact.description")}

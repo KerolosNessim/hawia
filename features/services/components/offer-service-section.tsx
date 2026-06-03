@@ -49,16 +49,16 @@ export default function OfferServiceSection({
             <ServiceSectionItemCard
               link={item.link}
               icon={item.icon}
-              className="rounded-xl border-2 border-brand p-6 leading-loose transition-all duration-300 group hover:bg-gray-900 hover:text-white"
+              className="rounded-xl border-2 border-brand p-6 leading-loose transition-all duration-300 group hover:border-gray-900"
             >
               <RichHtml
                 html={item.title}
                 as="h2"
-                className="text-lg font-bold text-brand group-hover:text-white [&_strong]:text-inherit"
+                className="text-lg font-bold text-brand  [&_strong]:text-inherit"
               />
               <RichHtml
                 html={item.description}
-                className="group-hover:text-white/90 [&_a]:text-brand group-hover:[&_a]:text-white"
+                className=" [&_a]:text-brand group-hover:[&_a]:text-white"
               />
             </ServiceSectionItemCard>
           </motion.div>

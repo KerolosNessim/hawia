@@ -3,6 +3,8 @@ import ArticlesSection from "@/features/blogs/components/articles-section";
 import { blogToCardPayload, fetchPublicBlogs } from "@/features/blogs/server/public-blogs";
 import ClientsSection from "@/features/home/component/clients-section";
 import ContactSection from "@/features/home/component/contact-section";
+import PromoBannersSlider from "@/features/home/component/promo-banners-slider";
+import { resolveHomePromoBanners } from "@/features/home/services/get-promo-banners";
 import DependenciesSection from "@/features/home/component/depndnces-sction";
 import HeroSection from "@/features/home/component/hero";
 import { HeroStats } from "@/features/home/component/hero-stats";
@@ -102,7 +104,10 @@ export default async function Home() {
     // use defaults
   }
 
-  const servicesRes = await getServices(locale).catch(() => null);
+  const [servicesRes, promoBanners] = await Promise.all([
+    getServices(locale).catch(() => null),
+    resolveHomePromoBanners(locale),
+  ]);
   const serviceItems = (servicesRes?.data ?? []).slice(0, 12).map((service) => ({
     name: plainTextFromHtml(service.title),
     url: buildCanonicalUrl(locale, `/services/${encodeURIComponent(pickServiceSlug(service, locale))}`),
@@ -136,6 +141,7 @@ export default async function Home() {
       <TestimonialsSection />
       <PackagesSection />
       <ArticlesSection items={latestBlogs} />
+      {promoBanners ? <PromoBannersSlider {...promoBanners} /> : null}
       <ContactSection />
     </main>
   );
