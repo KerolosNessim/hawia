@@ -40,9 +40,15 @@ export default function StepsSection({ countryId }: { countryId?: number }) {
     : [];
   
 
-  const items = apiItems.length > 0 ? apiItems : fallbackItems;
+  const items =
+    apiItems.length > 0
+      ? apiItems
+      : countryId == null
+        ? fallbackItems
+        : [];
 
   if (isLoading) return null;
+  if (countryId != null && items.length === 0) return null;
 
   return (
     <section className="py-24 bg-gray-900 relative overflow-hidden">

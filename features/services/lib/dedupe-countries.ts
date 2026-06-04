@@ -5,21 +5,51 @@ function normalizeText(value: string): string {
     .toLowerCase()
     .normalize("NFKC")
     .replace(/[\u064B-\u065F\u0670]/g, "")
-    .replace(/[أإآٱ]/g, "ا")
-    .replace(/ى/g, "ي")
-    .replace(/ة/g, "ه")
+    .replace(/[\u0623\u0625\u0622\u0671]/g, "\u0627")
+    .replace(/\u0649/g, "\u064a")
+    .replace(/\u0629/g, "\u0647")
     .replace(/\s+/g, " ")
     .trim();
 }
 
+const SA_ALIASES = [
+  "sa",
+  "sau",
+  "saudi",
+  "ksa",
+  "\u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629",
+  "\u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0647",
+  "\u0627\u0644\u0645\u0645\u0644\u0643\u0629 \u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629",
+].map(normalizeText);
+
+const OM_ALIASES = [
+  "om",
+  "omn",
+  "oman",
+  "\u0639\u0645\u0627\u0646",
+  "\u0639\u064f\u0645\u0627\u0646",
+  "\u0633\u0644\u0637\u0646\u0629 \u0639\u0645\u0627\u0646",
+].map(normalizeText);
+
+function canonicalCountryKey(text: string): string | null {
+  if (!text) return null;
+  if (SA_ALIASES.some((alias) => text.includes(alias))) return "SA";
+  if (OM_ALIASES.some((alias) => text.includes(alias))) return "OM";
+  return null;
+}
+
 function countryNameForKey(country: Pick<Country, "name">): string {
   const raw = country.name as unknown;
-  if (typeof raw === "string") return normalizeText(raw.trim());
+  if (typeof raw === "string") {
+    const text = normalizeText(raw.trim());
+    return canonicalCountryKey(text) ?? text;
+  }
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
     const localized = raw as { ar?: unknown; en?: unknown };
     const ar = typeof localized.ar === "string" ? localized.ar : "";
     const en = typeof localized.en === "string" ? localized.en : "";
-    return normalizeText((ar || en).trim());
+    const text = normalizeText(`${ar} ${en}`);
+    return canonicalCountryKey(text) ?? normalizeText((ar || en).trim());
   }
   return "";
 }

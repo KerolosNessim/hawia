@@ -151,6 +151,7 @@ export async function resolveHomePromoBanners(
 ): Promise<ResolvedHomePromoBanners | null> {
   const fromApi = await getHomePromoBanners(locale, countryId);
   if (fromApi?.slides.length) return fromApi;
+  if (countryId != null && countryId > 0) return null;
 
   const t = await getTranslations({ locale, namespace: "homePromoBanners" });
   const slides = t.raw("slides") as PromoBannerSlide[];

@@ -96,9 +96,15 @@ export default function TestimonialsSection({ countryId }: { countryId?: number 
       }[])
     : [];
 
-  const testimonials = apiTestimonials?.length > 0 ? apiTestimonials : staticTestimonials;
+  const testimonials =
+    apiTestimonials?.length > 0
+      ? apiTestimonials
+      : countryId == null
+        ? staticTestimonials
+        : [];
 
   if (isLoading) return null;
+  if (countryId != null && testimonials.length === 0) return null;
 
   return (
     <section className="relative overflow-hidden bg-gray-900 py-16">

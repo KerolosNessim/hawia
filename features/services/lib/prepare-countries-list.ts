@@ -31,6 +31,31 @@ export function prepareCountriesList(raw: Country[]): PreparedCountries {
   return { countries, idAlias };
 }
 
+function countryNameText(country: Country): string {
+  const raw = country.name as unknown;
+  if (typeof raw === "string") return raw.toLowerCase();
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const localized = raw as { ar?: unknown; en?: unknown };
+    return [localized.en, localized.ar]
+      .filter((value): value is string => typeof value === "string")
+      .join(" ")
+      .toLowerCase();
+  }
+  return "";
+}
+
+function defaultSaudiCountryId(prepared: PreparedCountries): number | undefined {
+  const sa = prepared.countries.find((country) => {
+    const name = countryNameText(country);
+    return (
+      name.includes("saudi") ||
+      name.includes("ksa") ||
+      name.includes("\u0627\u0644\u0633\u0639\u0648\u062f")
+    );
+  });
+  return sa?.id ?? prepared.countries[0]?.id;
+}
+
 export function resolveSelectedCountryId(
   countryId: number | undefined,
   prepared: PreparedCountries,
@@ -42,5 +67,5 @@ export function resolveSelectedCountryId(
     return canonical;
   }
 
-  return prepared.countries[0]?.id;
+  return defaultSaudiCountryId(prepared);
 }
