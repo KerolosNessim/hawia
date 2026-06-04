@@ -1,6 +1,3 @@
-import { localePath } from "@/features/blogs/lib/blog-routes";
-
-
 import DependenciesSection from "@/features/home/component/depndnces-sction";
 import ServicePageScript from "@/features/services/components/service-page-script";
 

@@ -326,11 +326,6 @@ function parseFaqsBlock(o: Record<string, unknown>, locale: string): Faqs {
   };
 }
 
-function parseFaqs(raw: unknown, locale: string): Faqs | null {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  return parseFaqsBlock(raw as Record<string, unknown>, locale);
-}
-
 function parseFaqsList(raw: unknown, locale: string): Faqs[] {
   if (!raw) return [];
   if (Array.isArray(raw)) {
