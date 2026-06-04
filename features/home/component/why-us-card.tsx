@@ -38,12 +38,12 @@ export function WhyUsFeatureItem({
         )}
       </div>
       <div className="min-w-0 flex-1 space-y-1.5 text-start">
-        <h3 className="text-base font-bold leading-snug text-gray-900 sm:text-lg">
+        <h3 className="text-base font-bold leading-snug text-white sm:text-lg">
           {title}
         </h3>
         <RichHtml
           html={description}
-          className="text-sm leading-relaxed text-gray-600 sm:text-[0.95rem] [&_p:last-child]:mb-0 [&_p]:mb-2"
+          className="text-sm leading-relaxed text-gray-300 sm:text-[0.95rem] [&_*]:!text-inherit [&_a]:!text-brand [&_p:last-child]:mb-0 [&_p]:mb-2"
         />
       </div>
     </li>

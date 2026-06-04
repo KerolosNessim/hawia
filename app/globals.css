@@ -340,6 +340,35 @@
     text-decoration: underline;
   }
 
+  /* Home — لماذا تختارنا (matches stats / steps dark band) */
+  [data-home-section="why-choose-us"] {
+    background-color: #111827 !important;
+    color: #f9fafb;
+  }
+
+  [data-home-section="why-choose-us"] .cms-rich-html :is(p, li, td, span, div) {
+    color: #d1d5db !important;
+    background-color: transparent !important;
+  }
+
+  [data-home-section="why-choose-us"] .cms-rich-html :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-brand) !important;
+    background-color: transparent !important;
+  }
+
+  [data-home-section="why-choose-us"] .cms-rich-html a {
+    color: var(--color-brand) !important;
+  }
+
+  [data-home-section="why-choose-us"] .cms-rich-html :is(.editor-toc, .cms-toc) {
+    border-color: rgb(255 255 255 / 0.12) !important;
+    background-color: rgb(255 255 255 / 0.06) !important;
+  }
+
+  [data-home-section="why-choose-us"] .cms-rich-html [style*="background"] {
+    background-color: transparent !important;
+  }
+
   .cms-rich-html img,
   .cms-rich-html video,
   .cms-rich-html iframe,

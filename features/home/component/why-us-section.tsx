@@ -85,9 +85,12 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
   const useRemoteCover = isRemoteMediaUrl(illustrationSrc);
 
   return (
-    <section className="relative bg-white py-16 md:py-20 lg:py-24">
+    <section
+      data-home-section="why-choose-us"
+      className="home-why-us-dark relative w-full overflow-hidden bg-gray-900 py-16 text-white md:py-20 lg:py-24"
+    >
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.035] text-gray-400"
+        className="pointer-events-none absolute inset-0 opacity-[0.06] text-brand"
         aria-hidden
       >
         <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -131,16 +134,16 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
                 {typeof title === "string" && title.includes("<") ? (
                   <RichHtml
                     html={title}
-                    className="cms-rich-html text-2xl font-bold leading-tight text-gray-900 sm:text-3xl lg:text-[2rem] lg:leading-tight [&_h2]:text-inherit [&_p]:mb-0"
+                    className="cms-rich-html text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-[2rem] lg:leading-tight [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h3]:!text-brand [&_p]:mb-0"
                   />
                 ) : (
-                  <h2 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl lg:text-[2rem]">
+                  <h2 className="text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-[2rem]">
                     {title}
                   </h2>
                 )}
                 <RichHtml
                   html={description}
-                  className="cms-rich-html text-base leading-relaxed text-gray-600 sm:text-lg [&_p:last-child]:mb-0 [&_p]:mb-3"
+                  className="cms-rich-html text-base leading-relaxed text-gray-300 sm:text-lg [&_*]:!text-inherit [&_a]:!text-brand [&_p:last-child]:mb-0 [&_p]:mb-3"
                 />
               </div>
 
@@ -179,7 +182,7 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
               >
                 <div className="relative aspect-square w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[380px] xl:max-w-[420px]">
                   <div
-                    className="absolute inset-[10%] rounded-full bg-gray-100"
+                    className="absolute inset-[8%] rounded-full bg-gray-800 shadow-[0_0_80px_rgba(163,205,57,0.12)]"
                     aria-hidden
                   />
                   <Image
@@ -198,7 +201,7 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
                     {galleryImages.map((img) => (
                       <div
                         key={img.id}
-                        className="flex aspect-square items-center justify-center rounded-xl border border-gray-100 bg-gray-50/80 p-2"
+                        className="flex aspect-square items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2"
                       >
                         <Image
                           src={img.url}

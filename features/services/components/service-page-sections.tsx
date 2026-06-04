@@ -49,46 +49,51 @@ function renderBenefitsBlock(
   const hasImage = hasSectionImage(benefits.image);
 
   const inner = (
-    <div
-      className={cn(
-        "container",
-        hasImage
-          ? "flex flex-col items-center gap-10 lg:flex-row lg:items-center"
-          : "flex flex-col items-center text-center",
-      )}
-    >
-      <motion.div
-        className={cn("w-full", hasImage ? "lg:flex-1" : "max-w-4xl")}
-        initial={{ opacity: 0, x: hasImage ? -20 : 0, y: hasImage ? 0 : 20 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
+    <section className="relative overflow-hidden bg-slate-950 py-16 text-white">
+      <div
+        className={cn(
+          "container",
+          hasImage
+            ? "flex flex-col items-center gap-10 lg:flex-row lg:items-center"
+            : "flex flex-col items-center text-center",
+        )}
       >
-        <RichHtml
-          html={benefits.title || fallbackTitle}
-          className="mb-4 text-3xl font-bold text-brand [&_p]:mb-0 [&_h2]:text-3xl [&_h3]:text-2xl [&_strong]:font-bold"
-        />
-        <RichHtml html={benefits.description} />
-      </motion.div>
-      {hasImage ? (
         <motion.div
-          className="flex w-full flex-1 justify-center"
-          initial={{ opacity: 0, y: 20 }}
+          className={cn("w-full", hasImage ? "lg:flex-1" : "max-w-4xl")}
+          initial={{ opacity: 0, x: hasImage ? -20 : 0, y: hasImage ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
         >
-          <Image
-            src={benefits.image}
-            alt={benefits.image_alt || plainTextFromHtml(serviceTitle)}
-            width={500}
-            height={500}
-            className="mask-blob mx-auto h-auto w-auto"
-            unoptimized={isRemoteMediaUrl(benefits.image)}
+          <RichHtml
+            html={benefits.title || fallbackTitle}
+            className="mb-5 text-3xl font-bold text-brand [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h2]:text-3xl [&_h3]:!text-brand [&_h3]:text-2xl [&_p]:mb-0 [&_strong]:font-bold"
+          />
+          <RichHtml
+            html={benefits.description}
+            className="text-base leading-8 text-slate-200 [&_*]:!text-inherit [&_a]:!text-brand [&_strong]:!text-white"
           />
         </motion.div>
-      ) : null}
-    </div>
+        {hasImage ? (
+          <motion.div
+            className="flex w-full flex-1 justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <Image
+              src={benefits.image}
+              alt={benefits.image_alt || plainTextFromHtml(serviceTitle)}
+              width={500}
+              height={500}
+              className="mask-blob mx-auto h-auto w-auto drop-shadow-2xl"
+              unoptimized={isRemoteMediaUrl(benefits.image)}
+            />
+          </motion.div>
+        ) : null}
+      </div>
+    </section>
   );
 
   return (
