@@ -12,6 +12,11 @@ const protectedRoutes = ['/dashboard', '/profile', '/checkout'];
 // Routes that should NOT be accessible if already authenticated
 const authRoutes = ['/login', '/register'];
 
+function resolveSupportedCountry(value: string | undefined): 'SA' | 'OM' {
+  const normalized = value?.trim().toUpperCase();
+  return normalized === 'OM' ? 'OM' : 'SA';
+}
+
 export default function middleware(req: NextRequest) {
   const token = req.cookies.get('auth_token')?.value;
   const { pathname } = req.nextUrl;
@@ -45,11 +50,12 @@ export default function middleware(req: NextRequest) {
 
   // Detect user country from headers (Cloudflare, Vercel, etc).
   // On localhost those headers are empty, so preserve an existing cookie for QA.
-  const country =
+  const detectedCountry =
     req.headers.get('x-vercel-ip-country') ||
     req.headers.get('cf-ipcountry') ||
     req.cookies.get('user_country')?.value ||
     'SA';
+  const country = resolveSupportedCountry(detectedCountry);
   
   // Set the country as a cookie so it can be easily accessed on client and server
   response.cookies.set('user_country', country, {
