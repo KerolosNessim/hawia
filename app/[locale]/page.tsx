@@ -184,8 +184,8 @@ export default async function Home({ searchParams }: PageProps) {
     >
       <PageSchemaScript json={homeSchemaJson} />
       {hero ? <HeroSection heroData={hero} /> : null}
-      <div className="overflow-hidden bg-gray-900 text-white">
-        <div className="container mx-auto min-w-0 max-w-full overflow-x-hidden lg:-translate-y-16 max-lg:pt-16">
+      <div className="relative bg-gray-900 text-white">
+        <div className="container relative z-20 mx-auto min-w-0 max-w-full px-4 sm:px-6 lg:-translate-y-16 lg:pb-10 max-lg:pt-16 max-lg:pb-8">
           <HeroStats stats={hero?.stats} />
         </div>
         <WhyUsSection countryId={homeCountryId} />

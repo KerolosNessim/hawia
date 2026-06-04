@@ -35,7 +35,7 @@ function StatItem({
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="bg-white flex min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-2xl p-4 text-center max-lg:min-w-0 lg:min-w-[200px]"
+      className="flex min-w-0 flex-1 flex-col items-center justify-center gap-3 rounded-2xl bg-white p-4 pb-5 text-center shadow-lg max-lg:min-w-0 lg:min-w-[200px]"
     >
       <h3 className="flex w-full flex-col items-center gap-2 text-zinc-800">
         <span className="inline-flex flex-wrap items-baseline justify-center gap-0.5 text-5xl font-extrabold leading-none text-brand">
@@ -77,7 +77,7 @@ export function HeroStats({ stats }: { stats?: HeroStat[] }) {
   if (displayStats.length === 0) return null;
 
   return (
-    <div className="grid min-w-0 grid-cols-2 gap-3 max-sm:grid-cols-1 sm:gap-4 lg:grid-cols-4">
+    <div className="grid min-w-0 grid-cols-2 gap-3 max-sm:grid-cols-1 sm:gap-4 lg:grid-cols-4 lg:gap-5">
       {displayStats.map((stat, index) => (
         <StatItem key={index} {...stat} index={index} />
       ))}
