@@ -6,11 +6,13 @@ import { RichHtml } from "@/features/shared/components/rich-html";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
 import type { Section, SectionItem } from "../types";
 
 export default function SeoSteps({ steps }: { steps: Section }) {
   const t = useTranslations("singleService.seoSteps");
   const hasImage = hasSectionImage(steps?.image);
+  const displayItems = orderSectionItemsForDisplay(steps?.items);
 
   return (
     <div className="py-12 bg-gray-900">
@@ -32,7 +34,7 @@ export default function SeoSteps({ steps }: { steps: Section }) {
               hasImage ? "lg:grid-cols-2 flex-1" : "w-full max-w-4xl",
             )}
           >
-            {steps?.items?.map((item: SectionItem, index: number) => (
+            {displayItems.map((item: SectionItem, index: number) => (
               <ServiceSectionItemCard
                 key={`${item.sort_order ?? index}-${index}`}
                 link={item.link}

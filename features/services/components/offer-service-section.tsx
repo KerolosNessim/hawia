@@ -6,6 +6,7 @@ import { RichHtml } from "@/features/shared/components/rich-html";
 import { useTranslations } from "next-intl";
 import * as motion from "framer-motion/client";
 import Image from "next/image";
+import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
 import type { Section, SectionItem } from "../types";
 
 export default function OfferServiceSection({
@@ -15,6 +16,7 @@ export default function OfferServiceSection({
 }) {
   const t = useTranslations("singleService.whatWeOffer");
   const hasImage = hasSectionImage(offerings?.image);
+  const displayItems = orderSectionItemsForDisplay(offerings?.items);
 
   return (
     <div className="container space-y-6">
@@ -37,7 +39,7 @@ export default function OfferServiceSection({
         </div>
       ) : null}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {offerings?.items?.map((item: SectionItem, index: number) => (
+        {displayItems.map((item: SectionItem, index: number) => (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}

@@ -22,12 +22,11 @@ export default async function AiServiceDetailView({
   showCta = true,
 }: Props) {
   const t = await getTranslations("singleService");
-  const heroTitle = plainTextFromHtml(service.singlePageTitle || service.title).trim() || t("title");
-  const heroDescriptionHtml =
-    service.subtitle?.trim() ||
-    service.inside_desc ||
-    service.description ||
-    t("description");
+  const heroTitleHtml = service.singlePageTitle?.trim() || service.title;
+  const heroTitle =
+    plainTextFromHtml(heroTitleHtml).trim() || t("title");
+  const heroSubtitle =
+    service.subtitle?.trim() || service.description?.trim() || "";
   const heroImage = service.image || "/whySeo.webp";
 
   return (
@@ -36,9 +35,8 @@ export default async function AiServiceDetailView({
 
       {showHero ? (
         <PageHeader
-          titleHtml={service.singlePageTitle || service.title || heroTitle}
-          descriptionAsHeader
-          descriptionHtml={heroDescriptionHtml}
+          titleHtml={heroTitleHtml || heroTitle}
+          descriptionHtml={heroSubtitle || undefined}
           image={heroImage}
           imageAlt={service.image_alt || ""}
         />

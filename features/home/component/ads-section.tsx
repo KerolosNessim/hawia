@@ -9,9 +9,9 @@ import * as motion from "motion/react-client";
 import { Link } from "@/i18n/navigation";
 import { getAdsData } from "../services/ads";
 
-export default async function AdsSection() {
+export default async function AdsSection({ countryId }: { countryId?: number }) {
   const t = await getTranslations("adsSection");
-  const section = await getAdsData();
+  const section = await getAdsData(countryId);
 
   if (!section?.categories?.length) return null;
 

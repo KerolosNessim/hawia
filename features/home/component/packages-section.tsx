@@ -2,10 +2,10 @@ import { fetchPackagesSectionData } from "@/features/packages/services/packages-
 import PackagesSectionClient from "@/features/home/component/packages-section-client";
 import { getLocale, getTranslations } from "next-intl/server";
 
-export default async function PackagesSection() {
+export default async function PackagesSection({ countryId }: { countryId?: number }) {
   const locale = await getLocale();
   const t = await getTranslations("packagesSection");
-  const sectionData = await fetchPackagesSectionData(locale);
+  const sectionData = await fetchPackagesSectionData(locale, countryId);
 
   return (
     <PackagesSectionClient

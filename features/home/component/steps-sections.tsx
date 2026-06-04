@@ -21,12 +21,11 @@ import Image from "next/image";
 
 const icons = [TrendingUp, Search, BarChart2, Users, FileText];
 
-export default function StepsSection() {
+export default function StepsSection({ countryId }: { countryId?: number }) {
   const t = useTranslations("stepsSection");
   const locale = useLocale();
   const isRTL = locale === "ar";
-  const { data, isLoading } = useSteps();
-  console.log("data steps", data?.data?.data);
+  const { data, isLoading } = useSteps(countryId);
   const apiItems = Array.isArray(data?.data?.data)
     ? data?.data?.data?.map((single) => ({
         title: single?.title,

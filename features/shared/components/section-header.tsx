@@ -1,6 +1,9 @@
 "use client";
 
+import { enhanceCmsHtml } from "@/lib/inline-image-alt";
 import { motion } from "framer-motion";
+import { useLocale } from "next-intl";
+import { useMemo } from "react";
 
 type SectionHeaderProps = {
   /** Plain fallback when `titleHtml` is empty. */
@@ -26,8 +29,17 @@ export default function SectionHeader({
   subtitleColor = "text-gray-200",
   titleColor = "text-brand",
 }: SectionHeaderProps) {
+  const locale = useLocale();
   const hasRichTitle = Boolean(titleHtml?.trim());
   const hasRichSubtitle = Boolean(subtitleHtml?.trim());
+  const enhancedTitleHtml = useMemo(
+    () => (titleHtml?.trim() ? enhanceCmsHtml(titleHtml, locale) : ""),
+    [titleHtml, locale],
+  );
+  const enhancedSubtitleHtml = useMemo(
+    () => (subtitleHtml?.trim() ? enhanceCmsHtml(subtitleHtml, locale) : ""),
+    [subtitleHtml, locale],
+  );
   const alignment = {
     start: " text-start ",
     center: " text-center flex-col justify-center ",
@@ -56,7 +68,7 @@ export default function SectionHeader({
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
           className={`cms-rich-html text-3xl md:text-4xl ${titleColor} font-bold tracking-tight [&_p]:mb-0 [&_h2]:text-3xl [&_h3]:text-2xl [&_strong]:font-bold`}
-          dangerouslySetInnerHTML={{ __html: titleHtml!.trim() }}
+          dangerouslySetInnerHTML={{ __html: enhancedTitleHtml }}
         />
       ) : title ? (
         <motion.h2
@@ -87,7 +99,7 @@ export default function SectionHeader({
           transition={{ duration: 0.7 }}
           viewport={{ once: true }}
           className={`cms-rich-html max-w-6xl text-gray-200 [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
-          dangerouslySetInnerHTML={{ __html: subtitleHtml!.trim() }}
+          dangerouslySetInnerHTML={{ __html: enhancedSubtitleHtml }}
         />
       ) : subtitle ? (
         <motion.p

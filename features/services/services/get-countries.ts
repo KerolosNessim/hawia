@@ -1,26 +1,36 @@
 import { apiClient } from "@/lib/api";
 import { mergeServiceListsByLocale } from "../lib/merge-service-locale-rows";
 import { normalizeServicesForLocale } from "../lib/normalize-service";
+import {
+  prepareCountriesList,
+  unwrapCountries,
+  type PreparedCountries,
+} from "../lib/prepare-countries-list";
 import type { Country, GetServicesApiRaw, Service } from "../types";
 
 export type GetCountriesResponse = {
   status: string;
   message: string;
   data: Country[];
+  idAlias: Map<number, number>;
 };
 
 /**
  * Fetches countries from GET /v1/countries.
- * The API returns `data: { data: Country[], meta }`; this unwraps to a flat `data: Country[]`.
+ * Duplicate country records from the API are collapsed before returning.
  */
 export const getCountries = async (): Promise<GetCountriesResponse> => {
   const raw = await apiClient.get<GetServicesApiRaw>("/v1/countries");
+  const { countries, idAlias } = prepareCountriesList(unwrapCountries(raw));
   return {
     status: raw.status,
     message: raw.message,
-    data: (raw.data?.data ?? []) as Country[],
+    data: countries,
+    idAlias,
   };
 };
+
+export type { PreparedCountries };
 
 /**
  * Fetches footer services for a specific country.
@@ -39,7 +49,7 @@ async function fetchFooterServicesRaw(
 export const getFooterServices = async (countryId: number, locale = "ar") => {
   const active = locale.toLowerCase().startsWith("en") ? "en" : "ar";
   const other = active === "en" ? "ar" : "en";
-  const [rawActive, activeRows, otherRows] = await Promise.all([
+  const [rawActive, otherRows] = await Promise.all([
     apiClient.get<{ status: string; message: string; data: unknown }>(
       `/v1/countries/${countryId}/footer-services`,
       { headers: { "Accept-Language": active } },

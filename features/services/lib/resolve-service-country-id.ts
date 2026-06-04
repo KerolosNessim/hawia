@@ -1,4 +1,5 @@
 import { matchCountryByUserCode } from "./country-match";
+import { countryIdsMatch } from "./dedupe-countries";
 import type { Country, ServiceCountry } from "../types";
 
 /**
@@ -15,23 +16,37 @@ export function resolveServiceCountryId(params: {
   urlCountryId?: number;
   allCountries?: Country[];
   userCountryCode?: string;
+  idAlias?: Map<number, number>;
 }): number | undefined {
-  const { serviceCountries, urlCountryId, allCountries = [], userCountryCode } = params;
+  const {
+    serviceCountries,
+    urlCountryId,
+    allCountries = [],
+    userCountryCode,
+    idAlias = new Map(),
+  } = params;
 
   if (urlCountryId != null && urlCountryId > 0) {
     if (
       serviceCountries.length === 0 ||
-      serviceCountries.some((c) => c.id === urlCountryId)
+      serviceCountries.some((country) => countryIdsMatch(country.id, urlCountryId, idAlias))
     ) {
-      return urlCountryId;
+      const canonical = idAlias.get(urlCountryId) ?? urlCountryId;
+      const fromService = serviceCountries.find((country) =>
+        countryIdsMatch(country.id, canonical, idAlias),
+      );
+      return fromService?.id ?? canonical;
     }
   }
 
   const code = userCountryCode?.trim() || "SA";
 
   if (serviceCountries.length > 0 && allCountries.length > 0) {
-    const serviceIds = new Set(serviceCountries.map((c) => c.id));
-    const eligible = allCountries.filter((c) => serviceIds.has(c.id));
+    const eligible = allCountries.filter((country) =>
+      serviceCountries.some((serviceCountry) =>
+        countryIdsMatch(serviceCountry.id, country.id, idAlias),
+      ),
+    );
     const matched = matchCountryByUserCode(eligible, code);
     if (matched) return matched.id;
     return serviceCountries[0]?.id;

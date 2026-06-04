@@ -5,17 +5,10 @@ import { BriefcaseBusiness } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useLocale } from "next-intl";
-import { RichHtml } from "@/features/shared/components/rich-html";
 import ApplyJobModal from "@/features/careers/components/apply-job-modal";
 import type { JobOpening } from "@/features/careers/types/jobs";
+import { Link } from "@/i18n/navigation";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 
 type Props = {
@@ -25,7 +18,6 @@ type Props = {
 export default function JobOpeningsGrid({ openings }: Props) {
   const locale = useLocale();
   const isAr = locale.startsWith("ar");
-  const [detailsOpening, setDetailsOpening] = useState<JobOpening | null>(null);
   const [applyOpening, setApplyOpening] = useState<JobOpening | null>(null);
 
   if (!openings.length) {
@@ -68,9 +60,11 @@ export default function JobOpeningsGrid({ openings }: Props) {
                   <Button
                     variant="outline"
                     className="w-full border-brand text-brand hover:bg-brand/5"
-                    onClick={() => setDetailsOpening(opening)}
+                    asChild
                   >
-                    {isAr ? "عرض التفاصيل" : "View details"}
+                    <Link href={`/careers/${opening.id}`}>
+                      {isAr ? "عرض التفاصيل" : "View details"}
+                    </Link>
                   </Button>
                   <Button
                     className="w-full bg-brand text-white hover:bg-brand/90"
@@ -85,42 +79,6 @@ export default function JobOpeningsGrid({ openings }: Props) {
         </div>
       </section>
 
-      <Dialog open={Boolean(detailsOpening)} onOpenChange={(open) => !open && setDetailsOpening(null)}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {isAr ? "تفاصيل الوظيفة" : "Job Details"}
-            </DialogTitle>
-            <DialogDescription>
-              {detailsOpening?.job_type || (isAr ? "معلومات الوظيفة الكاملة" : "Full opening information")}
-            </DialogDescription>
-          </DialogHeader>
-
-          {detailsOpening ? (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-foreground">
-                {plainTextFromHtml(detailsOpening.title)}
-              </h3>
-              <RichHtml
-                html={detailsOpening.description}
-                className="text-sm leading-relaxed text-muted-foreground"
-              />
-              <div className="pt-2">
-                <Button
-                  className="bg-brand text-white hover:bg-brand/90"
-                  onClick={() => {
-                    setApplyOpening(detailsOpening);
-                    setDetailsOpening(null);
-                  }}
-                >
-                  {isAr ? "قدّم الآن" : "Apply now"}
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
-
       <ApplyJobModal
         opening={applyOpening}
         open={Boolean(applyOpening)}
@@ -131,4 +89,3 @@ export default function JobOpeningsGrid({ openings }: Props) {
     </>
   );
 }
-

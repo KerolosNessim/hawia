@@ -1,17 +1,28 @@
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { apiClient } from "@/lib/api";
 import { normalizeServicesForLocale } from "../lib/normalize-service";
+import {
+  prepareCountriesList,
+  unwrapCountries,
+  type PreparedCountries,
+} from "../lib/prepare-countries-list";
 import type { Country, GetServicesApiRaw, Service } from "../types";
 import { fetchServicesListMerged } from "./fetch-services-list";
 
-export async function fetchPublicCountries(): Promise<Country[]> {
+export type { PreparedCountries };
+
+export async function fetchPublicCountriesPrepared(): Promise<PreparedCountries> {
   try {
     const raw = await apiClient.get<GetServicesApiRaw>("/v1/countries");
-    const list = raw.data?.data;
-    return Array.isArray(list) ? (list as Country[]) : [];
+    return prepareCountriesList(unwrapCountries(raw));
   } catch {
-    return [];
+    return { countries: [], idAlias: new Map() };
   }
+}
+
+export async function fetchPublicCountries(): Promise<Country[]> {
+  const { countries } = await fetchPublicCountriesPrepared();
+  return countries;
 }
 
 export type FetchPublicServicesPaginatedParams = {

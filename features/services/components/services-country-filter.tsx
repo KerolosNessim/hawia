@@ -32,15 +32,17 @@ export function ServicesCountryFilter({
         const labelClass = `font-bold ${isActive ? "text-brand" : "text-gray-600"}`;
         const inner = (
           <>
-            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-100">
-              <Image
-                src={country.image}
-                alt={country.name}
-                width={40}
-                height={40}
-                className="h-10 w-10 object-cover"
-              />
-            </div>
+            {country.image?.trim() ? (
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-100">
+                <Image
+                  src={country.image}
+                  alt={country.name}
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-cover"
+                />
+              </div>
+            ) : null}
             <span className={labelClass}>{country.name}</span>
           </>
         );

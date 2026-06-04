@@ -13,16 +13,23 @@ import StepsSection from "@/features/home/component/steps-sections";
 import TestimonialsSection from "@/features/home/component/testimonials-section";
 import WhyUsSection from "@/features/home/component/why-us-section";
 import ServicesSection from "@/features/services/components/services-section";
+import {
+  parseHomeCountryOverride,
+  type HomeCountrySearchParams,
+} from "@/features/home/lib/home-country-override";
+import { normalizeLandingResponse } from "@/features/home/lib/normalize-landing";
+import { resolveHomeCountryId } from "@/features/home/lib/resolve-home-country-id";
 import { getAccreditations } from "@/features/home/services/accreditations";
 import { getLandingPageData } from "@/features/home/services/hero";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import type { Accreditation } from "@/features/home/types";
+import type { Accreditation, Hero } from "@/features/home/types";
 import { getServices } from "@/features/services/services/get-services";
 import { pickServiceSlug } from "@/features/services/lib/services-routes";
 import { getSettings } from "@/features/settings/services/settings-service";
 import { resolveSettingsPageSeo } from "@/features/settings/lib/resolve-settings-seo";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { localePathname } from "@/lib/seo/metadata-helpers";
+import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import { buildCanonicalUrl, schemaMediaUrl, serializeHomePageSchema } from "@/lib/seo/schema";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
@@ -30,22 +37,45 @@ import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
-type PageProps = { params: Promise<{ locale: string }> };
+type PageProps = {
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<HomeCountrySearchParams>;
+};
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const loc = locale as Locale;
+  const sp = searchParams ? await searchParams : undefined;
+  const countryOverride = parseHomeCountryOverride(sp);
 
   try {
-    const response = await getSettings();
-    const settings = response.data;
+    const [settingsRes, landingRes] = await Promise.all([
+      getSettings(),
+      resolveHomeCountryId(countryOverride)
+        .then((countryId) => getLandingPageData(countryId))
+        .catch(() => null),
+    ]);
+    const settings = settingsRes.data;
+    const landing = normalizeLandingResponse(landingRes ?? undefined);
+    const settingsSeo = await resolveSettingsPageSeo("home");
+    const title =
+      landing?.hero?.seo?.meta_title?.trim() ||
+      settingsSeo?.title?.trim() ||
+      settings.general.home_meta_title?.trim() ||
+      settings.general.site_name ||
+      "Howeyah";
+    const description =
+      landing?.hero?.seo?.meta_description?.trim() ||
+      settingsSeo?.description?.trim() ||
+      settings.general.home_meta_description?.trim() ||
+      settings.general.site_description?.trim() ||
+      undefined;
 
-    return buildStaticPageMetadata({
+    return buildPageMetadata({
       locale: loc,
       pathname: localePathname(loc, "/"),
-      pageKey: "home",
-      title: settings.general.site_name || "Howeyah",
-      description: settings.general.site_description || undefined,
+      title,
+      description,
     });
   } catch {
     return buildStaticPageMetadata({
@@ -69,19 +99,40 @@ function normalizeAccreditation(raw: Accreditation | undefined): Accreditation |
   };
 }
 
-export default async function Home() {
-  const [data, accreditationsRes] = await Promise.all([
-    getLandingPageData(),
-    getAccreditations().catch(() => null),
+function normalizeHero(raw: Hero | undefined): Hero | undefined {
+  if (!raw) return undefined;
+  const image = resolveMediaUrl(raw.media?.image);
+  return {
+    ...raw,
+    media: {
+      ...raw.media,
+      image,
+      images: (raw.media?.images ?? []).map(resolveMediaUrl),
+    },
+  };
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const sp = searchParams ? await searchParams : undefined;
+  const countryOverride = parseHomeCountryOverride(sp);
+  const homeCountryId = await resolveHomeCountryId(countryOverride);
+
+  const [landingRes, accreditationsRes] = await Promise.all([
+    getLandingPageData(homeCountryId).catch(() => null),
+    getAccreditations(homeCountryId).catch(() => null),
   ]);
 
-  if (!data.data) return null;
+  const landing = normalizeLandingResponse(landingRes ?? undefined);
+  if (!landing) return null;
 
   const locale = (await getLocale()) as Locale;
-  const latestBlogs = (await fetchPublicBlogs()).slice(0, 3).map((b) => blogToCardPayload(b, locale));
+  const latestBlogs = (
+    await fetchPublicBlogs({ country_id: homeCountryId, per_page: 3 })
+  ).slice(0, 3).map((b) => blogToCardPayload(b, locale));
   const accreditation = normalizeAccreditation(
-    accreditationsRes?.data ?? data.data.accreditation,
+    accreditationsRes?.data ?? landing.accreditation,
   );
+  const hero = normalizeHero(landing.hero);
 
   const tSeo = await getTranslations({ locale, namespace: "seo" });
   const homeUrl = buildCanonicalUrl(locale, "/");
@@ -91,11 +142,13 @@ export default async function Home() {
     const settingsRes = await getSettings();
     const homeSeo = await resolveSettingsPageSeo("home");
     homeTitle =
+      hero?.seo?.meta_title?.trim() ||
       homeSeo?.title?.trim() ||
       settingsRes.data.general.home_meta_title?.trim() ||
       settingsRes.data.general.site_name ||
       homeTitle;
     homeDescription =
+      hero?.seo?.meta_description?.trim() ||
       homeSeo?.description?.trim() ||
       settingsRes.data.general.home_meta_description?.trim() ||
       settingsRes.data.general.site_description?.trim() ||
@@ -105,8 +158,8 @@ export default async function Home() {
   }
 
   const [servicesRes, promoBanners] = await Promise.all([
-    getServices(locale).catch(() => null),
-    resolveHomePromoBanners(locale),
+    getServices(locale, { country_id: homeCountryId }).catch(() => null),
+    resolveHomePromoBanners(locale, homeCountryId),
   ]);
   const serviceItems = (servicesRes?.data ?? []).slice(0, 12).map((service) => ({
     name: plainTextFromHtml(service.title),
@@ -118,28 +171,32 @@ export default async function Home() {
     name: homeTitle,
     description: homeDescription,
     inLanguage: locale === "ar" ? "ar" : "en",
-    primaryImageUrl: schemaMediaUrl("/images/home-hero.webp"),
+    primaryImageUrl: schemaMediaUrl(hero?.media?.image ?? "/images/home-hero.webp"),
     breadcrumbs: [],
     services: serviceItems,
   });
 
   return (
-    <main className="max-w-full overflow-x-clip">
+    <main
+      className="max-w-full overflow-x-clip"
+      data-home-country-id={homeCountryId ?? ""}
+      data-home-country-override={countryOverride ?? ""}
+    >
       <PageSchemaScript json={homeSchemaJson} />
-      <HeroSection heroData={data?.data?.hero} />
+      {hero ? <HeroSection heroData={hero} /> : null}
       <div className="bg-gray-900">
         <div className="container mx-auto min-w-0 max-w-full overflow-x-hidden lg:-translate-y-16 max-lg:pt-16">
-          <HeroStats stats={data?.data?.hero?.stats} />
+          <HeroStats stats={hero?.stats} />
         </div>
-        <WhyUsSection />
+        <WhyUsSection countryId={homeCountryId} />
       </div>
-      <ServicesSection /> 
-      <StepsSection />
+      <ServicesSection countryId={homeCountryId} /> 
+      <StepsSection countryId={homeCountryId} />
       <DependenciesSection accreditation={accreditation} />
-      <AdsSection />
-      <ClientsSection />
-      <TestimonialsSection />
-      <PackagesSection />
+      <AdsSection countryId={homeCountryId} />
+      <ClientsSection countryId={homeCountryId} initialPartners={landing.partners} />
+      <TestimonialsSection countryId={homeCountryId} />
+      <PackagesSection countryId={homeCountryId} />
       <ArticlesSection items={latestBlogs} />
       {promoBanners ? <PromoBannersSlider {...promoBanners} /> : null}
       <ContactSection />

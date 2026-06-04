@@ -19,24 +19,33 @@ export function applyInlineImageDimensions(html: string): string {
   });
 }
 
+function readImgDataAttr(attrs: string, name: string): string {
+  const match = attrs.match(new RegExp(`\\b${name}=["']([^"']*)["']`, "i"));
+  return match?.[1]?.trim() ?? "";
+}
+
+function replaceImgAltAttr(attrs: string, alt: string): string {
+  const safe = alt.replace(/"/g, "&quot;");
+  if (/\balt\s*=/i.test(attrs)) {
+    return attrs.replace(/\balt\s*=\s*["'][^"']*["']/i, `alt="${safe}"`);
+  }
+  return `${attrs} alt="${safe}"`;
+}
+
 /** Applies locale-specific `alt` on inline `<img>` tags saved with `data-alt-ar` / `data-alt-en`. */
 export function applyInlineImageAlts(html: string, locale: string): string {
   if (!html.includes("data-alt-")) return html;
-  if (typeof DOMParser === "undefined") return html;
 
-  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
-  const root = doc.body.firstElementChild;
-  if (!root) return html;
-
-  root.querySelectorAll("img").forEach((img) => {
-    const ar = img.getAttribute("data-alt-ar") ?? "";
-    const en = img.getAttribute("data-alt-en") ?? "";
-    if (!ar && !en) return;
+  return html.replace(/<img\b([^>]*?)\/?>/gi, (full, attrs) => {
+    if (!attrs.includes("data-alt-")) return full;
+    const ar = readImgDataAttr(attrs, "data-alt-ar");
+    const en = readImgDataAttr(attrs, "data-alt-en");
+    if (!ar && !en) return full;
     const alt = pickImageAlt({ ar, en }, locale);
-    if (alt) img.setAttribute("alt", alt);
+    if (!alt) return full;
+    const selfClosing = /\/\s*>$/.test(full.trim());
+    return `<img${replaceImgAltAttr(attrs, alt)}${selfClosing ? " /" : ""}>`;
   });
-
-  return root.innerHTML;
 }
 
 /** Alt text + intrinsic size attributes for rich CMS HTML. */

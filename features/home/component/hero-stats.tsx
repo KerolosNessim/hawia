@@ -53,7 +53,7 @@ function StatItem({
       </h3>
       {hasDescription ? (
         <RichHtml
-          as="p"
+          as="div"
           html={description}
           className="mt-0 max-w-[180px] overflow-visible text-sm text-zinc-900 [&_*]:overflow-visible"
         />

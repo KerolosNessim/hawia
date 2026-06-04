@@ -508,6 +508,7 @@ export function findPublicBlogCategoryBySlug(
 
 export type FetchBlogsQuery = {
   blog_category_id?: string | number;
+  country_id?: string | number;
   category_slug?: string;
   search?: string;
   /** Filter by article tag label (CMS `tags[]` on blog posts). */
@@ -557,6 +558,7 @@ export type FetchPublicBlogsPaginatedParams = {
   search?: string;
   tag?: string;
   blog_category_id?: string | number;
+  country_id?: string | number;
   category_slug?: string;
 };
 
@@ -569,6 +571,8 @@ export async function fetchPublicBlogsPaginated(
   if (params.search?.trim()) q.search = params.search.trim();
   if (params.blog_category_id != null && params.blog_category_id !== "")
     q.blog_category_id = String(params.blog_category_id);
+  if (params.country_id != null && params.country_id !== "")
+    q.country_id = String(params.country_id);
   if (params.category_slug?.trim()) q.category_slug = params.category_slug.trim();
   if (params.tag?.trim()) q.tag = params.tag.trim();
 
@@ -693,6 +697,7 @@ export async function fetchPublicBlogs(query?: FetchBlogsQuery): Promise<PublicB
   const { blogs } = await fetchPublicBlogsPaginated({
     paginationPath: "/v1/blogs",
     blog_category_id: query?.blog_category_id,
+    country_id: query?.country_id,
     category_slug: query?.category_slug,
     search: query?.search,
     page: query?.page,

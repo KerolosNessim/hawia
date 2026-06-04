@@ -68,11 +68,11 @@ function TestimonialCard({
   );
 }
 
-export default function TestimonialsSection() {
+export default function TestimonialsSection({ countryId }: { countryId?: number }) {
   const t = useTranslations("testimonialsSection");
   const locale = useLocale();
   const isRtl = locale === "ar";
-  const { data, isLoading } = useTestimonials();
+  const { data, isLoading } = useTestimonials(countryId);
 
   const testimonialRows = Array.isArray(data?.data?.testimonials)
     ? data.data.testimonials

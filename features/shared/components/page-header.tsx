@@ -2,8 +2,11 @@
 
 import SiteBreadcrumb from "@/features/shared/components/site-breadcrumb";
 import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
+import { enhanceCmsHtml } from "@/lib/inline-image-alt";
 import { cn } from "@/lib/utils";
 import * as motion from "framer-motion/client";
+import { useLocale } from "next-intl";
+import { useMemo } from "react";
 
 interface PageHeaderProps {
   /** Plain fallback when `titleHtml` is empty. */
@@ -65,14 +68,22 @@ export default function PageHeader({
   descriptionAsHeader = false,
   breadcrumbItems,
 }: PageHeaderProps) {
+  const locale = useLocale();
   const hasRichTitle = Boolean(titleHtml?.trim());
   const hasRichDescription = Boolean(descriptionHtml?.trim());
 
+  const enhancedTitleHtml = useMemo(
+    () => (titleHtml?.trim() ? enhanceCmsHtml(titleHtml, locale) : ""),
+    [titleHtml, locale],
+  );
+  const enhancedDescriptionHtml = useMemo(
+    () => (descriptionHtml?.trim() ? enhanceCmsHtml(descriptionHtml, locale) : ""),
+    [descriptionHtml, locale],
+  );
+
   const showTitle = !descriptionAsHeader;
 
-  const headerHtml = descriptionAsHeader
-    ? descriptionHtml?.trim()
-    : undefined;
+  const headerHtml = descriptionAsHeader ? enhancedDescriptionHtml || undefined : undefined;
 
   const headerPlain = descriptionAsHeader
     ? description?.trim()
@@ -85,9 +96,9 @@ export default function PageHeader({
   return (
     <section
       className={cn(
-        "relative overflow-hidden",
-        /* Mobile: grow with content; desktop: fixed hero height */
-        "md:h-[40vh] lg:h-[60vh]",
+        "relative flex flex-col overflow-hidden",
+        /* Mobile: min height + grow with content; desktop: fixed hero height */
+        "min-h-[50vh] md:min-h-0 md:h-[40vh] lg:h-[60vh]",
       )}
     >
       <img
@@ -114,9 +125,9 @@ export default function PageHeader({
       {/* pt: clear fixed navbar; pb: clear breadcrumb bar */}
       <div
         className={cn(
-          "relative z-10 container",
+          "relative z-10 container flex flex-1 flex-col justify-center",
           "pt-14 pb-11 sm:pt-16 sm:pb-12",
-          "md:flex md:h-full md:flex-col md:justify-center md:pb-14 md:pt-0",
+          "md:h-full md:pb-14 md:pt-0",
         )}
       >
         {descriptionAsHeader ? (
@@ -145,7 +156,7 @@ export default function PageHeader({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className={titleRichClass}
-              dangerouslySetInnerHTML={{ __html: titleHtml!.trim() }}
+              dangerouslySetInnerHTML={{ __html: enhancedTitleHtml }}
             />
           ) : title ? (
             <motion.h1
@@ -167,7 +178,7 @@ export default function PageHeader({
               transition={{ duration: 0.5, delay: 0.15 }}
               className={descriptionRichClass}
               dangerouslySetInnerHTML={{
-                __html: descriptionHtml!.trim(),
+                __html: enhancedDescriptionHtml,
               }}
             />
           ) : (

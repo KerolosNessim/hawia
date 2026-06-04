@@ -106,9 +106,16 @@ function readPageMeta(body: unknown): PageMeta {
   };
 }
 
-async function fetchAllRows(url: string): Promise<Record<string, unknown>[]> {
+function countryQuery(countryId: number | undefined): Record<string, string> {
+  return countryId != null && countryId > 0 ? { country_id: String(countryId) } : {};
+}
+
+async function fetchAllRows(
+  url: string,
+  countryId?: number,
+): Promise<Record<string, unknown>[]> {
   const first = await apiClient.get<unknown>(url, {
-    query: { page: 1, per_page: 100 },
+    query: { page: 1, per_page: 100, ...countryQuery(countryId) },
   });
   const firstRows = unwrapArray(first);
   const meta = readPageMeta(first);
@@ -117,7 +124,7 @@ async function fetchAllRows(url: string): Promise<Record<string, unknown>[]> {
   const rest = await Promise.all(
     Array.from({ length: meta.lastPage - 1 }, (_, i) =>
       apiClient.get<unknown>(url, {
-        query: { page: i + 2, per_page: meta.perPage || 100 },
+        query: { page: i + 2, per_page: meta.perPage || 100, ...countryQuery(countryId) },
       }),
     ),
   );
@@ -379,9 +386,10 @@ function recordToCard(
 
 export async function fetchPublicPackageCategories(
   locale: string,
+  countryId?: number,
 ): Promise<PublicPackageCategory[]> {
   try {
-    const rows = await fetchAllRows("/v1/packages/categories");
+    const rows = await fetchAllRows("/v1/packages/categories", countryId);
     return rows
       .map((r) => recordToCategory(r, locale))
       .filter((x): x is PublicPackageCategory => x != null)
@@ -393,9 +401,10 @@ export async function fetchPublicPackageCategories(
 
 export async function fetchPublicPackages(
   locale: string,
+  countryId?: number,
 ): Promise<PublicPackageCard[]> {
   try {
-    const rows = await fetchAllRows("/v1/packages");
+    const rows = await fetchAllRows("/v1/packages", countryId);
     return rows
       .map((r) => recordToCard(r, locale))
       .filter((x): x is PublicPackageCard => x != null);
@@ -424,10 +433,14 @@ export function findPublicPackageCategoryBySlug(
 export async function fetchPublicPackageCategoryById(
   id: string,
   locale: string,
+  countryId?: number,
 ): Promise<PublicPackageCategory | null> {
   try {
     const body = await apiClient.get<unknown>(
       `/v1/packages/categories/${encodeURIComponent(id)}`,
+      {
+        query: countryQuery(countryId),
+      },
     );
     const row = unwrapObject(body);
     return row ? recordToCategory(row, locale) : null;
@@ -458,12 +471,13 @@ function recordToCategoryWithPackages(
 export async function fetchPublicPackagesByCategorySlug(
   categorySlug: string,
   locale: string,
+  countryId?: number,
 ): Promise<{
   category: PublicPackageCategory | null;
   packages: PublicPackageCard[];
 }> {
   const decoded = decodePathSegment(categorySlug).trim();
-  const categories = await fetchPublicPackageCategories(locale);
+  const categories = await fetchPublicPackageCategories(locale, countryId);
   const categoryFromList = findPublicPackageCategoryBySlug(categories, decoded);
 
   const lookupKeys = new Set<string>();
@@ -482,6 +496,9 @@ export async function fetchPublicPackagesByCategorySlug(
     try {
       const directBody = await apiClient.get<unknown>(
         `/v1/packages/categories/${encodeURIComponent(key)}`,
+        {
+          query: countryQuery(countryId),
+        },
       );
       const direct = recordToCategoryWithPackages(
         unwrapObject(directBody),
@@ -502,10 +519,11 @@ export async function fetchPublicPackagesByCategorySlug(
   const detailedCategory = await fetchPublicPackageCategoryById(
     resolvedCategory.id,
     locale,
+    countryId,
   );
   resolvedCategory = detailedCategory ?? resolvedCategory;
 
-  const allPackages = await fetchPublicPackages(locale);
+  const allPackages = await fetchPublicPackages(locale, countryId);
   resolvedPackages = allPackages.filter((pkg) =>
     categoryIdsMatch(pkg.categoryId, resolvedCategory!.id),
   );
@@ -515,10 +533,11 @@ export async function fetchPublicPackagesByCategorySlug(
 
 export async function fetchPackagesSectionData(
   locale: string,
+  countryId?: number,
 ): Promise<PackagesSectionPayload> {
   const [categories, packages] = await Promise.all([
-    fetchPublicPackageCategories(locale),
-    fetchPublicPackages(locale),
+    fetchPublicPackageCategories(locale, countryId),
+    fetchPublicPackages(locale, countryId),
   ]);
 
   const packagesByCategoryId: Record<string, PublicPackageCard[]> = {};
@@ -597,10 +616,11 @@ function recordToDetail(
 async function findPackageDetailByAnySlug(
   slugOrId: string,
   locale: string,
+  countryId?: number,
 ): Promise<PublicPackageDetail | null> {
   const decoded = decodePathSegment(slugOrId).trim();
   try {
-    const rows = await fetchAllRows("/v1/packages");
+    const rows = await fetchAllRows("/v1/packages", countryId);
     const row = rows.find((r) => slugObjectMatches(decoded, r));
     return row ? recordToDetail(row, locale) : null;
   } catch {
@@ -611,20 +631,23 @@ async function findPackageDetailByAnySlug(
 export async function fetchPublicPackageDetail(
   slugOrId: string,
   locale: string,
+  countryId?: number,
 ): Promise<PublicPackageDetail | null> {
   const decoded = decodePathSegment(slugOrId).trim();
   const key = encodeURIComponent(decoded);
   try {
-    const body = await apiClient.get<unknown>(`/v1/packages/${key}`);
+    const body = await apiClient.get<unknown>(`/v1/packages/${key}`, {
+      query: countryQuery(countryId),
+    });
 
     const row = unwrapObject(body);
-    if (!row) return findPackageDetailByAnySlug(decoded, locale);
+    if (!row) return findPackageDetailByAnySlug(decoded, locale, countryId);
     return recordToDetail(row, locale);
   } catch {
-    const fromList = await findPackageDetailByAnySlug(decoded, locale);
+    const fromList = await findPackageDetailByAnySlug(decoded, locale, countryId);
     if (fromList) return fromList;
 
-    const list = await fetchPublicPackages(locale);
+    const list = await fetchPublicPackages(locale, countryId);
     const hit = list.find((p) => p.slug === decoded || p.id === decoded);
     if (!hit) return null;
     return {

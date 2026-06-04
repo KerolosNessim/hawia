@@ -6,41 +6,45 @@ import { useCountry } from "@/hooks/use-country";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { matchCountryByUserCode } from "../lib/country-match";
+import { countryIdsMatch } from "../lib/dedupe-countries";
 import { useGetServices } from "../hooks/useGetServices";
 import { ServicesCountryFilter } from "./services-country-filter";
 import { ServicesGrid } from "./services-grid";
 
-export default function ServicesSection() {
+export default function ServicesSection({ countryId }: { countryId?: number }) {
   const t = useTranslations("servicesSection");
   const tPage = useTranslations("servicesPage");
   const {
     data,
     isLoading,
     error,
-    countries,
+    countriesData,
+    countryIdAlias,
     countriesLoading,
     countriesError,
-  } = useGetServices();
+  } = useGetServices(countryId);
 
   const services = Array.isArray(data?.data) ? data?.data : [];
-  const countriesData = Array.isArray(countries?.data) ? countries.data : [];
 
   const userCountryCode = useCountry();
-  const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
+  const [autoSelectedCountry, setAutoSelectedCountry] = useState<number | null>(null);
   const hasAutoSelected = useRef(false);
+  const selectedCountry = countryId ?? autoSelectedCountry;
 
   useEffect(() => {
     if (countriesData.length > 0 && !hasAutoSelected.current) {
       const matched = matchCountryByUserCode(countriesData, userCountryCode);
       hasAutoSelected.current = true;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time geo default
-      setSelectedCountry(matched ? matched.id : countriesData[0].id);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time geo fallback
+      setAutoSelectedCountry(matched ? matched.id : countriesData[0].id);
     }
   }, [countriesData, userCountryCode]);
 
   const filteredServices = services.filter((service) =>
     selectedCountry
-      ? service.countries?.some((c) => c.id === selectedCountry)
+      ? service.countries?.some((country) =>
+          countryIdsMatch(country.id, selectedCountry, countryIdAlias),
+        )
       : true,
   );
 
@@ -65,11 +69,11 @@ export default function ServicesSection() {
         subtitleColor="text-gray-500"
       />
 
-      {countriesData.length > 0 && selectedCountry != null ? (
+      {countryId == null && countriesData.length > 0 && selectedCountry != null ? (
         <ServicesCountryFilter
           countries={countriesData}
           selectedCountryId={selectedCountry}
-          onSelectCountry={setSelectedCountry}
+          onSelectCountry={setAutoSelectedCountry}
         />
       ) : null}
 

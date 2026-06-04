@@ -146,6 +146,30 @@ export async function getJobOpeningsPublic(): Promise<JobOpening[]> {
   return resolveListData(response).map(normalizeOpening).filter((row): row is JobOpening => row != null);
 }
 
+export async function getJobOpeningsPublicByLocale(locale: "ar" | "en"): Promise<JobOpening[]> {
+  const response = await fetch(buildV1Url("/jobs/openings"), {
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": locale,
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) return [];
+  const data = await response.json().catch(() => ({}));
+  return resolveListData(data).map(normalizeOpening).filter((row): row is JobOpening => row != null);
+}
+
+export async function resolveJobOpeningById(
+  id: string,
+  locale: string,
+): Promise<JobOpening | null> {
+  const lang = locale.startsWith("ar") ? "ar" : "en";
+  const numericId = Number(id);
+  if (!Number.isFinite(numericId) || numericId <= 0) return null;
+  const openings = await getJobOpeningsPublicByLocale(lang);
+  return openings.find((opening) => opening.id === numericId) ?? null;
+}
+
 export async function applyToJobPublic(
   payload: ApplyJobPayload,
   locale: "ar" | "en"

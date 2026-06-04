@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { getStepsData } from "../services/steps";
 
-export const useSteps = () => {
+export const useSteps = (countryId?: number) => {
     const { data, isLoading, error } = useQuery({
-        queryKey: ["steps"],
-        queryFn: getStepsData,
+        queryKey: ["steps", countryId],
+        queryFn: () => getStepsData(countryId),
     });
 
     return { data, isLoading, error };

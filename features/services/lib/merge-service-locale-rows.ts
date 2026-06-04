@@ -7,6 +7,7 @@ export function mergeServiceTitleFields(
 ): Record<string, unknown> {
   const title = pickRichField(primary.title, fallback?.title);
   const subtitle = pickRichField(primary.subtitle, fallback?.subtitle);
+  const single_page_title = pickRichField(primary.single_page_title, fallback?.single_page_title);
   const description = pickRichField(primary.description, fallback?.description);
   const highlight_description = pickRichField(
     primary.highlight_description,
@@ -22,6 +23,7 @@ export function mergeServiceTitleFields(
     ...primary,
     title,
     subtitle,
+    single_page_title,
     description,
     highlight_description,
     meta_title,

@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { homeCountryQuery } from "../lib/country-query";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
@@ -115,10 +116,14 @@ function hasVisibleSectionHeader(section: PromoBannersSectionApi, locale: Locale
 }
 
 /** Public home carousel from `GET /v1/home/promo-banners`. */
-export async function getHomePromoBanners(locale: Locale): Promise<ResolvedHomePromoBanners | null> {
+export async function getHomePromoBanners(
+  locale: Locale,
+  countryId?: number,
+): Promise<ResolvedHomePromoBanners | null> {
+  const query = homeCountryQuery(countryId);
   try {
     const raw = await apiClient.get<unknown>("/v1/home/promo-banners", {
-      next: { revalidate: 60 },
+      query: query ?? undefined,
     });
     const payload = extractPayload(raw);
     if (!payload?.slides.length) return null;
@@ -140,8 +145,11 @@ export async function getHomePromoBanners(locale: Locale): Promise<ResolvedHomeP
 }
 
 /** API data with next-intl fallback for home `PromoBannersSlider`. */
-export async function resolveHomePromoBanners(locale: Locale): Promise<ResolvedHomePromoBanners | null> {
-  const fromApi = await getHomePromoBanners(locale);
+export async function resolveHomePromoBanners(
+  locale: Locale,
+  countryId?: number,
+): Promise<ResolvedHomePromoBanners | null> {
+  const fromApi = await getHomePromoBanners(locale, countryId);
   if (fromApi?.slides.length) return fromApi;
 
   const t = await getTranslations({ locale, namespace: "homePromoBanners" });

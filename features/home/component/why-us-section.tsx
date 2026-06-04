@@ -30,10 +30,10 @@ const featureIcons = [Handshake, Users, TrendingUp, Star, Users];
 
 const FALLBACK_ILLUSTRATION = "/values.webp";
 
-export default function WhyUsSection() {
+export default function WhyUsSection({ countryId }: { countryId?: number }) {
   const t = useTranslations("why-choose-us");
   const locale = useLocale();
-  const { data, isLoading } = useWhyUs();
+  const { data, isLoading } = useWhyUs(countryId);
 
   const section = data?.data;
   const items = Array.isArray(section?.items) ? section.items : [];

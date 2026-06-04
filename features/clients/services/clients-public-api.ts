@@ -39,6 +39,7 @@ export type PublicClientCard = {
 
 export type FetchPublicClientsOptions = {
   categorySlug?: string;
+  countryId?: number;
 };
 
 export type PublicClientsPageData = {
@@ -47,6 +48,16 @@ export type PublicClientsPageData = {
   description: string;
   clients: PublicClientCard[];
 };
+
+function appendCountryQuery(
+  query: Record<string, string>,
+  countryId: number | undefined,
+): Record<string, string> {
+  if (countryId != null && countryId > 0) {
+    query.country_id = String(countryId);
+  }
+  return query;
+}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -246,10 +257,11 @@ function sectionContentFromApi(
 /** Home ads / samples block: section heading + category cards from `GET /v1/solutions/categories`. */
 export async function fetchSolutionCategoriesSection(
   locale: string,
+  options?: { countryId?: number },
 ): Promise<SolutionCategoriesSectionData | null> {
   try {
     const body = await apiClient.get<unknown>("/v1/solutions/categories", {
-      query: { per_page: 100 },
+      query: appendCountryQuery({ per_page: "100" }, options?.countryId),
     });
     const { title, descriptionHtml } = sectionContentFromApi(body, locale);
     const categories = unwrapArray(body)
@@ -270,10 +282,11 @@ export async function fetchSolutionCategoriesSection(
 
 export async function fetchPublicSolutionCategories(
   locale: string,
+  options?: { countryId?: number },
 ): Promise<PublicSolutionCategory[]> {
   try {
     const body = await apiClient.get<unknown>("/v1/solutions/categories", {
-      query: { per_page: 100 },
+      query: appendCountryQuery({ per_page: "100" }, options?.countryId),
     });
     return unwrapArray(body)
       .map((row) => categoryRowFromApi(row, locale))
@@ -312,6 +325,7 @@ export async function fetchPublicClients(
     const query: Record<string, string> = {};
     const categorySlug = options?.categorySlug?.trim();
     if (categorySlug) query.category_slug = categorySlug;
+    appendCountryQuery(query, options?.countryId);
     const body = await apiClient.get<unknown>("/v1/solutions/singles", {
       ...(Object.keys(query).length ? { query } : {}),
     });
@@ -364,6 +378,7 @@ export async function fetchPublicClientsPageData(
 export async function fetchPublicClientDetail(
   slugOrId: string,
   locale: string,
+  options?: { countryId?: number },
 ): Promise<PublicClientCard | null> {
   const decoded = decodePathSegment(slugOrId);
   try {
@@ -371,7 +386,7 @@ export async function fetchPublicClientDetail(
     const row = unwrapObject(body);
     return row ? recordToClient(row, locale) : null;
   } catch {
-    const clients = await fetchPublicClients(locale);
+    const clients = await fetchPublicClients(locale, options);
     return clients.find((client) => client.slug === decoded || client.id === decoded) ?? null;
   }
 }

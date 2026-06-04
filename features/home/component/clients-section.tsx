@@ -4,11 +4,23 @@ import LogoMarqueeSection from "@/features/shared/components/logo-marquee-sectio
 import { useTranslations, useLocale } from "next-intl";
 import { pickImageAlt } from "@/lib/image-alt";
 import { usePartners } from "../hooks/usePartners";
+import type { LandingPageData, Partner } from "../types";
 
-export default function ClientsSection() {
+type ClientsSectionProps = {
+  countryId?: number;
+  initialPartners?: LandingPageData["partners"] | Partner[];
+};
+
+export default function ClientsSection({
+  countryId,
+  initialPartners,
+}: ClientsSectionProps) {
   const t = useTranslations("clientsSection");
   const locale = useLocale();
-  const { partners: partnersList, isLoading } = usePartners();
+  const { partners: partnersList, isLoading } = usePartners({
+    countryId,
+    initialPartners,
+  });
 
   const partnerImages = partnersList.flatMap((partner) => {
     const images = Array.isArray(partner.images) ? partner.images : [];

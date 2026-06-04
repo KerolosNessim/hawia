@@ -20,8 +20,9 @@ import {
   parseCountryId,
   parsePage,
 } from "@/features/services/lib/parse-services-search-params";
+import { resolveSelectedCountryId } from "@/features/services/lib/prepare-countries-list";
 import {
-  fetchPublicCountries,
+  fetchPublicCountriesPrepared,
   fetchPublicServicesPaginated,
 } from "@/features/services/services/public-services-api";
 import PageHeader from "@/features/shared/components/page-header";
@@ -50,9 +51,11 @@ export async function generateMetadata({
 
   const cookieStore = await cookies();
   const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
-  const countries = await fetchPublicCountries();
+  const preparedCountries = await fetchPublicCountriesPrepared();
+  const countries = preparedCountries.countries;
   const defaultCountry = matchCountryByUserCode(countries, userCountryCode);
-  const selectedCountryId = countryId ?? defaultCountry?.id;
+  const selectedCountryId =
+    resolveSelectedCountryId(countryId, preparedCountries) ?? defaultCountry?.id;
 
   const { meta } = await fetchPublicServicesPaginated({
     paginationPath: localePath(locale, "/services"),
@@ -90,10 +93,12 @@ export default async function ServicesPage(props: {
   const cookieStore = await cookies();
   const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
 
-  const countries = await fetchPublicCountries();
+  const preparedCountries = await fetchPublicCountriesPrepared();
+  const countries = preparedCountries.countries;
   const countryIdParam = parseCountryId(sp);
   const defaultCountry = matchCountryByUserCode(countries, userCountryCode);
-  const selectedCountryId = countryIdParam ?? defaultCountry?.id;
+  const selectedCountryId =
+    resolveSelectedCountryId(countryIdParam, preparedCountries) ?? defaultCountry?.id;
 
   const paginationPath = localePath(locale, "/services");
 

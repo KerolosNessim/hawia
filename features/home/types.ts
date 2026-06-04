@@ -39,12 +39,13 @@ export interface Hero {
   phone: string;
   stats: HeroStat[];
   seo: HeroSEO;
+  country_id?: number;
 }
 
 export interface AccreditationImage {
   id: number;
   url: string;
-  image_alt?: string | null;
+  image_alt?: string | { ar?: string | null; en?: string | null } | null;
 }
 
 export interface Accreditation {
@@ -63,7 +64,7 @@ export interface AccreditationResponse {
 export interface PartnerImage {
   id: number;
   url: string;
-  image_alt?: string | null;
+  image_alt?: string | { ar?: string | null; en?: string | null } | null;
 }
 
 export interface Partner {
@@ -92,7 +93,7 @@ export interface PartnersResponse {
 }
 
 export interface LandingPageData {
-  hero: Hero;
+  hero?: Hero;
   accreditation?: Accreditation;
   partners?: Partner[] | { data?: Partner[] };
 }

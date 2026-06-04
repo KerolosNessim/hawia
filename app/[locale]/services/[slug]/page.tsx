@@ -10,7 +10,7 @@ import { ServicePageSections } from "@/features/services/components/service-page
 import { parseCountryId } from "@/features/services/lib/parse-services-search-params";
 import { resolveServiceCountryId } from "@/features/services/lib/resolve-service-country-id";
 import { getServices } from "@/features/services/services/get-services";
-import { fetchPublicCountries } from "@/features/services/services/public-services-api";
+import { fetchPublicCountriesPrepared } from "@/features/services/services/public-services-api";
 
 import { buildServiceMetadata } from "@/features/services/lib/service-metadata";
 
@@ -141,9 +141,9 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
   const serviceAbs = buildCanonicalUrl(locale, `/services/${encodeURIComponent(serviceSlug)}`);
 
-  const heroTitle =
-
-    service.singlePageTitle?.trim() || service.title;
+  const heroTitle = service.singlePageTitle?.trim() || service.title;
+  const heroSubtitle =
+    service.subtitle?.trim() || service.description?.trim() || "";
 
   const tBreadcrumb = await getTranslations({ locale, namespace: "seo.breadcrumb" });
 
@@ -183,12 +183,13 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
   const cookieStore = await cookies();
   const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
-  const countries = await fetchPublicCountries();
+  const preparedCountries = await fetchPublicCountriesPrepared();
   const relatedCountryId = resolveServiceCountryId({
     serviceCountries: service.countries ?? [],
     urlCountryId: parseCountryId(sp),
-    allCountries: countries,
+    allCountries: preparedCountries.countries,
     userCountryCode,
+    idAlias: preparedCountries.idAlias,
   });
 
   const servicesListRes = await getServices(locale, { country_id: relatedCountryId });
@@ -205,28 +206,10 @@ export default async function ServicePage({ params, searchParams }: Props) {
       <PageSchemaScript json={serviceSchemaJson} />
 
       <PageHeader
-
         titleHtml={heroTitle}
-
-        descriptionAsHeader
-
-        descriptionHtml={
-
-          service.subtitle?.trim() ||
-
-          service.inside_desc ||
-
-          service.description ||
-
-          t("description")
-
-        }
-
+        descriptionHtml={heroSubtitle || undefined}
         image={service.image || "/whySeo.webp"}
-
         imageAlt={service.image_alt || ""}
-
-
       />
 
       {service.description?.trim() && service.pageSections.length === 0 ? (

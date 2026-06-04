@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { TypingAnimation } from "@/components/ui/typing-animation";
+import { enhanceCmsHtml } from "@/lib/inline-image-alt";
 import * as motion from "framer-motion/client";
 import { FileText, Phone } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo } from "react";
 import type { Hero } from "../types";
 import BookingDialog from "@/features/booking/components/booking-dialog";
 
@@ -11,6 +13,19 @@ const heroCtaBtnClass =
 
 export default function HeroSection({heroData}:{heroData:Hero}) {
   const t = useTranslations("hero");
+  const locale = useLocale();
+  const titleHtml = useMemo(
+    () => enhanceCmsHtml(heroData?.content?.title || t("title"), locale),
+    [heroData?.content?.title, locale, t],
+  );
+  const descriptionHtml = useMemo(
+    () => enhanceCmsHtml(heroData?.content?.description || t("description"), locale),
+    [heroData?.content?.description, locale, t],
+  );
+  const subDescriptionHtml = useMemo(
+    () => enhanceCmsHtml(heroData?.content?.sub_description || t("subDescription"), locale),
+    [heroData?.content?.sub_description, locale, t],
+  );
   return (
     <div
       className="max-xl:pt-20 relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden   bg-cover bg-center bg-no-repeat "
@@ -27,9 +42,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 1 }}
             className="cms-rich-html xl:text-9xl! max-xl:text-3xl! text-5xl! font-bold max-xl:mb-1 mb-4 text-gray-900 [&_h1]:m-0!"
-            dangerouslySetInnerHTML={{
-              __html: heroData?.content?.title || t("title"),
-            }}
+            dangerouslySetInnerHTML={{ __html: titleHtml }}
           ></motion.div>
           <motion.div
                       initial={{ opacity: 0, y: -20 }}
@@ -38,9 +51,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
                       transition={{ duration: 1, delay: 1 }}
                       className="cms-rich-html xl:text-2xl max-xl:text-base text-lg font-bold text-gray-900 max-xl:mt-1 mt-4"
 
-          dangerouslySetInnerHTML={{
-            __html: heroData?.content?.description || t("description"),
-          }}>
+          dangerouslySetInnerHTML={{ __html: descriptionHtml }}>
 
           </motion.div>
           <motion.div
@@ -49,9 +60,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 1 }}
             className="cms-rich-html xl:text-2xl max-xl:text-sm max-xl:font-normal text-lg font-bold text-gray-900"
-            dangerouslySetInnerHTML={{
-              __html: heroData?.content?.sub_description || t("subDescription"),
-            }}
+            dangerouslySetInnerHTML={{ __html: subDescriptionHtml }}
           ></motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
