@@ -26,10 +26,10 @@ export default function StepsSection({ countryId }: { countryId?: number }) {
   const locale = useLocale();
   const isRTL = locale === "ar";
   const { data, isLoading } = useSteps(countryId);
-  const apiItems = Array.isArray(data?.data?.data)
-    ? data?.data?.data?.map((single) => ({
-        title: single?.title,
-        description: single?.description,
+  const apiItems = Array.isArray(data?.data)
+    ? data.data.map((single) => ({
+        title: single?.content?.title || single?.title || "",
+        description: single?.content?.description || single?.description || "",
         image: single?.image,
       }))
     : [];

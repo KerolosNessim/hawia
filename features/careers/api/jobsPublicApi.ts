@@ -1,5 +1,12 @@
 import { CONFIG } from "@/config";
-import { apiClient, ApiError } from "@/lib/api";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
+import {
+  jobOpeningMatchesSegment,
+  mergeJobOpeningsBilingual,
+  pickJobOpeningSlug,
+  slugifyJobTitle,
+  type JobSlugLocale,
+} from "@/features/careers/lib/job-slug";
 import type {
   ApiResponse,
   ApplyJobPayload,
@@ -8,6 +15,7 @@ import type {
   JobSection,
   ValidationErrors,
 } from "@/features/careers/types/jobs";
+import { apiClient, ApiError } from "@/lib/api";
 
 const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || CONFIG.BACK_URL;
 const API_ORIGIN = RAW_API_BASE.replace(/\/+$/, "").replace(/\/api$/, "");
@@ -101,14 +109,51 @@ function normalizeSection(rowValue: unknown): JobSection | null {
   };
 }
 
-function normalizeOpening(rowValue: unknown): JobOpening | null {
+function pickBilingualSlug(row: Record<string, unknown>): { ar: string; en: string } {
+  const s = row.slug ?? row.url_slug;
+  if (typeof s === "string" && s.trim()) {
+    const t = s.trim();
+    return { ar: t, en: t };
+  }
+  if (s && typeof s === "object" && !Array.isArray(s)) {
+    const o = s as Record<string, unknown>;
+    return {
+      ar: asText(o.ar),
+      en: asText(o.en),
+    };
+  }
+  const local = asRecord(row.slug_local);
+  return {
+    ar: asText(local.ar),
+    en: asText(local.en),
+  };
+}
+
+function finalizeOpening(opening: Omit<JobOpening, "slug">, locale: JobSlugLocale): JobOpening {
+  const slug = pickJobOpeningSlug(
+    { ...opening, slug: "" },
+    locale,
+  );
+  return { ...opening, slug };
+}
+
+function normalizeOpening(rowValue: unknown, locale: JobSlugLocale): JobOpening | null {
   const row = asRecord(rowValue);
   const id = asNumber(row.id);
   if (!Number.isFinite(id)) return null;
   const media = asRecord(row.media);
-  return {
+  const title = asText(row.title);
+  const bilingual = pickBilingualSlug(row);
+  const arSlug = bilingual.ar || slugifyJobTitle(title, "ar");
+  const enSlug = bilingual.en || slugifyJobTitle(title, "en");
+  const slugLocal = {
+    ar: arSlug || enSlug,
+    en: enSlug || arSlug,
+  };
+  const base = {
     id,
-    title: asText(row.title),
+    slugLocal,
+    title,
     description: asText(row.description),
     job_type: asText(row.job_type) || null,
     media: {
@@ -116,6 +161,7 @@ function normalizeOpening(rowValue: unknown): JobOpening | null {
       image_alt: asText(media.image_alt) || null,
     },
   };
+  return finalizeOpening(base, locale);
 }
 
 export async function getJobsHeaderPublic(): Promise<JobHeader | null> {
@@ -141,9 +187,16 @@ export async function getJobsSectionsPublic(): Promise<JobSection[]> {
   return resolveListData(response).map(normalizeSection).filter((row): row is JobSection => row != null);
 }
 
-export async function getJobOpeningsPublic(): Promise<JobOpening[]> {
+function openingsLocale(locale: string): JobSlugLocale {
+  return locale.startsWith("ar") ? "ar" : "en";
+}
+
+export async function getJobOpeningsPublic(locale: string = "ar"): Promise<JobOpening[]> {
+  const lang = openingsLocale(locale);
   const response = await apiClient.get("/v1/jobs/openings");
-  return resolveListData(response).map(normalizeOpening).filter((row): row is JobOpening => row != null);
+  return resolveListData(response)
+    .map((row) => normalizeOpening(row, lang))
+    .filter((row): row is JobOpening => row != null);
 }
 
 export async function getJobOpeningsPublicByLocale(locale: "ar" | "en"): Promise<JobOpening[]> {
@@ -156,18 +209,40 @@ export async function getJobOpeningsPublicByLocale(locale: "ar" | "en"): Promise
   });
   if (!response.ok) return [];
   const data = await response.json().catch(() => ({}));
-  return resolveListData(data).map(normalizeOpening).filter((row): row is JobOpening => row != null);
+  return resolveListData(data)
+    .map((row) => normalizeOpening(row, locale))
+    .filter((row): row is JobOpening => row != null);
 }
 
+export async function getJobOpeningsBilingual(): Promise<JobOpening[]> {
+  const [arList, enList] = await Promise.all([
+    getJobOpeningsPublicByLocale("ar"),
+    getJobOpeningsPublicByLocale("en"),
+  ]);
+  return mergeJobOpeningsBilingual(arList, enList);
+}
+
+export async function resolveJobOpeningBySlug(
+  segment: string,
+  locale: string,
+): Promise<JobOpening | null> {
+  const decoded = decodePathSegment(segment).trim();
+  if (!decoded) return null;
+  const openings = await getJobOpeningsBilingual();
+  const opening = openings.find((row) => jobOpeningMatchesSegment(row, decoded)) ?? null;
+  if (!opening) return null;
+  return {
+    ...opening,
+    slug: pickJobOpeningSlug(opening, locale),
+  };
+}
+
+/** @deprecated Use {@link resolveJobOpeningBySlug} */
 export async function resolveJobOpeningById(
   id: string,
   locale: string,
 ): Promise<JobOpening | null> {
-  const lang = locale.startsWith("ar") ? "ar" : "en";
-  const numericId = Number(id);
-  if (!Number.isFinite(numericId) || numericId <= 0) return null;
-  const openings = await getJobOpeningsPublicByLocale(lang);
-  return openings.find((opening) => opening.id === numericId) ?? null;
+  return resolveJobOpeningBySlug(id, locale);
 }
 
 export async function applyToJobPublic(

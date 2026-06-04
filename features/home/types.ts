@@ -46,6 +46,13 @@ export interface AccreditationImage {
   id: number;
   url: string;
   image_alt?: string | { ar?: string | null; en?: string | null } | null;
+  service_ids?: number[];
+  services?: {
+    id: number;
+    slug?: string | null;
+    slug_local?: { ar?: string | null; en?: string | null } | null;
+    title?: string | { ar?: string | null; en?: string | null } | null;
+  }[];
 }
 
 export interface Accreditation {
@@ -65,6 +72,8 @@ export interface PartnerImage {
   id: number;
   url: string;
   image_alt?: string | { ar?: string | null; en?: string | null } | null;
+  service_ids?: number[];
+  services?: AccreditationImage["services"];
 }
 
 export interface Partner {
@@ -153,6 +162,9 @@ export interface WhyUsResponse {
 export interface SolutionSingleItem {
     id: number,
     slug: string | null,
+    slug_local?: { ar?: string | null; en?: string | null } | null,
+    title?: string,
+    description?: string,
     content: {
         title: string,
         description: string

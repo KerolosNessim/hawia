@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocale } from "next-intl";
 import ApplyJobModal from "@/features/careers/components/apply-job-modal";
+import { jobOpeningPath } from "@/features/careers/lib/job-slug";
 import type { JobOpening } from "@/features/careers/types/jobs";
 import { Link } from "@/i18n/navigation";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
@@ -62,7 +63,7 @@ export default function JobOpeningsGrid({ openings }: Props) {
                     className="w-full border-brand text-brand hover:bg-brand/5"
                     asChild
                   >
-                    <Link href={`/careers/${opening.id}`}>
+                    <Link href={jobOpeningPath(opening.slug)}>
                       {isAr ? "عرض التفاصيل" : "View details"}
                     </Link>
                   </Button>

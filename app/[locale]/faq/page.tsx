@@ -1,6 +1,7 @@
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { buildCanonicalUrl, serializeFaqPageSchema } from "@/lib/seo/schema";
 import { getFaqData } from "@/features/home/services/faq";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
@@ -60,7 +61,10 @@ export default async function FaqPage() {
     return null;
   }
 
-  const items = data.items || [];
+  const items = (data.items || []).map((item) => ({
+    ...item,
+    answer: stripLeadingDuplicateHeading(item.answer, item.question),
+  }));
   const midPoint = Math.ceil(items.length / 2);
   const leftItems = items.slice(0, midPoint);
   const rightItems = items.slice(midPoint);

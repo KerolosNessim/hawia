@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import { countryFlagEmoji } from "../lib/country-flag";
 import type { Country } from "../types";
 
 type ServicesCountryFilterProps = {
@@ -42,7 +43,14 @@ export function ServicesCountryFilter({
                   className="h-10 w-10 object-cover"
                 />
               </div>
-            ) : null}
+            ) : (
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-white text-2xl"
+                aria-hidden
+              >
+                {countryFlagEmoji(country)}
+              </span>
+            )}
             <span className={labelClass}>{country.name}</span>
           </>
         );

@@ -1,6 +1,7 @@
 import { apiClient, ApiError } from "@/lib/api";
 import { homeCountryQuery } from "../lib/country-query";
 import type { StepsResponse } from "../types";
+import { normalizeHelpYouSteps } from "../utils/normalize-steps-data";
 
 /**
  * Help-you / steps list for the home page (`/v1/help-you`).
@@ -16,7 +17,7 @@ export async function getStepsData(countryId?: number): Promise<StepsResponse> {
     return {
       status: raw.status,
       message: raw.message,
-      data: raw.data,
+      data: normalizeHelpYouSteps(raw.data),
     };
   } catch (e) {
     if (e instanceof ApiError) return empty;

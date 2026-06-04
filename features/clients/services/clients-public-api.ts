@@ -14,6 +14,7 @@ export type PublicSolutionCategoryCard = {
   title: string;
   imageUrl: string;
   imageAlt: string;
+  href?: string;
 };
 
 export type SolutionCategoriesSectionData = {
@@ -35,6 +36,8 @@ export type PublicClientCard = {
   categoryId: string | null;
   categorySlug: string | null;
   categoryName: string | null;
+  categoryIds: string[];
+  categorySlugs: string[];
 };
 
 export type FetchPublicClientsOptions = {
@@ -147,23 +150,45 @@ function imageUrlsFromRecord(row: Record<string, unknown>): string[] {
 function categoryFromRecord(
   row: Record<string, unknown>,
   locale: string,
-): { id: string | null; slug: string | null; name: string | null } {
-  const nested = asRecord(row.category);
-  const directId = row.category_id ?? row.solution_category_id;
-  const id =
-    nested?.id != null
-      ? String(nested.id)
-      : directId != null && String(directId).trim()
-        ? String(directId)
-        : null;
-  const slug = nested ? pickLoc(nested.slug, locale) : "";
-  const name = nested
-    ? pickLoc(nested.title, locale) || pickLoc(nested.name, locale)
-    : "";
+): { id: string | null; slug: string | null; name: string | null; ids: string[]; slugs: string[] } {
+  const categoryRows = [
+    row.category,
+    row.solution_category,
+    ...(Array.isArray(row.categories) ? row.categories : []),
+    ...(Array.isArray(row.solution_categories) ? row.solution_categories : []),
+  ]
+    .map(asRecord)
+    .filter((item): item is Record<string, unknown> => item != null);
+
+  const ids = new Set<string>();
+  const slugs = new Set<string>();
+  let name = "";
+
+  for (const category of categoryRows) {
+    if (category.id != null && String(category.id).trim()) ids.add(String(category.id).trim());
+    const slug = pickCategorySlug(category, locale);
+    if (slug) slugs.add(slug);
+    if (!name) name = pickLoc(category.title, locale) || pickLoc(category.name, locale);
+  }
+
+  for (const key of ["category_id", "solution_category_id"]) {
+    const value = row[key];
+    if (value != null && String(value).trim()) ids.add(String(value).trim());
+  }
+
+  for (const key of ["category_slug", "solution_category_slug"]) {
+    const value = pickLoc(row[key], locale) || pickString(row[key]);
+    if (value) slugs.add(value);
+  }
+
+  const id = ids.values().next().value ?? null;
+  const slug = slugs.values().next().value ?? null;
   return {
     id,
-    slug: slug || null,
+    slug,
     name: name || null,
+    ids: [...ids],
+    slugs: [...slugs],
   };
 }
 
@@ -193,6 +218,8 @@ function recordToClient(row: Record<string, unknown>, locale: string): PublicCli
     categoryId: category.id,
     categorySlug: category.slug,
     categoryName: category.name,
+    categoryIds: category.ids,
+    categorySlugs: category.slugs,
   };
 }
 
@@ -237,7 +264,7 @@ function categoryCardFromApi(
       ? imageAltRaw.trim()
       : pickLoc(imageAltRaw, locale) || title;
 
-  return { id, slug, title, imageUrl, imageAlt };
+  return { id, slug, title, imageUrl, imageAlt, href: `/clients?category=${encodeURIComponent(slug)}` };
 }
 
 function sectionContentFromApi(
@@ -267,6 +294,19 @@ export async function fetchSolutionCategoriesSection(
     const categories = unwrapArray(body)
       .map((row) => categoryCardFromApi(row, locale))
       .filter((c): c is PublicSolutionCategoryCard => c != null);
+    if (categories.length === 0) {
+      const clients = await fetchPublicClients(locale, options);
+      categories.push(
+        ...clients.slice(0, 8).map((client) => ({
+          id: client.id,
+          slug: client.slug,
+          title: client.title,
+          imageUrl: client.imageUrl,
+          imageAlt: client.title,
+          href: `/clients/${encodeURIComponent(client.slug)}`,
+        })),
+      );
+    }
 
     if (!title && categories.length === 0) return null;
 
@@ -301,20 +341,40 @@ export function countClientsByCategorySlug(
 ): Map<string, number> {
   const counts = new Map<string, number>();
   for (const client of clients) {
-    const slug = client.categorySlug?.trim();
-    if (!slug) continue;
-    counts.set(slug, (counts.get(slug) ?? 0) + 1);
+    const slugs = client.categorySlugs.length
+      ? client.categorySlugs
+      : client.categorySlug
+        ? [client.categorySlug]
+        : [];
+    for (const slug of slugs) {
+      if (!slug.trim()) continue;
+      counts.set(slug, (counts.get(slug) ?? 0) + 1);
+    }
   }
   return counts;
+}
+
+function categoryMatches(client: PublicClientCard, category: PublicSolutionCategory): boolean {
+  const slug = category.slug.trim();
+  const id = category.id.trim();
+  return (
+    (slug ? client.categorySlugs.includes(slug) || client.categorySlug === slug : false) ||
+    (id ? client.categoryIds.includes(id) || client.categoryId === id : false)
+  );
 }
 
 export function filterClientsByCategorySlug(
   clients: PublicClientCard[],
   categorySlug: string | null | undefined,
+  categories: PublicSolutionCategory[] = [],
 ): PublicClientCard[] {
   const slug = categorySlug?.trim();
   if (!slug) return clients;
-  return clients.filter((c) => c.categorySlug === slug);
+  const category = categories.find((c) => c.slug === slug);
+  if (!category) {
+    return clients.filter((c) => c.categorySlugs.includes(slug) || c.categorySlug === slug);
+  }
+  return clients.filter((client) => categoryMatches(client, category));
 }
 
 export async function fetchPublicClients(
@@ -324,7 +384,13 @@ export async function fetchPublicClients(
   try {
     const query: Record<string, string> = {};
     const categorySlug = options?.categorySlug?.trim();
-    if (categorySlug) query.category_slug = categorySlug;
+    const categories = categorySlug ? await fetchPublicSolutionCategories(locale, options) : [];
+    const category = categories.find((c) => c.slug === categorySlug);
+    if (categorySlug) {
+      query.category_slug = categorySlug;
+      query.category = categorySlug;
+      if (category?.id) query.category_id = category.id;
+    }
     appendCountryQuery(query, options?.countryId);
     const body = await apiClient.get<unknown>("/v1/solutions/singles", {
       ...(Object.keys(query).length ? { query } : {}),
@@ -333,7 +399,7 @@ export async function fetchPublicClients(
       .map((row) => recordToClient(row, locale))
       .filter((client): client is PublicClientCard => client != null);
     if (categorySlug) {
-      return filterClientsByCategorySlug(clients, categorySlug);
+      return filterClientsByCategorySlug(clients, categorySlug, categories);
     }
     return clients;
   } catch {
@@ -356,7 +422,8 @@ export async function fetchPublicClientsPageData(
     if (!clients.length) {
       clients = await fetchPublicClients(locale, options);
     } else if (options?.categorySlug?.trim()) {
-      clients = filterClientsByCategorySlug(clients, options.categorySlug);
+      const categories = await fetchPublicSolutionCategories(locale, options);
+      clients = filterClientsByCategorySlug(clients, options.categorySlug, categories);
     }
 
     return {

@@ -1,6 +1,8 @@
 import { normalizePublicBlogTags } from "@/features/blogs/lib/blog-tag";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { pickImageAlt } from "@/lib/image-alt";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { pickLocalizedField, pickSlugLocal } from "./pick-localized-field";
 import { pickServiceCoverPath, resolveLocalizedImageUrl } from "./pick-service-cover";
 import { buildPageSections } from "./collect-page-sections";
@@ -62,9 +64,11 @@ function parseSection(raw: unknown, locale: string): Section | null {
           const iconRaw = row.icon;
           const icon =
             typeof iconRaw === "string" && iconRaw.trim() ? iconRaw.trim() : null;
+          const title = pickLocalizedField(row.title, locale);
+          const description = pickLocalizedField(row.description, locale);
           return {
-            title: pickLocalizedField(row.title, locale),
-            description: pickLocalizedField(row.description, locale),
+            title,
+            description: stripLeadingDuplicateHeading(description, title),
             sort_order: String(row.sort_order ?? "0"),
             link: itemLink,
             icon,
@@ -285,7 +289,10 @@ function parseFaqsBlock(o: Record<string, unknown>, locale: string): Faqs {
         .map((item) => {
           const row = item as Record<string, unknown>;
           const question = pickLocalizedField(row.question, locale).trim();
-          const answer = pickLocalizedField(row.answer, locale).trim();
+          const answer = stripLeadingDuplicateHeading(
+            pickLocalizedField(row.answer, locale),
+            question,
+          ).trim();
           if (!question) return null;
           const sortOrder = Number.parseInt(String(row.sort_order ?? "0"), 10);
           return {
@@ -348,7 +355,32 @@ function parsePackagesList(raw: unknown, locale: string): ServicePackagesSection
   return one && one.items.length > 0 ? [one] : [];
 }
 
-function parseOurAccreditations(raw: unknown, locale: string): Accreditation | null {
+function parseLinkedMediaServices(raw: unknown): Accreditation["images"][number]["services"] {
+  if (!Array.isArray(raw)) return undefined;
+  const services = raw
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const row = item as Record<string, unknown>;
+      const slugLocal =
+        row.slug_local && typeof row.slug_local === "object" && !Array.isArray(row.slug_local)
+          ? (row.slug_local as { ar?: string | null; en?: string | null })
+          : null;
+      return {
+        id: Number(row.id ?? 0),
+        slug: typeof row.slug === "string" ? row.slug : null,
+        slug_local: slugLocal,
+        title:
+          typeof row.title === "string" ||
+          (row.title && typeof row.title === "object" && !Array.isArray(row.title))
+            ? (row.title as string | { ar?: string | null; en?: string | null })
+            : null,
+      };
+    })
+    .filter((item) => item.id > 0);
+  return services.length ? services : undefined;
+}
+
+function parseLinkedMediaBlock(raw: unknown, locale: string): Accreditation | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const row = raw as Record<string, unknown>;
   const imagesRaw = Array.isArray(row.images) ? row.images : [];
@@ -363,6 +395,10 @@ function parseOurAccreditations(raw: unknown, locale: string): Accreditation | n
         id: Number(img.id ?? index),
         url,
         image_alt: pickImageAlt(img.image_alt, locale) ?? null,
+        service_ids: Array.isArray(img.service_ids)
+          ? img.service_ids.map((id) => Number(id)).filter((id) => id > 0)
+          : undefined,
+        services: parseLinkedMediaServices(img.services),
       };
     })
     .filter((x): x is Accreditation["images"][number] => x != null);
@@ -379,6 +415,8 @@ function parseOurAccreditations(raw: unknown, locale: string): Accreditation | n
     images,
   };
 }
+
+const parseOurAccreditations = parseLinkedMediaBlock;
 
 /** Maps raw `/v1/services/{slug}` payload to `SingleService`. */
 export function normalizeSingleService(
@@ -418,10 +456,10 @@ export function normalizeSingleService(
     slug_local: pickSlugLocal(raw),
     image: resolveMediaUrl(image),
     image_alt: pickImageAlt(raw.image_alt, locale) || null,
-    title: pickLocalizedField(raw.title, locale),
+    title: plainTextFromHtml(pickLocalizedField(raw.title, locale)),
     singlePageTitle:
-      pickLocalizedField(raw.single_page_title, locale) ||
-      pickLocalizedField(raw.singlePageTitle, locale),
+      plainTextFromHtml(pickLocalizedField(raw.single_page_title, locale)) ||
+      plainTextFromHtml(pickLocalizedField(raw.singlePageTitle, locale)),
     pageScript:
       typeof raw.page_script === "string" && raw.page_script.trim()
         ? raw.page_script
@@ -460,6 +498,10 @@ export function normalizeSingleService(
       ? (raw.countries as SingleService["countries"])
       : [],
     ourAccreditations: parseOurAccreditations(raw.our_accreditations, locale),
+    ourClients:
+      parseLinkedMediaBlock(raw.our_clients, locale) ??
+      parseLinkedMediaBlock(raw.partners, locale) ??
+      parseLinkedMediaBlock(raw.clients, locale),
     clientPortfolio:
       firstPageSectionData<ServiceClientPortfolio>(pageSections, "clientPortfolio") ??
       clientPortfolio,

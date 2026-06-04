@@ -12,7 +12,7 @@ import {
 
 export type BlogPageResolveResult =
   | { kind: "ok"; blog: PublicBlog }
-  | { kind: "redirect"; toSlug: string; status: number }
+  | { kind: "redirect"; toSlug: string; toPath?: string; status: number }
   | { kind: "gone"; status: number };
 
 /**
@@ -31,8 +31,8 @@ export async function resolveBlogPage(
     if (isGoneStatus(redirect.status)) {
       return { kind: "gone", status: redirect.status };
     }
-    if (redirect.toSlug && redirect.toSlug !== decoded) {
-      return { kind: "redirect", toSlug: redirect.toSlug, status: redirect.status };
+    if (redirect.toPath || (redirect.toSlug && redirect.toSlug !== decoded)) {
+      return { kind: "redirect", toSlug: redirect.toSlug, toPath: redirect.toPath, status: redirect.status };
     }
   }
 

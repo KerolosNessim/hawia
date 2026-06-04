@@ -14,7 +14,7 @@ function asRecord(v: unknown): Record<string, unknown> | null {
 
 export type ServicePageResolveResult =
   | { kind: "ok"; data: SingleService }
-  | { kind: "redirect"; toSlug: string; status: number }
+  | { kind: "redirect"; toSlug: string; toPath?: string; status: number }
   | { kind: "gone"; status: number };
 
 /**
@@ -32,8 +32,19 @@ export async function resolveServicePage(
   if (redirectRec && row.id == null && row.slug == null) {
     const status = Number(redirectRec.status ?? redirectRec.code ?? 0);
     const toSlug = String(redirectRec.to_slug ?? redirectRec.toSlug ?? "").trim();
+    const toPath = String(
+      redirectRec.target_path ??
+        redirectRec.targetPath ??
+        redirectRec.target_url ??
+        redirectRec.targetUrl ??
+        redirectRec.to ??
+        "",
+    ).trim();
     if (isGoneStatus(status)) {
       return { kind: "gone", status };
+    }
+    if (toPath) {
+      return { kind: "redirect", toSlug, toPath, status: status || 301 };
     }
     if (toSlug && toSlug !== decoded) {
       return { kind: "redirect", toSlug, status: status || 301 };
@@ -46,8 +57,8 @@ export async function resolveServicePage(
     if (isGoneStatus(redirect.status)) {
       return { kind: "gone", status: redirect.status };
     }
-    if (redirect.toSlug && redirect.toSlug !== decoded) {
-      return { kind: "redirect", toSlug: redirect.toSlug, status: redirect.status };
+    if (redirect.toPath || (redirect.toSlug && redirect.toSlug !== decoded)) {
+      return { kind: "redirect", toSlug: redirect.toSlug, toPath: redirect.toPath, status: redirect.status };
     }
   }
 

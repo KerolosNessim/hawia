@@ -1,5 +1,6 @@
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { pickImageAlt } from "@/lib/image-alt";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { Service, ServiceCountry } from "../types";
 import { pickLocalizedField, pickSlugLocal } from "./pick-localized-field";
 import { pickServiceCoverPath } from "./pick-service-cover";
@@ -41,7 +42,7 @@ export function normalizeServiceForLocale(
     slug_local: slugLocal,
     image: coverPath ? resolveMediaUrl(coverPath) : "",
     image_alt: pickImageAlt(raw.image_alt, locale) || null,
-    title: pickLocalizedField(raw.title, locale),
+    title: plainTextFromHtml(pickLocalizedField(raw.title, locale)),
     subtitle: pickLocalizedField(raw.subtitle, locale),
     description: pickLocalizedField(raw.description, locale),
     sort_order: Number(raw.sort_order ?? 0),

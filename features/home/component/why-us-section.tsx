@@ -64,8 +64,6 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
         ? fallbackFeatures
         : [];
 
-  if (countryId != null && features.length === 0) return null;
-
   const title = section?.content?.title || t("title");
   const description = section?.content?.description || t("description");
 

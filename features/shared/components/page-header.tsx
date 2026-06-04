@@ -58,6 +58,12 @@ const descriptionRichClass = cn(
   "[&_*]:text-inherit lg:[&_*]:!text-inherit",
 );
 
+function inlineTitleHtml(html: string): string {
+  return html
+    .replace(/<\/?(?:h[1-6]|p|div)[^>]*>/gi, "")
+    .trim();
+}
+
 export default function PageHeader({
   title,
   titleHtml,
@@ -73,7 +79,8 @@ export default function PageHeader({
   const hasRichDescription = Boolean(descriptionHtml?.trim());
 
   const enhancedTitleHtml = useMemo(
-    () => (titleHtml?.trim() ? enhanceCmsHtml(titleHtml, locale) : ""),
+    () =>
+      titleHtml?.trim() ? inlineTitleHtml(enhanceCmsHtml(titleHtml, locale)) : "",
     [titleHtml, locale],
   );
   const enhancedDescriptionHtml = useMemo(
@@ -84,6 +91,7 @@ export default function PageHeader({
   const showTitle = !descriptionAsHeader;
 
   const headerHtml = descriptionAsHeader ? enhancedDescriptionHtml || undefined : undefined;
+  const headerTitleHtml = headerHtml ? inlineTitleHtml(headerHtml) : undefined;
 
   const headerPlain = descriptionAsHeader
     ? description?.trim()
@@ -131,13 +139,13 @@ export default function PageHeader({
         )}
       >
         {descriptionAsHeader ? (
-          headerHtml ? (
-            <motion.div
+          headerTitleHtml ? (
+            <motion.h1
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className={titleRichClass}
-              dangerouslySetInnerHTML={{ __html: headerHtml }}
+              dangerouslySetInnerHTML={{ __html: headerTitleHtml }}
             />
           ) : headerPlain ? (
             <motion.h1
@@ -151,7 +159,7 @@ export default function PageHeader({
           ) : null
         ) : showTitle ? (
           hasRichTitle ? (
-            <motion.div
+            <motion.h1
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}

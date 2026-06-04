@@ -23,6 +23,20 @@ import { getSettings, scriptsFromSettings } from "@/features/settings/services/s
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
+const FALLBACK_FAVICON = "/logo.png";
+
+function resolveFaviconUrl(favicon: string | null | undefined): string {
+  const raw = favicon?.trim();
+  if (!raw) return FALLBACK_FAVICON;
+  if (/^https?:\/\//i.test(raw)) return raw.replace(/^http:\/\//i, "https://");
+
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  if (!path.startsWith("/storage/")) return path;
+
+  const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/i, "").replace(/\/$/, "");
+  return apiBase ? `${apiBase}${path}` : path;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -39,7 +53,9 @@ export async function generateMetadata({
         homeSeo?.description || settings.general.site_description || undefined,
       referrer: SITE_REFERRER_POLICY,
       icons: {
-        icon: settings.general.favicon || "/favicon.ico",
+        icon: resolveFaviconUrl(settings.general.favicon),
+        shortcut: resolveFaviconUrl(settings.general.favicon),
+        apple: resolveFaviconUrl(settings.general.favicon),
       },
     };
   } catch (error) {
@@ -48,6 +64,11 @@ export async function generateMetadata({
       title: "Howeyah",
       description: "Howeyah platform for consulting and educational services.",
       referrer: SITE_REFERRER_POLICY,
+      icons: {
+        icon: FALLBACK_FAVICON,
+        shortcut: FALLBACK_FAVICON,
+        apple: FALLBACK_FAVICON,
+      },
     };
   }
 }

@@ -41,6 +41,9 @@ export type JobSection = {
 
 export type JobOpening = {
   id: number;
+  /** Locale-specific slug used in `/careers/{slug}` URLs. */
+  slug: string;
+  slugLocal?: { ar?: string; en?: string };
   title: string;
   description: string;
   job_type: string | null;

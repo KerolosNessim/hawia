@@ -5,9 +5,12 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import type { ServiceClientPortfolioItem } from "@/features/services/types";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { Link } from "@/i18n/navigation";
+import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
@@ -53,6 +56,31 @@ export default function ServiceClientPortfolioDialog({
   if (!item) return null;
 
   const title = item.client || item.clientTag || item.headline;
+  const buttonLabel = item.readCaseStudyButtonText?.trim() || t("readCaseStudy");
+  const link = item.caseStudyLink;
+  const cta = link?.href ? (
+    link.external ? (
+      <Button
+        asChild
+        className="mt-2 w-full rounded-full bg-brand text-white hover:bg-brand/90 sm:w-auto"
+      >
+        <a href={link.href} target="_blank" rel="noopener noreferrer">
+          {buttonLabel}
+          <ArrowRight className="size-4 rtl:rotate-180" />
+        </a>
+      </Button>
+    ) : (
+      <Button
+        asChild
+        className="mt-2 w-full rounded-full bg-brand text-white hover:bg-brand/90 sm:w-auto"
+      >
+        <Link href={link.href}>
+          {buttonLabel}
+          <ArrowRight className="size-4 rtl:rotate-180" />
+        </Link>
+      </Button>
+    )
+  ) : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,6 +145,7 @@ export default function ServiceClientPortfolioDialog({
             <DetailBlock label={t("challenge")} value={item.challenge} />
             <DetailBlock label={t("whatWeDid")} value={item.whatWeDid} />
             <DetailBlock label={t("results")} value={item.results} />
+            {cta}
           </div>
         </div>
       </DialogContent>

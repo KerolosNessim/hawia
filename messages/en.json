@@ -303,7 +303,8 @@
     "empty": "No AI services are available at the moment.",
     "viewAll": "View all AI services",
     "bookFreeConsultation": "Book your free consultation now",
-    "contactDirect": "Contact us directly"
+    "contactDirect": "Contact us directly",
+    "aiToolsCta": "AI tools"
   },
   "aiServicesContentPage": {
     "metaTitle": "AI Content Studio | Howeyah",

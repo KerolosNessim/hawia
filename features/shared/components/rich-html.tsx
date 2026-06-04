@@ -8,7 +8,7 @@ import { useMemo } from "react";
 type RichHtmlProps = {
   html?: string | null;
   className?: string;
-  as?: "div" | "p" | "span";
+  as?: "div" | "p" | "span" | "h2" | "h3" | "h4";
   /** When true, renders empty wrapper if html is blank (e.g. layout placeholders). */
   allowEmpty?: boolean;
   /** Wide tables/code in article bodies only — default is clip (no card scrollbars). */

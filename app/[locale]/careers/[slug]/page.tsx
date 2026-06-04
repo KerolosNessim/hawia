@@ -1,17 +1,21 @@
 import JobOpeningDetailPage from "@/features/careers/components/job-opening-detail-page";
-import { resolveJobOpeningById } from "@/features/careers/api/jobsPublicApi";
+import { resolveJobOpeningBySlug } from "@/features/careers/api/jobsPublicApi";
+import { jobOpeningPath, pickJobOpeningSlug } from "@/features/careers/lib/job-slug";
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
+import { getPathname } from "@/i18n/navigation";
 import {
   buildPageMetadata,
   localePathname,
+  localePathsForSlug,
 } from "@/lib/seo/metadata-helpers";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 
 type Props = {
-  params: Promise<{ locale: Locale; id: string }>;
+  params: Promise<{ locale: Locale; slug: string }>;
 };
 
 function jobMetaDescription(description: string): string {
@@ -19,10 +23,10 @@ function jobMetaDescription(description: string): string {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, id } = await params;
-  const decodedId = decodePathSegment(id);
-  const opening = await resolveJobOpeningById(decodedId, locale);
-  const pathname = localePathname(locale, `/careers/${encodeURIComponent(decodedId)}`);
+  const { locale, slug } = await params;
+  const decodedSlug = decodePathSegment(slug);
+  const opening = await resolveJobOpeningBySlug(decodedSlug, locale);
+  const pathname = localePathname(locale, jobOpeningPath(decodedSlug));
 
   if (!opening) {
     return buildPageMetadata({
@@ -33,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     });
   }
 
+  const canonicalSlug = pickJobOpeningSlug(opening, locale);
   const title = plainTextFromHtml(opening.title).trim() || (locale.startsWith("ar") ? "وظيفة" : "Job");
   const description =
     jobMetaDescription(opening.description) ||
@@ -45,7 +50,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return buildPageMetadata({
     locale,
-    pathname: localePathname(locale, `/careers/${opening.id}`),
+    pathname: localePathname(locale, jobOpeningPath(canonicalSlug)),
+    localePaths: localePathsForSlug("/careers", opening.slugLocal, canonicalSlug),
     title: `${title} | Howeyah`,
     description,
     openGraph: {
@@ -59,10 +65,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function JobOpeningRoutePage({ params }: Props) {
-  const { locale, id } = await params;
-  const opening = await resolveJobOpeningById(decodePathSegment(id), locale);
+  const { locale, slug } = await params;
+  const decodedSlug = decodePathSegment(slug);
+  const opening = await resolveJobOpeningBySlug(decodedSlug, locale);
 
   if (!opening) redirectToNotFound();
+
+  const canonicalSlug = pickJobOpeningSlug(opening, locale);
+  if (decodedSlug !== canonicalSlug) {
+    permanentRedirect(
+      getPathname({
+        locale,
+        href: {
+          pathname: "/careers/[slug]",
+          params: { slug: canonicalSlug },
+        },
+      }),
+    );
+  }
 
   return <JobOpeningDetailPage opening={opening} />;
 }

@@ -8,6 +8,7 @@ import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { blogPostPath } from "@/features/blogs/lib/blog-routes";
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
+import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { apiClient } from "@/lib/api";
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
@@ -245,7 +246,8 @@ function faqArrayToHtml(field: unknown): string {
     const row = asRecord(item);
     if (!row) continue;
     const question = typeof row.question === "string" ? row.question.trim() : "";
-    const answer = typeof row.answer === "string" ? row.answer.trim() : "";
+    const rawAnswer = typeof row.answer === "string" ? row.answer.trim() : "";
+    const answer = stripLeadingDuplicateHeading(rawAnswer, question);
     if (!question && !answer) continue;
     if (question) chunks.push(question);
     if (answer) chunks.push(answer);
@@ -260,7 +262,8 @@ function normalizeFaqItems(field: unknown): { question: string; answer: string }
       const row = asRecord(item);
       if (!row) return null;
       const question = typeof row.question === "string" ? row.question.trim() : "";
-      const answer = typeof row.answer === "string" ? row.answer.trim() : "";
+      const rawAnswer = typeof row.answer === "string" ? row.answer.trim() : "";
+      const answer = stripLeadingDuplicateHeading(rawAnswer, question);
       if (!question && !answer) return null;
       return { question, answer };
     })

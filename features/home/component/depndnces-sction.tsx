@@ -5,6 +5,9 @@ import Marquee from "react-fast-marquee";
 import Image from "next/image";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { pickImageAlt } from "@/lib/image-alt";
+import { Link } from "@/i18n/navigation";
+import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
+import { pickLocalizedField } from "@/features/services/lib/pick-localized-field";
 
 import type { Accreditation } from "../types";
 
@@ -16,12 +19,36 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
     accreditation?.images?.map((img) => ({
       url: img.url,
       alt: pickImageAlt(img.image_alt, locale, accreditation?.title) || undefined,
+      services: img.services ?? [],
     })) ?? [];
 
-  const card = (image: string, index: number, alt?: string) => (
+  const card = (
+    image: string,
+    index: number,
+    alt?: string,
+    services: NonNullable<Accreditation["images"][number]["services"]> = [],
+  ) => {
+    const service = services[0];
+    const serviceSlug = service
+      ? pickServiceSlug(
+          {
+            slug: service.slug ?? "",
+            slug_local: {
+              ar: service.slug_local?.ar ?? undefined,
+              en: service.slug_local?.en ?? undefined,
+            },
+          },
+          locale,
+        )
+      : "";
+    const serviceTitle = service
+      ? pickLocalizedField(service.title, locale) || (locale === "ar" ? "عرض الخدمة" : "View service")
+      : "";
+
+    const inner = (
     <div
       key={index}
-      className="group relative mx-2 flex items-center justify-center h-32 w-44 shrink-0 rounded-2xl border border-neutral-200/50 bg-neutral-50/30 p-8 transition-all duration-300 hover:border-brand hover:bg-neutral-50/50 dark:border-neutral-800/50 dark:bg-neutral-900/30 dark:hover:border-primary/30 dark:hover:bg-neutral-900/50"
+      className="group relative mx-2 flex h-32 w-44 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/50 bg-neutral-50/30 p-8 transition-all duration-300 hover:border-brand hover:bg-neutral-50/50 dark:border-neutral-800/50 dark:bg-neutral-900/30 dark:hover:border-primary/30 dark:hover:bg-neutral-900/50"
     >
       <Image
         src={image}
@@ -32,7 +59,21 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
         className="h-full w-full object-contain  transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0"
       />
     </div>
-  );
+    );
+
+    return serviceSlug ? (
+      <Link
+        key={index}
+        href={servicePostPath(serviceSlug)}
+        aria-label={serviceTitle}
+        className="block"
+      >
+        {inner}
+      </Link>
+    ) : (
+      inner
+    );
+  };
 
   if (images.length === 0) return null;
 
@@ -59,7 +100,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
             pauseOnHover
             autoFill
           >
-            {images.map((image, index) => card(image.url, index, image.alt))}
+            {images.map((image, index) => card(image.url, index, image.alt, image.services))}
           </Marquee>
         </div>
 
@@ -71,7 +112,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
             pauseOnHover
             autoFill
           >
-            {images.map((image, index) => card(image.url, index, image.alt))}
+            {images.map((image, index) => card(image.url, index, image.alt, image.services))}
           </Marquee>
         </div>
       </div>

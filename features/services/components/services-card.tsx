@@ -9,6 +9,7 @@ import { LucideIcon } from "lucide-react";
 import * as motion from "framer-motion/client";
 import { Link } from "@/i18n/navigation";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { useLocale } from "next-intl";
 import { pickServiceSlug, servicePostPath } from "../lib/services-routes";
@@ -34,6 +35,9 @@ export default function ServicesCard({
 }) {
   const locale = useLocale();
   const href = servicePostPath(pickServiceSlug(item, locale), { countryId });
+  const title = plainTextFromHtml(item?.title);
+  const description = stripLeadingDuplicateHeading(item?.description, item?.title);
+  const subtitle = stripLeadingDuplicateHeading(item?.subtitle, item?.title);
 
   return (
     <Link href={href} className="h-full">
@@ -52,18 +56,14 @@ export default function ServicesCard({
               </div>
               {titleAsPlainH3 ? (
                 <h3 className={serviceCardTitleClassName}>
-                  {plainTextFromHtml(item?.title)}
+                  {title}
                 </h3>
               ) : (
-                <RichHtml
-                  html={item?.title}
-                  as="p"
-                  className={`${serviceCardTitleClassName} [&_a]:text-brand group-hover:[&_a]:text-brand`}
-                />
+                <h2 className={serviceCardTitleClassName}>{title}</h2>
               )}
-              {item?.subtitle?.trim() ? (
+              {subtitle.trim() ? (
                 <RichHtml
-                  html={item.subtitle}
+                  html={subtitle}
                   as="p"
                   className="service-card__subtitle line-clamp-2 min-h-10 w-full text-center text-sm font-medium text-muted-foreground"
                 />
@@ -75,7 +75,7 @@ export default function ServicesCard({
           <CardContent className="flex min-h-0 flex-1 flex-col">
             <CardDescription className="flex flex-1 flex-col text-center text-base font-semibold leading-relaxed text-muted-foreground">
               <RichHtml
-                html={item?.description}
+                html={description}
                 as="span"
                 className="service-card__description line-clamp-4 block w-full text-muted-foreground [&_p]:mb-2 [&_p:last-child]:mb-0"
               />

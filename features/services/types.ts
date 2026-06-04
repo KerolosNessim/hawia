@@ -297,6 +297,9 @@ export type SingleService = {
   /** Per-service accreditations block from API `our_accreditations`. */
   ourAccreditations?: Accreditation | null;
 
+  /** Per-service client logos block from API `our_clients` / `partners`. */
+  ourClients?: Accreditation | null;
+
   /** @deprecated Use `pageSections` */
   clientPortfolio?: ServiceClientPortfolio | null;
 

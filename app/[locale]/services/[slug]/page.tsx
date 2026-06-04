@@ -51,7 +51,7 @@ import type { Metadata } from "next";
 
 import { cookies } from "next/headers";
 
-import { permanentRedirect } from "next/navigation";
+import { permanentRedirect, redirect as nextRedirect } from "next/navigation";
 
 import type { ServicesSearchParams } from "@/features/services/lib/parse-services-search-params";
 
@@ -84,7 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 
 
-function applySlugRedirect(locale: Locale, toSlug: string, status: number): never {
+function applySlugRedirect(locale: Locale, toSlug: string, status: number, toPath?: string): never {
 
   const href = servicePostPath(toSlug);
 
@@ -92,8 +92,15 @@ function applySlugRedirect(locale: Locale, toSlug: string, status: number): neve
 
   if (isGoneStatus(status)) {
 
-    redirectToNotFound();
+    redirectToNotFound(locale);
 
+  }
+
+  if (toPath) {
+    if (isPermanentRedirectStatus(status)) {
+      permanentRedirect(toPath);
+    }
+    nextRedirect(toPath);
   }
 
   if (isPermanentRedirectStatus(status)) {
@@ -121,13 +128,13 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
   const resolved = await resolveServicePage(slug, locale);
 
-  if (!resolved) redirectToNotFound();
+  if (!resolved) redirectToNotFound(locale);
 
-  if (resolved.kind === "gone") redirectToNotFound();
+  if (resolved.kind === "gone") redirectToNotFound(locale);
 
   if (resolved.kind === "redirect") {
 
-    applySlugRedirect(routeLocale, resolved.toSlug, resolved.status);
+    applySlugRedirect(routeLocale, resolved.toSlug, resolved.status, resolved.toPath);
 
   }
 
@@ -254,6 +261,9 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
       {service.ourAccreditations ? (
         <DependenciesSection accreditation={service.ourAccreditations} />
+      ) : null}
+      {service.ourClients ? (
+        <DependenciesSection accreditation={service.ourClients} />
       ) : null}
 
       <div className="space-y-16 pb-16">

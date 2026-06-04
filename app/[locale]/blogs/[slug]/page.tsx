@@ -137,7 +137,7 @@ export default async function BlogSlugPage(props: {
   const search = parseSearch(sp);
 
   if (RESERVED_BLOG_SLUGS.has(slug)) {
-    redirectToNotFound();
+    redirectToNotFound(locale);
   }
 
   const categories = await fetchPublicBlogCategories(locale);
@@ -145,10 +145,10 @@ export default async function BlogSlugPage(props: {
 
   if (!category) {
     const resolved = await resolveBlogPage(slug, locale);
-    if (!resolved) redirectToNotFound();
-    if (resolved.kind === "gone") redirectToNotFound();
+    if (!resolved) redirectToNotFound(locale);
+    if (resolved.kind === "gone") redirectToNotFound(locale);
     if (resolved.kind === "redirect") {
-      applyBlogSlugRedirect(locale, resolved.toSlug, resolved.status);
+      applyBlogSlugRedirect(locale, resolved.toSlug, resolved.status, resolved.toPath);
     }
     return <SingleBlogPage locale={locale} slug={resolved.blog.slug} />;
   }

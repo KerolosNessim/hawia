@@ -55,7 +55,7 @@ export default async function AdsSection({ countryId }: { countryId?: number }) 
           {section.categories.map((item, index) => (
             <Link
               key={item.id}
-              href={clientsIndexPath({ categorySlug: item.slug })}
+              href={item.href || clientsIndexPath({ categorySlug: item.slug })}
               className="block"
             >
               <motion.div

@@ -1,5 +1,6 @@
 export type SlugRedirect = {
   toSlug: string;
+  toPath?: string;
   status: number;
 };
 
@@ -25,8 +26,17 @@ function redirectFromBlock(redirectRec: Record<string, unknown>): SlugRedirect |
   const toSlug = String(
     redirectRec.to_slug ?? redirectRec.toSlug ?? redirectRec.slug ?? "",
   ).trim();
+  const toPath = String(
+    redirectRec.target_path ??
+      redirectRec.targetPath ??
+      redirectRec.target_url ??
+      redirectRec.targetUrl ??
+      redirectRec.to ??
+      "",
+  ).trim();
   const status = Number(redirectRec.status ?? redirectRec.code ?? 0);
   if (!Number.isFinite(status) || status <= 0) return null;
+  if (toPath) return { toSlug, toPath, status };
   if (toSlug) return { toSlug, status };
   if (status === 404 || status === 410) return { toSlug: "", status };
   return null;

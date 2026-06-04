@@ -55,7 +55,7 @@ export default function OfferServiceSection({
             >
               <RichHtml
                 html={item.title}
-                as="h2"
+                as="h3"
                 className="text-lg font-bold text-brand  [&_strong]:text-inherit"
               />
               <RichHtml
