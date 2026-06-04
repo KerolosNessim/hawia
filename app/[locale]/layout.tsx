@@ -11,6 +11,7 @@ import { cairoLocal, fontPreloadByLocale, geistLocal } from "@/lib/fonts";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
+import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
 import { CustomHeadFromSettings } from "@/features/shared/components/seo/custom-head-from-settings";
 import GlobalSchemaScript from "@/features/shared/components/seo/global-schema-script";
 import { HeadTagsFromMarkup } from "@/features/shared/components/seo/head-tags-from-markup";
@@ -122,15 +123,17 @@ export default async function RootLayout({
       </head>
       <body className="relative max-w-full min-h-dvh overflow-x-clip">
         <QueryProvider>
-          <NextIntlClientProvider messages={messages}>
-            <DirectionProvider direction={dir}>
-              <Navbar />
-              {children}
-              <Footer />
-              <FloatingSocials />
-              <Toaster  position="top-right"/>
-            </DirectionProvider>
-          </NextIntlClientProvider>
+          <SmoothScrollProvider>
+            <NextIntlClientProvider messages={messages}>
+              <DirectionProvider direction={dir}>
+                <Navbar />
+                {children}
+                <Footer />
+                <FloatingSocials />
+                <Toaster position="top-right" />
+              </DirectionProvider>
+            </NextIntlClientProvider>
+          </SmoothScrollProvider>
         </QueryProvider>
 
         {bodyScriptsOnly ? (

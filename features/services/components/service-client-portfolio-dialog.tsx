@@ -90,7 +90,7 @@ export default function ServiceClientPortfolioDialog({
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
 
-        <div className="overflow-y-auto">
+        <div data-lenis-prevent className="overflow-y-auto">
           {item.image ? (
             <div className="relative flex min-h-[12rem] items-center justify-center bg-linear-to-b from-brand/20 to-muted/30 px-6 py-8">
               <div className="absolute inset-0 flex items-center justify-center opacity-60">

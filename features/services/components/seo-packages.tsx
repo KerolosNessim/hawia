@@ -11,6 +11,8 @@ import {
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { SectionLinkShell } from "@/features/services/components/section-link-shell";
+import { sectionSubtitleColor } from "@/features/services/lib/section-tone";
+import type { SectionTone } from "@/features/services/lib/section-tone";
 import type { ServicePackageItem, ServicePackagesSection } from "@/features/services/types";
 import * as motion from "framer-motion/client";
 import { CheckCircle2, Gem, Rocket, Target, X } from "lucide-react";
@@ -124,7 +126,11 @@ function PackageDetailDialog({
   );
 }
 
-export default function SeoPackages({ packages, orderPhone }: Props) {
+export default function SeoPackages({
+  packages,
+  orderPhone,
+  tone = "light",
+}: Props & { tone?: SectionTone }) {
   const t = useTranslations("singleService.seoPackages");
   const [activePkg, setActivePkg] = useState<ServicePackageItem | null>(null);
 
@@ -133,13 +139,12 @@ export default function SeoPackages({ packages, orderPhone }: Props) {
   const sectionTitleHtml = packages.title.trim() || undefined;
 
   return (
-    <section className="bg-muted/30 py-16">
-      <div className="container space-y-10">
+    <div className="container space-y-10">
         <SectionHeader
           titleHtml={sectionTitleHtml}
           title={t("title")}
           subtitleHtml={packages.description}
-          subtitleColor="text-muted-foreground"
+          subtitleColor={sectionSubtitleColor(tone)}
         />
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -204,7 +209,6 @@ export default function SeoPackages({ packages, orderPhone }: Props) {
             );
           })}
         </div>
-      </div>
 
       {activePkg ? (
         <PackageDetailDialog
@@ -214,6 +218,6 @@ export default function SeoPackages({ packages, orderPhone }: Props) {
           orderPhone={orderPhone}
         />
       ) : null}
-    </section>
+    </div>
   );
 }

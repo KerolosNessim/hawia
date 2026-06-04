@@ -178,7 +178,7 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <main
-      className="max-w-full overflow-x-clip"
+      className="max-w-full"
       data-home-country-id={homeCountryId ?? ""}
       data-home-country-override={countryOverride ?? ""}
     >

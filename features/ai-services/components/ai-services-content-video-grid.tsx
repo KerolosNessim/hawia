@@ -51,11 +51,11 @@ function AiContentVideoCard({
     `${watchLabel} ${index + 1}`;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg hover:shadow-brand/10">
+    <article className="group mx-auto flex w-full max-w-[280px] flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg hover:shadow-brand/10 sm:max-w-[300px]">
       <button
         type="button"
         onClick={() => onPlay(item)}
-        className="relative aspect-video w-full shrink-0 overflow-hidden bg-gray-100"
+        className="relative aspect-[9/16] w-full shrink-0 overflow-hidden bg-gray-100"
         aria-label={label}
       >
         <Image
@@ -63,7 +63,7 @@ function AiContentVideoCard({
           alt={label}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes="(max-width: 640px) 85vw, 300px"
           unoptimized={isRemoteMediaUrl(poster)}
         />
         <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 transition-opacity group-hover:opacity-90" />
@@ -127,9 +127,12 @@ export default function AiServicesContentVideoGrid({
 
   return (
     <>
-      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      <ul className="grid grid-cols-1 place-items-center gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
         {items.map((item, index) => (
-          <li key={`${item.sort_order}-${item.video}-${index}`} className="min-h-0">
+          <li
+            key={`${item.sort_order}-${item.video}-${index}`}
+            className="flex w-full justify-center"
+          >
             <AiContentVideoCard
               item={item}
               index={index}

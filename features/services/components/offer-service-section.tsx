@@ -6,13 +6,18 @@ import { RichHtml } from "@/features/shared/components/rich-html";
 import { useTranslations } from "next-intl";
 import * as motion from "framer-motion/client";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { sectionItemCardClassName, sectionSubtitleColor } from "../lib/section-tone";
+import type { SectionTone } from "../lib/section-tone";
 import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
 import type { Section, SectionItem } from "../types";
 
 export default function OfferServiceSection({
   offerings,
+  tone = "light",
 }: {
   offerings: Section;
+  tone?: SectionTone;
 }) {
   const t = useTranslations("singleService.whatWeOffer");
   const hasImage = hasSectionImage(offerings?.image);
@@ -24,7 +29,7 @@ export default function OfferServiceSection({
         titleHtml={offerings?.title || undefined}
         title={t("title")}
         subtitleHtml={offerings?.description || t("subtitle")}
-        subtitleColor="text-gray-500"
+        subtitleColor={sectionSubtitleColor(tone)}
       />
       {hasImage && offerings.image ? (
         <div className="flex justify-center">
@@ -51,16 +56,25 @@ export default function OfferServiceSection({
             <ServiceSectionItemCard
               link={item.link}
               icon={item.icon}
-              className="rounded-xl border-2 border-brand p-6 leading-loose transition-all duration-300 group hover:border-gray-900"
+              className={cn(
+                sectionItemCardClassName(tone),
+                "leading-loose transition-all duration-300 group",
+                tone === "light" && "hover:border-gray-900",
+                tone === "dark" && "hover:border-brand/80",
+              )}
             >
               <RichHtml
                 html={item.title}
                 as="h3"
-                className="text-lg font-bold text-brand  [&_strong]:text-inherit"
+                className="text-lg font-bold text-brand [&_strong]:text-inherit"
               />
               <RichHtml
                 html={item.description}
-                className=" [&_a]:text-brand group-hover:[&_a]:text-white"
+                className={cn(
+                  "[&_a]:text-brand",
+                  tone === "dark" && "text-gray-200 group-hover:[&_a]:text-white",
+                  tone === "light" && "text-gray-600 group-hover:[&_a]:text-brand",
+                )}
               />
             </ServiceSectionItemCard>
           </motion.div>

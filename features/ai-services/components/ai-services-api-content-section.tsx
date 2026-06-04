@@ -2,6 +2,7 @@ import AiServicesContentVideoGrid from "@/features/ai-services/components/ai-ser
 import { getServiceAiContent } from "@/features/ai-services/services/get-service-ai-content";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
+import type { SectionTone } from "@/features/services/lib/section-tone";
 import { cn } from "@/lib/utils";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -19,9 +20,11 @@ function isHtmlString(text: string): boolean {
 function ContentBlock({
   text,
   asTitle,
+  tone = "light",
 }: {
   text: string;
   asTitle?: boolean;
+  tone?: SectionTone;
 }) {
   if (!hasContent(text)) return null;
 
@@ -32,52 +35,90 @@ function ContentBlock({
         className={cn(
           "cms-rich-html",
           asTitle
-            ? "text-2xl font-bold text-gray-900 md:text-3xl [&_p]:mb-0"
-            : "text-base leading-relaxed text-muted-foreground",
+            ? cn(
+                "text-2xl font-bold md:text-3xl [&_p]:mb-0",
+                tone === "dark" ? "text-white" : "text-gray-900",
+              )
+            : cn(
+                "text-base leading-relaxed",
+                tone === "dark" ? "text-gray-300" : "text-muted-foreground",
+              ),
         )}
       />
     );
   }
 
   if (asTitle) {
-    return <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">{text}</h2>;
+    return (
+      <h2
+        className={cn(
+          "text-2xl font-bold md:text-3xl",
+          tone === "dark" ? "text-white" : "text-gray-900",
+        )}
+      >
+        {text}
+      </h2>
+    );
   }
 
-  return <p className="text-base leading-relaxed text-muted-foreground">{text}</p>;
+  return (
+    <p
+      className={cn(
+        "text-base leading-relaxed",
+        tone === "dark" ? "text-gray-300" : "text-muted-foreground",
+      )}
+    >
+      {text}
+    </p>
+  );
 }
 
-export default async function AiServicesApiContentSection() {
+export default async function AiServicesApiContentSection({
+  embedded = false,
+  tone = "light",
+}: {
+  /** When true, outer tone shell is provided by the parent (e.g. `/ai-services`). */
+  embedded?: boolean;
+  tone?: SectionTone;
+}) {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("aiServicesContentPage");
-  const content = await getServiceAiContent(locale);
+  const apiContent = await getServiceAiContent(locale);
 
-  if (!content?.is_active) return null;
+  if (!apiContent?.is_active) return null;
 
-  const itemsWithVideo = content.items.filter((item) => item.video.trim());
-  const hasHeader = hasContent(content.title) || hasContent(content.description);
+  const itemsWithVideo = apiContent.items.filter((item) => item.video.trim());
+  const hasHeader =
+    hasContent(apiContent.title) || hasContent(apiContent.description);
 
   if (!hasHeader && itemsWithVideo.length === 0) return null;
 
-  const fallbackPoster = content.image || VIDEO_POSTER_FALLBACK;
+  const fallbackPoster = apiContent.image || VIDEO_POSTER_FALLBACK;
+
+  const sectionBody = (
+    <div className="container max-w-6xl space-y-10 md:space-y-12">
+      {hasHeader ? (
+        <header className="mx-auto max-w-3xl space-y-3 text-center md:text-start">
+          <ContentBlock text={apiContent.title} asTitle tone={tone} />
+          <ContentBlock text={apiContent.description} tone={tone} />
+        </header>
+      ) : null}
+
+      {itemsWithVideo.length > 0 ? (
+        <AiServicesContentVideoGrid
+          items={itemsWithVideo}
+          fallbackPoster={fallbackPoster}
+          watchLabel={t("youtubeLabel")}
+        />
+      ) : null}
+    </div>
+  );
+
+  if (embedded) return sectionBody;
 
   return (
     <section className="border-t border-border bg-muted/20 py-16 md:py-20">
-      <div className="container max-w-6xl space-y-10 md:space-y-12">
-        {hasHeader ? (
-          <header className="mx-auto max-w-3xl space-y-3 text-center md:text-start">
-            <ContentBlock text={content.title} asTitle />
-            <ContentBlock text={content.description} />
-          </header>
-        ) : null}
-
-        {itemsWithVideo.length > 0 ? (
-          <AiServicesContentVideoGrid
-            items={itemsWithVideo}
-            fallbackPoster={fallbackPoster}
-            watchLabel={t("youtubeLabel")}
-          />
-        ) : null}
-      </div>
+      {sectionBody}
     </section>
   );
 }

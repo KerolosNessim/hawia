@@ -226,35 +226,22 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
       ) : null}
 
-      <div className="space-y-16 py-16">
+      {service.highlight_description ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="container py-10 text-center leading-loose"
+        >
+          <RichHtml
+            html={service.highlight_description}
+            className="cms-rich-html mx-auto max-w-4xl space-y-4 rounded-xl border border-brand/30 bg-brand/5 p-6"
+          />
+        </motion.div>
+      ) : null}
 
-        {service.highlight_description ? (
-
-          <motion.div
-
-            initial={{ opacity: 0, y: 20 }}
-
-            animate={{ opacity: 1, y: 0 }}
-
-            transition={{ duration: 0.5 }}
-
-            viewport={{ once: true }}
-
-            className="container rounded-xl bg-gray-900 p-6 text-center leading-loose text-white"
-
-          >
-
-            <RichHtml html={service.highlight_description} className="space-y-4" />
-
-          </motion.div>
-
-        ) : null}
-
-
-
-        <ServicePageSections service={service} excludeKeys={["articleTags"]} />
-
-      </div>
+      <ServicePageSections service={service} excludeKeys={["articleTags"]} />
 
       {service.ourAccreditations ? (
         <DependenciesSection accreditation={service.ourAccreditations} />

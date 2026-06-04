@@ -12,6 +12,8 @@ import type {
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { Link } from "@/i18n/navigation";
+import { sectionSubtitleColor } from "@/features/services/lib/section-tone";
+import type { SectionTone } from "@/features/services/lib/section-tone";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -53,10 +55,12 @@ function PortfolioCard({
   item,
   readLabel,
   onOpenDetails,
+  tone,
 }: {
   item: ServiceClientPortfolioItem;
   readLabel: string;
   onOpenDetails: (item: ServiceClientPortfolioItem) => void;
+  tone: SectionTone;
 }) {
   const label = item.readCaseStudyButtonText?.trim() || readLabel;
 
@@ -76,7 +80,10 @@ function PortfolioCard({
       viewport={{ once: true }}
       transition={{ duration: 0.45 }}
       className={cn(
-        "group relative flex h-full min-h-[22rem] flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-linear-to-b from-brand/15 to-white p-6 shadow-lg transition-shadow hover:shadow-xl sm:min-h-[24rem]",
+        "group relative flex h-full min-h-[22rem] flex-col overflow-hidden rounded-[2rem] border p-6 shadow-lg transition-shadow hover:shadow-xl sm:min-h-[24rem]",
+        tone === "dark"
+          ? "border-white/15 bg-linear-to-b from-brand/20 to-gray-800"
+          : "border-border/60 bg-linear-to-b from-brand/15 to-white",
         "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
       )}
     >
@@ -108,10 +115,24 @@ function PortfolioCard({
           </p>
         ) : null}
         {item.period ? (
-          <p className="text-sm font-medium text-muted-foreground">{item.period}</p>
+          <p
+            className={cn(
+              "text-sm font-medium",
+              tone === "dark" ? "text-gray-300" : "text-muted-foreground",
+            )}
+          >
+            {item.period}
+          </p>
         ) : null}
         {item.client ? (
-          <p className="text-sm font-semibold text-foreground">{item.client}</p>
+          <p
+            className={cn(
+              "text-sm font-semibold",
+              tone === "dark" ? "text-white" : "text-foreground",
+            )}
+          >
+            {item.client}
+          </p>
         ) : null}
         {item.metrics.length > 0 ? (
           <ul className="flex flex-wrap gap-2">
@@ -180,8 +201,10 @@ function ViewAllCard({
 
 export default function ServiceClientPortfolioSection({
   portfolio,
+  tone = "light",
 }: {
   portfolio: ServiceClientPortfolio;
+  tone?: SectionTone;
 }) {
   const t = useTranslations("singleService.clientPortfolio");
   const readLabel =
@@ -208,7 +231,7 @@ export default function ServiceClientPortfolioSection({
         title={t("title")}
         subtitleHtml={portfolio.subtitle || undefined}
         subtitle={t("subtitle")}
-        subtitleColor="text-gray-500"
+        subtitleColor={sectionSubtitleColor(tone)}
         align="start"
       />
 
@@ -219,6 +242,7 @@ export default function ServiceClientPortfolioSection({
             item={item}
             readLabel={readLabel}
             onOpenDetails={openDetails}
+            tone={tone}
           />
         ))}
         {portfolio.viewAllCard ? (

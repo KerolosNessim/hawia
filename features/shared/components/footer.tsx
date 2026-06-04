@@ -103,17 +103,9 @@ export default function Footer() {
             </Link>
             <RichHtml
               html={settings?.general?.site_description || t("brandDescription")}
-              className="mx-auto max-w-[200px] text-lg leading-snug font-bold text-gray-700 lg:mx-0"
+              className="mx-auto text-lg leading-snug font-bold whitespace-nowrap text-gray-700 lg:mx-0"
             />
             <div className="space-y-2 font-bold text-brand">
-              <a
-                href={TRADEMARK_REGISTRATION_PDF}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none"
-              >
-                {t("registeredTrademark")}
-              </a>
               <a
                 href={TRADEMARK_REGISTRATION_PDF}
                 target="_blank"

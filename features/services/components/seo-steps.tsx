@@ -6,21 +6,29 @@ import { RichHtml } from "@/features/shared/components/rich-html";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { sectionItemCardClassName, sectionSubtitleColor } from "../lib/section-tone";
+import type { SectionTone } from "../lib/section-tone";
 import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
 import type { Section, SectionItem } from "../types";
 
-export default function SeoSteps({ steps }: { steps: Section }) {
+export default function SeoSteps({
+  steps,
+  tone = "dark",
+}: {
+  steps: Section;
+  tone?: SectionTone;
+}) {
   const t = useTranslations("singleService.seoSteps");
   const hasImage = hasSectionImage(steps?.image);
   const displayItems = orderSectionItemsForDisplay(steps?.items);
 
   return (
-    <div className="py-12 bg-gray-900">
-      <div className="container space-y-8">
+    <div className="container space-y-8">
         <SectionHeader
           titleHtml={steps?.title || undefined}
           title={t("title")}
           subtitleHtml={steps?.description || t("subtitle")}
+          subtitleColor={sectionSubtitleColor(tone)}
         />
         <div
           className={cn(
@@ -39,10 +47,16 @@ export default function SeoSteps({ steps }: { steps: Section }) {
                 key={`${item.sort_order ?? index}-${index}`}
                 link={item.link}
                 icon={item.icon}
-                className="rounded-xl border border-brand bg-gray-700 p-4 text-white"
+                className={sectionItemCardClassName(tone)}
               >
                 <RichHtml html={item.title} as="p" className="font-bold" />
-                <RichHtml html={item.description} className="mt-2 text-gray-200" />
+                <RichHtml
+                  html={item.description}
+                  className={cn(
+                    "mt-2",
+                    tone === "dark" ? "text-gray-200" : "text-gray-600",
+                  )}
+                />
               </ServiceSectionItemCard>
             ))}
           </div>
@@ -59,7 +73,6 @@ export default function SeoSteps({ steps }: { steps: Section }) {
             </div>
           ) : null}
         </div>
-      </div>
     </div>
   );
 }

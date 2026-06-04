@@ -7,9 +7,18 @@ import {
 import SectionHeader from '@/features/shared/components/section-header';
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { SectionLinkShell } from "@/features/services/components/section-link-shell";
+import { sectionSubtitleColor } from "../lib/section-tone";
+import type { SectionTone } from "../lib/section-tone";
+import { cn } from "@/lib/utils";
 import { Faqs } from "../types";
 
-export default function SeoFaq({faq}: {faq: Faqs}) {
+export default function SeoFaq({
+  faq,
+  tone = "light",
+}: {
+  faq: Faqs;
+  tone?: SectionTone;
+}) {
   const linkedItems = faq?.items?.filter((item) => item.link?.trim()) ?? [];
   const accordionItems =
     faq?.items?.filter((item) => !item.link?.trim()) ?? [];
@@ -19,7 +28,7 @@ export default function SeoFaq({faq}: {faq: Faqs}) {
       <SectionHeader
         titleHtml={faq?.title}
         subtitleHtml={faq?.description}
-        subtitleColor="text-gray-500"
+        subtitleColor={sectionSubtitleColor(tone)}
       />
       <div className="grid grid-cols-1 gap-4">
         {linkedItems.length > 0 ? (
@@ -28,14 +37,22 @@ export default function SeoFaq({faq}: {faq: Faqs}) {
               <SectionLinkShell
                 key={`linked-${index}`}
                 link={item.link}
-                className="block rounded-xl border border-border/70 bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+                className={cn(
+                  "block rounded-xl border p-6 shadow-sm transition-shadow hover:shadow-md",
+                  tone === "dark"
+                    ? "border-white/15 bg-gray-800/80"
+                    : "border-border/70 bg-card",
+                )}
               >
                 <RichHtml
                   html={item.question}
                   as="h3"
                   className="mb-3 text-lg font-semibold text-start [&_p]:mb-0"
                 />
-                <RichHtml html={item.answer} className="text-muted-foreground" />
+                <RichHtml
+                  html={item.answer}
+                  className={tone === "dark" ? "text-gray-300" : "text-muted-foreground"}
+                />
               </SectionLinkShell>
             ))}
           </div>

@@ -8,6 +8,7 @@ import type {
   ServicePackagesSection,
   ServicePageSectionInstance,
   ServicePageSectionKey,
+  SingleService,
   Tools,
 } from "../types";
 
@@ -134,4 +135,26 @@ export function getOrderedServicePageSections(
   pageSections: ServicePageSectionInstance[],
 ): ServicePageSectionInstance[] {
   return [...pageSections].sort((a, b) => a.sort_order - b.sort_order);
+}
+
+function sectionRendersOnPage(section: ServicePageSectionInstance): boolean {
+  switch (section.key) {
+    case "clientPortfolio":
+      return (section.data as ServiceClientPortfolio).items.length > 0;
+    case "packages":
+      return (section.data as ServicePackagesSection).items.length > 0;
+    default:
+      return true;
+  }
+}
+
+/** Visible CMS section count (server-safe; used for tone alternation on `/ai-services`). */
+export function countVisibleServicePageSections(
+  service: Pick<SingleService, "pageSections">,
+  excludeKeys: ServicePageSectionKey[] = [],
+): number {
+  const excluded = new Set(excludeKeys);
+  return getOrderedServicePageSections(service.pageSections).filter(
+    (section) => !excluded.has(section.key) && sectionRendersOnPage(section),
+  ).length;
 }

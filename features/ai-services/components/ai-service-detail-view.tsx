@@ -1,4 +1,4 @@
-import AiServiceCtaButtons from "@/features/ai-services/components/ai-service-cta-buttons";
+import { AI_TOOLS_URL } from "@/features/ai-services/constants";
 import ServiceArticleTags from "@/features/services/components/service-article-tags";
 import { ServicePageSections } from "@/features/services/components/service-page-sections";
 import ServicePageScript from "@/features/services/components/service-page-script";
@@ -12,16 +12,17 @@ type Props = {
   service: SingleService;
   /** When several services stack on `/ai-services`, only the first gets the top hero. */
   showHero?: boolean;
-  /** CTA row is shown once per page, not per stacked service. */
-  showCta?: boolean;
+  /** AI tools CTA in the hero (first service on `/ai-services` only). */
+  showHeaderAction?: boolean;
 };
 
 export default async function AiServiceDetailView({
   service,
   showHero = true,
-  showCta = true,
+  showHeaderAction = false,
 }: Props) {
   const t = await getTranslations("singleService");
+  const tAi = await getTranslations("aiServicesPage");
   const heroTitleHtml = service.singlePageTitle?.trim() || service.title;
   const heroTitle =
     plainTextFromHtml(heroTitleHtml).trim() || t("title");
@@ -39,6 +40,15 @@ export default async function AiServiceDetailView({
           descriptionHtml={heroSubtitle || undefined}
           image={heroImage}
           imageAlt={service.image_alt || ""}
+          action={
+            showHeaderAction
+              ? {
+                  label: tAi("aiToolsCta"),
+                  href: AI_TOOLS_URL,
+                  external: true,
+                }
+              : undefined
+          }
         />
       ) : (
         <div className="container max-w-6xl border-t border-border pt-12">
@@ -58,11 +68,7 @@ export default async function AiServiceDetailView({
         </div>
       ) : null}
 
-      <div className="space-y-16 py-16">
-        {showCta ? <AiServiceCtaButtons /> : null}
-
-        <ServicePageSections service={service} excludeKeys={["articleTags"]} />
-      </div>
+      <ServicePageSections service={service} excludeKeys={["articleTags"]} />
 
       {service.articleTags.length > 0 ? (
         <div className="space-y-16 pb-16">

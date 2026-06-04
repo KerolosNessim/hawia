@@ -5,6 +5,7 @@ import {
   parseTocEntries,
   type TocEntry,
 } from "@/features/blogs/lib/parse-toc-entries";
+import { scrollToHash } from "@/lib/lenis/scroll";
 import { cn } from "@/lib/utils";
 import { useCallback, useMemo } from "react";
 
@@ -13,25 +14,11 @@ type BlogTableOfContentsProps = {
   className?: string;
 };
 
-const SCROLL_OFFSET_PX = 96;
-
-function scrollToAnchor(hash: string) {
-  const id = decodeURIComponent(hash.replace(/^#/, ""));
-  if (!id) return;
-
-  const target = document.getElementById(id);
-  if (!target) return;
-
-  const top = target.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET_PX;
-  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-  window.history.replaceState(null, "", `#${encodeURIComponent(id)}`);
-}
-
 function TocLink({ entry }: { entry: TocEntry }) {
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
-      scrollToAnchor(entry.href);
+      scrollToHash(entry.href);
     },
     [entry.href],
   );

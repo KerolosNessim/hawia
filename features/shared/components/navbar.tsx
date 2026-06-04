@@ -199,7 +199,10 @@ export default function Navbar() {
 
             </HoverCardTrigger>
 
-            <HoverCardContent className="max-h-[min(70vh,24rem)] overflow-y-auto no-scrollbar">
+            <HoverCardContent
+              data-lenis-prevent
+              className="max-h-[min(70vh,24rem)] overflow-y-auto no-scrollbar"
+            >
 
               <div className="flex flex-col gap-1">
 

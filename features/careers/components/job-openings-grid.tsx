@@ -37,46 +37,63 @@ export default function JobOpeningsGrid({ openings }: Props) {
         </h2>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {openings.map((opening) => (
-            <Card key={opening.id} className="overflow-hidden border-border/70 shadow-sm transition hover:shadow-md">
-              {opening.media.image ? (
-                <img
-                  src={opening.media.image}
-                  alt={opening.media.image_alt || opening.title}
-                  className="h-44 w-full object-cover"
+          {openings.map((opening) => {
+            const title = plainTextFromHtml(opening.title);
+            const detailHref = jobOpeningPath(opening.slug);
+
+            return (
+              <Card
+                key={opening.id}
+                className="relative overflow-hidden border-border/70 shadow-sm transition hover:shadow-md"
+              >
+                <Link
+                  href={detailHref}
+                  className="absolute inset-0 z-[1] rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                  aria-label={title}
                 />
-              ) : (
-                <div className="flex h-44 items-center justify-center bg-muted/30 text-brand">
-                  <BriefcaseBusiness className="size-10" />
-                </div>
-              )}
-              <CardContent className="space-y-3 p-5">
-                <div className="space-y-2">
-                  <h3 className="line-clamp-2 text-xl font-bold text-foreground">
-                    {plainTextFromHtml(opening.title)}
-                  </h3>
-                  {opening.job_type ? <Badge variant="secondary">{opening.job_type}</Badge> : null}
-                </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <Button
-                    variant="outline"
-                    className="w-full border-brand text-brand hover:bg-brand/5"
-                    asChild
-                  >
-                    <Link href={jobOpeningPath(opening.slug)}>
+                {opening.media.image ? (
+                  <img
+                    src={opening.media.image}
+                    alt={opening.media.image_alt || title}
+                    className="relative z-0 h-44 w-full object-cover"
+                  />
+                ) : (
+                  <div className="relative z-0 flex h-44 items-center justify-center bg-muted/30 text-brand">
+                    <BriefcaseBusiness className="size-10" />
+                  </div>
+                )}
+                <CardContent className="relative z-[2] space-y-3 p-5">
+                  <div className="pointer-events-none space-y-2">
+                    <h3 className="line-clamp-2 text-xl font-bold text-foreground">{title}</h3>
+                    {opening.job_type ? (
+                      <Badge variant="secondary">{opening.job_type}</Badge>
+                    ) : null}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <Button
+                      variant="outline"
+                      className="pointer-events-none relative z-[2] w-full border-brand text-brand"
+                      tabIndex={-1}
+                      aria-hidden
+                    >
                       {isAr ? "عرض التفاصيل" : "View details"}
-                    </Link>
-                  </Button>
-                  <Button
-                    className="w-full bg-brand text-white hover:bg-brand/90"
-                    onClick={() => setApplyOpening(opening)}
-                  >
-                    {isAr ? "قدّم الآن" : "Apply now"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    </Button>
+                    <Button
+                      type="button"
+                      className="relative z-[3] w-full bg-brand text-white hover:bg-brand/90"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setApplyOpening(opening);
+                      }}
+                    >
+                      {isAr ? "قدّم الآن" : "Apply now"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </section>
 

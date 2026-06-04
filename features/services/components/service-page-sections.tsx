@@ -8,6 +8,12 @@ import SeoSteps from "@/features/services/components/seo-steps";
 import SeoTools from "@/features/services/components/seo-tools";
 import ServiceClientPortfolioSection from "@/features/services/components/service-client-portfolio-section";
 import { getOrderedServicePageSections } from "@/features/services/lib/collect-page-sections";
+import {
+  sectionShellClassName,
+  sectionSubtitleColor,
+  sectionToneAt,
+  type SectionTone,
+} from "@/features/services/lib/section-tone";
 import type {
   Benefits,
   Cta,
@@ -34,6 +40,8 @@ type Props = {
   service: SingleService;
   /** Sections rendered elsewhere on the page (e.g. article tags after related services). */
   excludeKeys?: ServicePageSectionKey[];
+  /** First section tone index (0 = dark). Use to continue alternation after other blocks. */
+  startIndex?: number;
 };
 
 function sectionLinkFromData(data: { link?: string | null }): string | undefined {
@@ -44,62 +52,59 @@ function renderBenefitsBlock(
   benefits: Benefits,
   serviceTitle: string,
   fallbackTitle: string,
-  blockKey: string,
+  tone: SectionTone,
 ) {
   const hasImage = hasSectionImage(benefits.image);
+  const bodyTextClass =
+    tone === "dark"
+      ? "text-base leading-8 text-slate-200 [&_*]:!text-inherit [&_a]:!text-brand [&_strong]:!text-white"
+      : "text-base leading-8 text-gray-600 [&_*]:!text-inherit [&_a]:!text-brand [&_strong]:!text-gray-900";
 
   const inner = (
-    <section className="relative overflow-hidden bg-slate-950 py-16 text-white">
-      <div
-        className={cn(
-          "container",
-          hasImage
-            ? "flex flex-col items-center gap-10 lg:flex-row lg:items-center"
-            : "flex flex-col items-center text-center",
-        )}
+    <div
+      className={cn(
+        "container",
+        hasImage
+          ? "flex flex-col items-center gap-10 lg:flex-row lg:items-center"
+          : "flex flex-col items-center text-center",
+      )}
+    >
+      <motion.div
+        className={cn("w-full", hasImage ? "lg:flex-1" : "max-w-4xl")}
+        initial={{ opacity: 0, x: hasImage ? -20 : 0, y: hasImage ? 0 : 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true }}
       >
+        <RichHtml
+          html={benefits.title || fallbackTitle}
+          className="mb-5 text-3xl font-bold text-brand [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h2]:text-3xl [&_h3]:!text-brand [&_h3]:text-2xl [&_p]:mb-0 [&_strong]:font-bold"
+        />
+        <RichHtml html={benefits.description} className={bodyTextClass} />
+      </motion.div>
+      {hasImage ? (
         <motion.div
-          className={cn("w-full", hasImage ? "lg:flex-1" : "max-w-4xl")}
-          initial={{ opacity: 0, x: hasImage ? -20 : 0, y: hasImage ? 0 : 20 }}
+          className="flex w-full flex-1 justify-center"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
         >
-          <RichHtml
-            html={benefits.title || fallbackTitle}
-            className="mb-5 text-3xl font-bold text-brand [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h2]:text-3xl [&_h3]:!text-brand [&_h3]:text-2xl [&_p]:mb-0 [&_strong]:font-bold"
-          />
-          <RichHtml
-            html={benefits.description}
-            className="text-base leading-8 text-slate-200 [&_*]:!text-inherit [&_a]:!text-brand [&_strong]:!text-white"
+          <Image
+            src={benefits.image}
+            alt={benefits.image_alt || plainTextFromHtml(serviceTitle)}
+            width={500}
+            height={500}
+            className="mask-blob mx-auto h-auto w-auto drop-shadow-2xl"
+            unoptimized={isRemoteMediaUrl(benefits.image)}
           />
         </motion.div>
-        {hasImage ? (
-          <motion.div
-            className="flex w-full flex-1 justify-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <Image
-              src={benefits.image}
-              alt={benefits.image_alt || plainTextFromHtml(serviceTitle)}
-              width={500}
-              height={500}
-              className="mask-blob mx-auto h-auto w-auto drop-shadow-2xl"
-              unoptimized={isRemoteMediaUrl(benefits.image)}
-            />
-          </motion.div>
-        ) : null}
-      </div>
-    </section>
+      ) : null}
+    </div>
   );
 
   return (
-    <SectionLinkShell key={blockKey} link={sectionLinkFromData(benefits)}>
-      {inner}
-    </SectionLinkShell>
+    <SectionLinkShell link={sectionLinkFromData(benefits)}>{inner}</SectionLinkShell>
   );
 }
 
@@ -115,59 +120,55 @@ function renderSectionInstance(
   section: ServicePageSectionInstance,
   service: SingleService,
   t: ReturnType<typeof useTranslations>,
+  tone: SectionTone,
 ) {
-  const blockKey = sectionBlockKey(section);
-
   switch (section.key) {
     case "benefits":
       return renderBenefitsBlock(
         section.data as Benefits,
         service.title,
         t("why_seo.title"),
-        blockKey,
+        tone,
       );
     case "offerings": {
       const offerings = section.data as Section;
-      return <OfferServiceSection key={blockKey} offerings={offerings} />;
+      return <OfferServiceSection offerings={offerings} tone={tone} />;
     }
     case "steps": {
       const steps = section.data as Section;
-      return <SeoSteps key={blockKey} steps={steps} />;
+      return <SeoSteps steps={steps} tone={tone} />;
     }
     case "tools": {
       const tools = section.data as Tools;
       return (
-        <SectionLinkShell key={blockKey} link={sectionLinkFromData(tools)}>
-          <SeoTools tools={tools} />
+        <SectionLinkShell link={sectionLinkFromData(tools)}>
+          <SeoTools tools={tools} tone={tone} />
         </SectionLinkShell>
       );
     }
     case "clientPortfolio": {
       const portfolio = section.data as ServiceClientPortfolio;
       if (!portfolio.items.length) return null;
-      return (
-        <ServiceClientPortfolioSection key={blockKey} portfolio={portfolio} />
-      );
+      return <ServiceClientPortfolioSection portfolio={portfolio} tone={tone} />;
     }
     case "faqs": {
       const faq = section.data as Faqs;
-      return <SeoFaq key={blockKey} faq={faq} />;
+      return <SeoFaq faq={faq} tone={tone} />;
     }
     case "packages": {
       const packages = section.data as NonNullable<SingleService["packages"]>;
       if (!packages.items.length) return null;
       return (
         <SeoPackages
-          key={blockKey}
           packages={packages}
           orderPhone={service.ctas?.phone_number}
+          tone={tone}
         />
       );
     }
     case "articleTags":
       return (
         <ServiceArticleTags
-          key={blockKey}
           tags={section.data as SingleService["articleTags"]}
           heading={t("articleTagsHeading")}
         />
@@ -175,11 +176,12 @@ function renderSectionInstance(
     case "ctas": {
       const cta = section.data as Cta;
       return (
-        <SectionLinkShell key={blockKey} link={sectionLinkFromData(cta)}>
+        <SectionLinkShell link={sectionLinkFromData(cta)}>
           <PageContact
             title={cta.title}
             phone={cta.phone_number}
             description={cta.description}
+            tone={tone}
           />
         </SectionLinkShell>
       );
@@ -189,12 +191,31 @@ function renderSectionInstance(
   }
 }
 
-export function ServicePageSections({ service, excludeKeys = [] }: Props) {
+export function ServicePageSections({
+  service,
+  excludeKeys = [],
+  startIndex = 0,
+}: Props) {
   const t = useTranslations("singleService");
   const excluded = new Set(excludeKeys);
   const order = getOrderedServicePageSections(service.pageSections).filter(
     (section) => !excluded.has(section.key),
   );
 
-  return <>{order.map((section) => renderSectionInstance(section, service, t))}</>;
+  return (
+    <>
+      {order.map((section, index) => {
+        const tone = sectionToneAt(startIndex + index);
+        const blockKey = sectionBlockKey(section);
+        const inner = renderSectionInstance(section, service, t, tone);
+        if (!inner) return null;
+
+        return (
+          <div key={blockKey} className={sectionShellClassName(tone)}>
+            {inner}
+          </div>
+        );
+      })}
+    </>
+  );
 }

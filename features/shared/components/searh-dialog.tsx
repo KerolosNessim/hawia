@@ -215,7 +215,10 @@ export const SearchDialog = ({ triggerClassName }: SearchDialogProps = {}) => {
               transition={{ duration: 0.25 }}
               className="overflow-hidden"
             >
-              <div className="border-t border-gray-100 max-h-[400px] overflow-y-auto px-6 py-4 space-y-4">
+              <div
+                data-lenis-prevent
+                className="border-t border-gray-100 max-h-[400px] overflow-y-auto px-6 py-4 space-y-4"
+              >
                 {isFetching && !hasResults && (
                   <div className="flex justify-center py-8">
                     <Loader2 className="size-8 animate-spin text-brand" />

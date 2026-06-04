@@ -79,6 +79,7 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
         </SheetHeader>
 
         <nav
+          data-lenis-prevent
           className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-4 py-4"
           aria-label={t("home")}
         >
