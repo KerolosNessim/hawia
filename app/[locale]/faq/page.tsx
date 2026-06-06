@@ -1,16 +1,10 @@
+import FaqAccordion from "@/features/shared/components/faq-accordion";
 import PageHeader from "@/features/shared/components/page-header";
-import { RichHtml } from "@/features/shared/components/rich-html";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { buildCanonicalUrl, serializeFaqPageSchema } from "@/lib/seo/schema";
 import { getFaqData } from "@/features/home/services/faq";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { localePathname } from "@/lib/seo/metadata-helpers";
@@ -65,10 +59,6 @@ export default async function FaqPage() {
     ...item,
     answer: stripLeadingDuplicateHeading(item.answer, item.question),
   }));
-  const midPoint = Math.ceil(items.length / 2);
-  const leftItems = items.slice(0, midPoint);
-  const rightItems = items.slice(midPoint);
-
   const pageTitle = data.title || t("title");
   const pageAbs = buildCanonicalUrl(locale, "/faq");
   const faqSchemaJson = serializeFaqPageSchema({
@@ -94,37 +84,14 @@ export default async function FaqPage() {
         descriptionHtml={data.description || t("description")}
       />
       <div className="container">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="space-y-4">
-            <Accordion type="single" collapsible className="w-full space-y-4">
-              {leftItems.map((item) => (
-                <AccordionItem key={item.id} value={`item-${item.id}`} className="border-brand/20 bg-white/5 backdrop-blur-sm rounded-2xl px-4 border">
-                  <AccordionTrigger className="text-lg font-bold hover:no-underline text-brand">
-                    {item.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-gray-300 leading-relaxed">
-                    <RichHtml html={item.answer} />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-
-          <div className="space-y-4">
-            <Accordion type="single" collapsible className="w-full space-y-4">
-              {rightItems.map((item) => (
-                <AccordionItem key={item.id} value={`item-${item.id}`} className="border-brand/20 bg-white/5 backdrop-blur-sm rounded-2xl px-4 border">
-                  <AccordionTrigger className="text-lg font-bold hover:no-underline text-brand">
-                    {item.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-gray-300 leading-relaxed">
-                    <RichHtml html={item.answer} />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </div>
+        <FaqAccordion
+          items={items.map((item) => ({
+            id: item.id,
+            question: item.question,
+            answer: item.answer,
+          }))}
+          columns={2}
+        />
       </div>
     </div>
   );

@@ -241,7 +241,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
         </motion.div>
       ) : null}
 
-      <ServicePageSections service={service} excludeKeys={["articleTags"]} />
+      <ServicePageSections  service={service} excludeKeys={["articleTags"]} />
 
       {service.ourAccreditations ? (
         <DependenciesSection accreditation={service.ourAccreditations} />

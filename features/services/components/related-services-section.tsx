@@ -71,6 +71,7 @@ export default function RelatedServicesSection({
                   index={index}
                   countryId={countryId}
                   titleAsPlainH3
+                  titleDark={true}
                 />
               </CarouselItem>
             ))}

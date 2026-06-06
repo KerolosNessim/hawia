@@ -32,12 +32,7 @@ import {
 import { resolveBlogPage } from "@/features/blogs/server/resolve-blog-page";
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import FaqAccordion from "@/features/shared/components/faq-accordion";
 import { Calendar, Clock, HelpCircle } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -442,10 +437,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
       {/* ── FAQ section ───────────────────────────────────────────────────── */}
       {faqAccordionItems.length ? (
-        <section
-          aria-labelledby="faq-section-heading"
-          className="container max-w-3xl"
-        >
+        <section aria-labelledby="faq-section-heading" className="container">
           {/* Section header */}
           <div className="mb-8 flex items-center gap-3 border-b border-border pb-5">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand">
@@ -459,25 +451,14 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
             </h2>
           </div>
 
-          <Accordion type="single" collapsible className="gap-4">
-            {faqAccordionItems.map((item, index) => (
-              <AccordionItem key={index} value={`faq-${index}`}>
-                <AccordionTrigger className="text-lg font-semibold text-start [&_svg]:shrink-0">
-                  <RichHtml
-                    html={item.question}
-                    as="span"
-                    className="flex-1 pe-2 text-start [&_p]:mb-0 [&_h2]:text-lg [&_h3]:text-base [&_strong]:font-semibold"
-                  />
-                </AccordionTrigger>
-                <AccordionContent>
-                  <RichHtml
-                    html={item.answer}
-                    className="faq-content text-base leading-relaxed text-gray-800 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ps-6 [&_ol]:list-decimal [&_ol]:ps-6 [&_a]:font-semibold [&_a]:text-brand"
-                  />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <FaqAccordion
+            items={faqAccordionItems.map((item, index) => ({
+              id: index,
+              question: item.question,
+              answer: item.answer,
+            }))}
+            columns={faqAccordionItems.length > 1 ? 2 : 1}
+          />
         </section>
       ) : null}
 

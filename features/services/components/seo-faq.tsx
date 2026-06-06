@@ -1,9 +1,4 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import FaqAccordion from "@/features/shared/components/faq-accordion";
 import SectionHeader from '@/features/shared/components/section-header';
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { SectionLinkShell } from "@/features/services/components/section-link-shell";
@@ -59,22 +54,14 @@ export default function SeoFaq({
         ) : null}
 
         {accordionItems.length > 0 ? (
-          <Accordion type="single" collapsible className="gap-4">
-            {accordionItems.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-lg font-semibold text-start [&_svg]:shrink-0">
-                  <RichHtml
-                    html={item.question}
-                    as="span"
-                    className="flex-1 pe-2 text-start [&_p]:mb-0 [&_h2]:text-lg [&_h3]:text-base [&_strong]:font-semibold"
-                  />
-                </AccordionTrigger>
-                <AccordionContent>
-                  <RichHtml html={item.answer} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <FaqAccordion
+            items={accordionItems.map((item, index) => ({
+              id: index,
+              question: item.question,
+              answer: item.answer,
+            }))}
+            columns={accordionItems.length > 1 ? 2 : 1}
+          />
         ) : null}
       </div>
     </div>
