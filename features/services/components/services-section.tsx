@@ -10,8 +10,9 @@ import { countryIdsMatch } from "../lib/dedupe-countries";
 import { useGetServices } from "../hooks/useGetServices";
 import { ServicesCountryFilter } from "./services-country-filter";
 import { ServicesGrid } from "./services-grid";
+import { cn } from "@/lib/utils";
 
-export default function ServicesSection({ countryId }: { countryId?: number }) {
+export default function ServicesSection({ countryId ,lightBg = false}: { countryId?: number,lightBg?: boolean }) {
   const t = useTranslations("servicesSection");
   const tPage = useTranslations("servicesPage");
   const {
@@ -61,32 +62,39 @@ export default function ServicesSection({ countryId }: { countryId?: number }) {
   }
 
   return (
-    <section className=" py-16 background-dark-img ">
+    <section
+      className={cn(
+        " py-16  ",
+        lightBg ? "finger-print-background" : "background-dark-img bg-opacity-50",
+      )}
+    >
       <div className="container space-y-8">
-      <SectionHeader
-        title={t("title")}
-        subtitle={t("subtitle")}
-        align="center"
-        subtitleColor="text-gray-500"
-      />
-
-      {countryId == null && countriesData.length > 0 && selectedCountry != null ? (
-        <ServicesCountryFilter
-          countries={countriesData}
-          selectedCountryId={selectedCountry}
-          onSelectCountry={setAutoSelectedCountry}
+        <SectionHeader
+          title={t("title")}
+          subtitle={t("subtitle")}
+          align="center"
+          subtitleColor="text-gray-500"
         />
-      ) : null}
 
-      <ServicesGrid services={filteredServices} />
+        {countryId == null &&
+        countriesData.length > 0 &&
+        selectedCountry != null ? (
+          <ServicesCountryFilter
+            countries={countriesData}
+            selectedCountryId={selectedCountry}
+            onSelectCountry={setAutoSelectedCountry}
+          />
+        ) : null}
 
-      <div className="flex justify-center pt-4">
-        <Link
-          href="/services"
-          className="rounded-full border-2 border-brand bg-brand/5 px-8 py-3 text-sm font-bold text-brand transition hover:bg-brand hover:text-white"
-        >
-          {tPage("viewAll")}
-        </Link>
+        <ServicesGrid services={filteredServices} titleDark={lightBg} />
+
+        <div className="flex justify-center pt-4">
+          <Link
+            href="/services"
+            className="rounded-full border-2 border-brand bg-brand/5 px-8 py-3 text-sm font-bold text-brand transition hover:bg-brand hover:text-white"
+          >
+            {tPage("viewAll")}
+          </Link>
         </div>
       </div>
     </section>

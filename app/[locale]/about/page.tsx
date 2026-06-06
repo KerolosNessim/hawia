@@ -113,6 +113,7 @@ export default async function AboutPage() {
         title={data?.title || t("title")}
         image={data?.image || "/hero-bg.webp"}
         descriptionHtml={data?.description || t("description")}
+        align="center"
       />
 
       <div className="space-y-16 finger-print-background">
@@ -133,7 +134,7 @@ export default async function AboutPage() {
         data={data?.vision_sections[0]}
       />
       {/* services */}
-      <ServicesSection />
+      <ServicesSection lightBg={true} />
       {/* values */}
       <Values data={data?.why_us_sections[0]} />
       {/* ideal client */}

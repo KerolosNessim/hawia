@@ -44,7 +44,7 @@ export default function AboutVideoDialog({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative z-20 mx-auto block w-full max-w-4xl cursor-pointer lg:-mt-40"
+          className="relative z-20 mx-auto block w-full max-w-4xl cursor-pointer lg:-mt-60"
           aria-label={watchLabel}
         >
           <Image

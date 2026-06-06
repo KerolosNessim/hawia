@@ -14,6 +14,7 @@ import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { useLocale } from "next-intl";
 import { pickServiceSlug, servicePostPath } from "../lib/services-routes";
 import { Service } from "../types";
+import { cn } from "@/lib/utils";
 
 const serviceCardTitleClassName =
   "service-card__title line-clamp-2 min-h-14 w-full text-center text-xl font-bold text-white";
@@ -24,6 +25,7 @@ export default function ServicesCard({
   index,
   countryId,
   titleAsPlainH3 = false,
+  titleDark = false,
 }: {
   item: Service;
   icon: LucideIcon;
@@ -31,7 +33,8 @@ export default function ServicesCard({
   /** Preserves country context on service detail URLs (`?country_id=`). */
   countryId?: number;
   /** Related-services carousel only: plain `<h3>` with HTML stripped from title. */
-  titleAsPlainH3?: boolean;
+    titleAsPlainH3?: boolean;
+  titleDark?: boolean;
 }) {
   const locale = useLocale();
   const href = servicePostPath(pickServiceSlug(item, locale), { countryId });
@@ -55,17 +58,17 @@ export default function ServicesCard({
                 <Icon className="h-8 w-8 md:h-10 md:w-10" />
               </div>
               {titleAsPlainH3 ? (
-                <h3 className={serviceCardTitleClassName}>
+                <h3 className={cn(serviceCardTitleClassName, titleDark && "text-gray-900")}>
                   {title}
                 </h3>
               ) : (
-                <h2 className={serviceCardTitleClassName}>{title}</h2>
+                <h2 className={cn(serviceCardTitleClassName, titleDark && "text-gray-900")}>{title}</h2>
               )}
               {subtitle.trim() ? (
                 <RichHtml
                   html={subtitle}
                   as="p"
-                  className="service-card__subtitle line-clamp-2 min-h-10 w-full text-center text-sm font-medium text-white"
+                  className={cn("service-card__subtitle line-clamp-2 min-h-10 w-full text-center text-sm font-medium", titleDark ?"text-gray-900": "text-white")}
                 />
               ) : (
                 <span className="min-h-10" aria-hidden />

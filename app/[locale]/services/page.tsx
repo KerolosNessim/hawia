@@ -169,7 +169,7 @@ export default async function ServicesPage(props: {
           {services.length === 0 ? (
             <p className="py-16 text-center text-lg text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ServicesGrid services={services} countryId={selectedCountryId} />
+            <ServicesGrid titleDark={true} services={services} countryId={selectedCountryId} />
           )}
         </section>
 

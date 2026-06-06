@@ -41,6 +41,7 @@ interface PageHeaderProps {
 
   /** Optional CTA below the hero title/description (e.g. AI tools on `/ai-services`). */
   action?: PageHeaderAction;
+  align?: "center" | "start";
 }
 
 /** Hero title — compact on mobile, large on desktop (matches legacy blog hero). */
@@ -85,6 +86,7 @@ export default function PageHeader({
   descriptionAsHeader = false,
   breadcrumbItems,
   action,
+  align = "start",
 }: PageHeaderProps) {
   const locale = useLocale();
   const hasRichTitle = Boolean(titleHtml?.trim());
@@ -156,7 +158,7 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={titleRichClass}
+              className={cn(titleRichClass, align === "center" ? "mx-auto" : "")}
               dangerouslySetInnerHTML={{ __html: headerTitleHtml }}
             />
           ) : headerPlain ? (
@@ -164,7 +166,7 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={cn("max-w-6xl", titlePlainClass)}
+              className={cn("max-w-6xl", titlePlainClass, align === "center" ? "mx-auto" : "")}
             >
               {headerPlain}
             </motion.h1>
@@ -175,7 +177,7 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={titleRichClass}
+              className={cn(titleRichClass, align === "center" ? "mx-auto" : "")}
               dangerouslySetInnerHTML={{ __html: enhancedTitleHtml }}
             />
           ) : title ? (
@@ -183,7 +185,7 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={titlePlainClass}
+              className={cn(titlePlainClass, align === "center" ? "mx-auto" : "")}
             >
               {title}
             </motion.h1>
@@ -196,7 +198,7 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className={descriptionRichClass}
+              className={cn(descriptionRichClass, align === "center" ? "mx-auto" : "")}
               dangerouslySetInnerHTML={{
                 __html: enhancedDescriptionHtml,
               }}
@@ -206,7 +208,7 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className={descriptionSizeClass}
+              className={cn(descriptionSizeClass, align === "center" ? "mx-auto" : "")}
             >
               {description}
             </motion.p>

@@ -5,9 +5,10 @@ import ServicesCard from "./services-card";
 type ServicesGridProps = {
   services: Service[];
   countryId?: number;
+  titleDark?: boolean;
 };
 
-export function ServicesGrid({ services, countryId }: ServicesGridProps) {
+export function ServicesGrid({ services, countryId, titleDark = false }: ServicesGridProps) {
   if (!services.length) return null;
 
   return (
@@ -19,6 +20,7 @@ export function ServicesGrid({ services, countryId }: ServicesGridProps) {
           item={item}
           index={index}
           countryId={countryId}
+          titleDark={titleDark}
         />
       ))}
     </div>

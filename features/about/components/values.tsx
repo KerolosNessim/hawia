@@ -9,7 +9,7 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
   const whyChoose = t.raw("why_choose");
   const values = t.raw("values");
   return (
-    <section className="finger-print-background">
+    <section className="background-dark-img py-16">
 
     <div className=" container flex items-center justify-center gap-10">
       <motion.div
@@ -25,14 +25,14 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
           {data?.description ? (
             <RichHtml
               html={data.description}
-              className="font-semibold [&_p]:text-brand [&_p]:font-bold"
+              className="text-white font-semibold [&_p]:text-brand [&_p]:font-bold"
             />
           ) : (
             <ul className="space-y-3  ">
               {whyChoose?.map((item: string, index: number) => (
                 <li
                   key={index}
-                  className="font-semibold flex items-baseline gap-2"
+                  className="font-semibold flex items-baseline gap-2 text-white"
                 >
                   <span className="w-2 h-2 bg-brand rounded-full shrink-0"></span>
                   {item}
@@ -61,7 +61,7 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
                 >
                   <span className="w-2 h-2 bg-brand rounded-full shrink-0"></span>
                   <span className="text-brand font-bold">{item.title}</span>
-                  <RichHtml html={item.description} className="inline" />
+                  <RichHtml  html={item.description} className="inline text-white" />
                 </li>
               ),
             )}
