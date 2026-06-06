@@ -18,6 +18,7 @@ import { useGetServices } from "@/features/services/hooks/useGetServices";
 import { Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { toast } from "sonner";
 
 export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
@@ -123,7 +124,7 @@ export default function BookingForm({ onSuccess }: { onSuccess?: () => void }) {
           <SelectContent position="popper">
             {services?.map((service) => (
               <SelectItem key={service.id} value={service.id.toString()}>
-                {service.title}
+                {plainTextFromHtml(service.title) || String(service.id)}
               </SelectItem>
             ))}
           </SelectContent>

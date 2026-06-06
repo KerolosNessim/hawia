@@ -39,7 +39,7 @@ const SECTION_CONFIG: Record<
   blogs: {
     labelKey: "results.blogs",
     icon: BookOpen,
-    buildHref: (slug) => `/blogs/blog/${slug}`,
+    buildHref: (slug) => `/blogs/${slug}`,
   },
   services: {
     labelKey: "results.services",
@@ -87,7 +87,11 @@ const ResultItem = ({ item, href, icon: Icon, onClose }: ResultItemProps) => (
   </Link>
 );
 
-export const SearchDialog = () => {
+type SearchDialogProps = {
+  triggerClassName?: string;
+};
+
+export const SearchDialog = ({ triggerClassName }: SearchDialogProps = {}) => {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [value, setValue] = useState("");
@@ -129,8 +133,13 @@ export const SearchDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="size-14! rounded-full bg-brand text-white">
-          <SearchIcon className="size-6" />
+        <Button
+          className={
+            triggerClassName ??
+            "size-14! rounded-full bg-brand text-white"
+          }
+        >
+          <SearchIcon className="size-5 sm:size-6" />
         </Button>
       </DialogTrigger>
 
@@ -206,7 +215,10 @@ export const SearchDialog = () => {
               transition={{ duration: 0.25 }}
               className="overflow-hidden"
             >
-              <div className="border-t border-gray-100 max-h-[400px] overflow-y-auto px-6 py-4 space-y-4">
+              <div
+                data-lenis-prevent
+                className="border-t border-gray-100 max-h-[400px] overflow-y-auto px-6 py-4 space-y-4"
+              >
                 {isFetching && !hasResults && (
                   <div className="flex justify-center py-8">
                     <Loader2 className="size-8 animate-spin text-brand" />

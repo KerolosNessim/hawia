@@ -1,29 +1,33 @@
-import SectionHeader from '@/features/shared/components/section-header'
-import React from 'react'
-import { getTranslations } from 'next-intl/server'
-import Image from 'next/image'
-import * as motion from "motion/react-client"
-import { getAdsData } from '../services/ads'
-export default async function AdsSection() {
-  const t = await getTranslations("adsSection")
+import SectionHeader from "@/features/shared/components/section-header";
+import { clientsIndexPath } from "@/features/clients/lib/clients-routes";
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { Button } from "@/components/ui/button";
+import { getTranslations } from "next-intl/server";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
+import * as motion from "motion/react-client";
+import { Link } from "@/i18n/navigation";
+import { getAdsData } from "../services/ads";
 
-  const data = await getAdsData()
-  if (!data?.data) return null
+export default async function AdsSection({ countryId }: { countryId?: number }) {
+  const t = await getTranslations("adsSection");
+  const section = await getAdsData(countryId);
 
-  const items = data.data.singles?.map((item) => {
-    return {
-      title: item?.content?.title,
-      img: item?.image,
-    }
-  }) || []
+  if (!section?.categories?.length) return null;
+
+  const title = section.title || t("title");
+  const subtitle = section.descriptionHtml || t("subtitle");
+
   return (
-    <section className="py-16 space-y-8 bg-gray-900 relative overflow-hidden">
-      {/* Decorative Wavy Background Pattern (Simplified) */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none text-brand">
+    <section className="relative space-y-8 overflow-hidden bg-gray-900 py-16">
+      <div
+        className="pointer-events-none absolute inset-0 text-brand opacity-5"
+        aria-hidden
+      >
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern
-              id="wavy"
+              id="ads-wavy"
               x="0"
               y="0"
               width="100"
@@ -36,39 +40,52 @@ export default async function AdsSection() {
                 stroke="currentColor"
                 strokeWidth="2"
               />
-            </pattern>{" "}
-            pattern
+            </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#wavy)" />
+          <rect width="100%" height="100%" fill="url(#ads-wavy)" />
         </svg>
       </div>
 
-      <div className="container px-4 relative z-10">
-        <SectionHeader title={data?.data?.content?.title || t("title")} subtitle={data?.data?.content?.description || t("subtitle")} />
+      <div className="container relative z-10 px-4">
+        <SectionHeader title={title} subtitleHtml={subtitle} />
       </div>
 
-      <div className="container px-4 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {items.map((item, index) => (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: index * 0.2 }}
-              key={index}
-              className="text-gray-900 bg-linear-to-b from-brand to-white rounded-lg p-6  text-center hover:from-white hover:to-brand hover:text-white transition-all  duration-300 "
+      <div className="container relative z-10 px-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {section.categories.map((item, index) => (
+            <Link
+              key={item.id}
+              href={item.href || clientsIndexPath({ categorySlug: item.slug })}
+              className="block"
             >
-              <Image
-                src={item.img}
-                alt={item.title}
-                width={100}
-                height={100}
-                className="size-50 object-contain mx-auto"
-              />
-              <h3 className="text-xl font-extrabold my-2">
-                {item.title}
-              </h3>
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="rounded-lg bg-linear-to-b from-brand to-white p-6 text-center text-gray-900 transition-all duration-300 hover:from-white hover:to-brand hover:text-white"
+              >
+                <Image
+                  src={item.imageUrl}
+                  alt={item.imageAlt || item.title}
+                  width={100}
+                  height={100}
+                  unoptimized={isRemoteMediaUrl(item.imageUrl)}
+                  className="mx-auto size-24 object-contain sm:size-28"
+                />
+                <h3 className="my-2 text-xl font-extrabold">{item.title}</h3>
+              </motion.div>
+            </Link>
           ))}
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link href={clientsIndexPath()} className="inline-flex">
+            <Button className="rounded-full bg-brand px-6 py-3 text-base text-white hover:bg-brand/90">
+              {t("showAll")}
+              <ArrowRight className="size-4 rtl:rotate-y-180" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

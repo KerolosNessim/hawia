@@ -36,8 +36,6 @@ export type LaravelResourcePaginationProps = {
   siblingCount?: number;
   disabled?: boolean;
   hideWhenSinglePage?: boolean;
-  /** Flip prev/next chevrons for RTL layouts. */
-  isRtl?: boolean;
 };
 
 export function LaravelResourcePagination({
@@ -54,7 +52,6 @@ export function LaravelResourcePagination({
   siblingCount = 1,
   disabled = false,
   hideWhenSinglePage = true,
-  isRtl = false,
 }: LaravelResourcePaginationProps) {
   const { current_page, last_page, from, to, total } = meta;
 
@@ -89,8 +86,6 @@ export function LaravelResourcePagination({
   const resolvePageHref = (page: number) =>
     getPageUrl ? getPageUrl(page) : buildLaravelPageUrl(meta.path, page);
 
-  const rtlChevron = isRtl ? "rotate-180" : undefined;
-
   const summary =
     showSummary && total > 0 && from != null && to != null ? (
       <p
@@ -121,7 +116,6 @@ export function LaravelResourcePagination({
               href={onPageChange ? "#" : (canPrev && prevHref ? prevHref : "#")}
               className={cn(
                 "rounded-xl border-border/60 h-9 px-3",
-                rtlChevron,
                 (!canPrev || disabled) && "pointer-events-none opacity-50"
               )}
               onClick={(e) => {
@@ -186,7 +180,6 @@ export function LaravelResourcePagination({
               href={onPageChange ? "#" : (canNext && nextHref ? nextHref : "#")}
               className={cn(
                 "rounded-xl border-border/60 h-9 px-3",
-                rtlChevron,
                 (!canNext || disabled) && "pointer-events-none opacity-50"
               )}
               onClick={(e) => {

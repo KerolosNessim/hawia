@@ -39,7 +39,11 @@ export default function RelatedBlogsSection({ articles }: { articles: BlogCardPa
       </div>
 
       <div className="container  space-y-12">
-        <SectionHeader title={tDetail("relatedTitle")} />
+        <SectionHeader
+          title={tDetail("relatedTitle")}
+          titleColor="text-white"
+          subtitleColor="text-gray-400"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {articles.map((article, index) => (
@@ -48,6 +52,7 @@ export default function RelatedBlogsSection({ articles }: { articles: BlogCardPa
               article={article}
               index={index}
               isRtl={isRtl}
+              theme="dark"
             />
           ))}
         </div>

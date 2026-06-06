@@ -14,22 +14,22 @@ import {
   ArrowDown,
 } from "lucide-react";
 import SectionHeader from "@/features/shared/components/section-header";
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { useSteps } from "../hooks/useSteps";
 
 import Image from "next/image";
 
 const icons = [TrendingUp, Search, BarChart2, Users, FileText];
 
-export default function StepsSection() {
+export default function StepsSection({ countryId }: { countryId?: number }) {
   const t = useTranslations("stepsSection");
   const locale = useLocale();
   const isRTL = locale === "ar";
-  const { data, isLoading } = useSteps();
-  console.log("data steps", data?.data?.data);
-  const apiItems = Array.isArray(data?.data?.data)
-    ? data?.data?.data?.map((single) => ({
-        title: single?.title,
-        description: single?.description,
+  const { data, isLoading } = useSteps(countryId);
+  const apiItems = Array.isArray(data?.data)
+    ? data.data.map((single) => ({
+        title: single?.content?.title || single?.title || "",
+        description: single?.content?.description || single?.description || "",
         image: single?.image,
       }))
     : [];
@@ -40,9 +40,15 @@ export default function StepsSection() {
     : [];
   
 
-  const items = apiItems.length > 0 ? apiItems : fallbackItems;
+  const items =
+    apiItems.length > 0
+      ? apiItems
+      : countryId == null
+        ? fallbackItems
+        : [];
 
   if (isLoading) return null;
+  if (countryId != null && items.length === 0) return null;
 
   return (
     <section className="py-24 bg-gray-900 relative overflow-hidden">
@@ -117,9 +123,10 @@ export default function StepsSection() {
                     <h3 className="font-bold text-xl mt-3 text-brand">
                       {step.title}
                     </h3>
-                    <p className="text-gray-200 mt-2 text-sm max-w-[180px] leading-relaxed">
-                      {step.description}
-                    </p>
+                    <RichHtml
+                      html={step.description}
+                      className="text-gray-200 mt-2 text-sm max-w-[180px] leading-relaxed"
+                    />
                   </div>
                 </motion.div>
 
@@ -176,7 +183,10 @@ export default function StepsSection() {
                 <h3 className="font-bold text-xl mt-2 text-brand">
                   {step.title}
                 </h3>
-                <p className="text-gray-200 mt-2 text-sm max-w-xs">{step.description}</p>
+                <RichHtml
+                  html={step.description}
+                  className="text-gray-200 mt-2 text-sm max-w-xs"
+                />
                 {index !== items.length - 1 && (
                   <ArrowDown className="mt-8 text-gray-300 w-6 h-6 animate-bounce" />
                 )}

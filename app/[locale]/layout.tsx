@@ -6,20 +6,37 @@ import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { Cairo, Geist } from "next/font/google";
-import { notFound } from "next/navigation";
+import { redirect } from "@/i18n/navigation";
+import { cairoLocal, fontPreloadByLocale, geistLocal } from "@/lib/fonts";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
-import BreadcrumbJsonLd from "@/features/shared/components/seo/breadcrumb-json-ld";
-import OrganizationJsonLd from "@/features/shared/components/seo/organization-json-ld";
+import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
+import { CustomHeadFromSettings } from "@/features/shared/components/seo/custom-head-from-settings";
+import GlobalSchemaScript from "@/features/shared/components/seo/global-schema-script";
+import { HeadTagsFromMarkup } from "@/features/shared/components/seo/head-tags-from-markup";
+import { partitionBodyScripts } from "@/lib/seo/partition-body-scripts";
+import { SITE_REFERRER_POLICY } from "@/lib/seo/metadata-helpers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import { resolveSettingsPageSeo } from "@/features/settings/lib/resolve-settings-seo";
+import { getSettings, scriptsFromSettings } from "@/features/settings/services/settings-service";
 
-import { getScripts, getSettings } from "@/features/settings/services/settings-service";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
+const FALLBACK_FAVICON = "/logo.png";
+
+function resolveFaviconUrl(favicon: string | null | undefined): string {
+  const raw = favicon?.trim();
+  if (!raw) return FALLBACK_FAVICON;
+  if (/^https?:\/\//i.test(raw)) return raw.replace(/^http:\/\//i, "https://");
+
+  const path = raw.startsWith("/") ? raw : `/${raw}`;
+  if (!path.startsWith("/storage/")) return path;
+
+  const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/i, "").replace(/\/$/, "");
+  return apiBase ? `${apiBase}${path}` : path;
+}
 
 export async function generateMetadata({
   params,
@@ -29,13 +46,17 @@ export async function generateMetadata({
   try {
     const response = await getSettings();
     const settings = response.data;
-    const homeSeo = settings.seo.find((s) => s.page_key === "home");
+    const homeSeo = await resolveSettingsPageSeo("home");
 
     return {
-      title: homeSeo?.meta_title || settings.general.site_name,
-      description: homeSeo?.meta_description || settings.general.site_description,
+      title: homeSeo?.title || settings.general.site_name,
+      description:
+        homeSeo?.description || settings.general.site_description || undefined,
+      referrer: SITE_REFERRER_POLICY,
       icons: {
-        icon: settings.general.favicon || "/favicon.ico",
+        icon: resolveFaviconUrl(settings.general.favicon),
+        shortcut: resolveFaviconUrl(settings.general.favicon),
+        apple: resolveFaviconUrl(settings.general.favicon),
       },
     };
   } catch (error) {
@@ -43,15 +64,15 @@ export async function generateMetadata({
     return {
       title: "Howeyah",
       description: "Howeyah platform for consulting and educational services.",
+      referrer: SITE_REFERRER_POLICY,
+      icons: {
+        icon: FALLBACK_FAVICON,
+        shortcut: FALLBACK_FAVICON,
+        apple: FALLBACK_FAVICON,
+      },
     };
   }
 }
-
-const cairo = Cairo({
-  subsets: ["arabic"],
-  variable: "--font-cairo",
-  weight: ["400", "500", "600", "700", "800", "900"],
-});
 
 export default async function RootLayout({
   children,
@@ -62,47 +83,65 @@ export default async function RootLayout({
 }>) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
-    return notFound();
+    redirect("/");
   }
   setRequestLocale(locale);
   const messages = await getMessages();
 
-  const font = locale === "ar" ? cairo : geistSans;
+  const isArabic = locale === "ar";
+  const font = isArabic ? cairoLocal : geistLocal;
+  const fontPreload = fontPreloadByLocale[isArabic ? "ar" : "en"];
 
-  const dir = locale === "ar" ? "rtl" : "ltr";
+  const dir   = isArabic ? "rtl" : "ltr";
 
-  const scriptsResponse = await getScripts().catch(() => null);
-  const scripts = scriptsResponse?.data;
+  const settingsForScripts = await getSettings().catch(() => null);
+  const scripts = settingsForScripts ? scriptsFromSettings(settingsForScripts.data) : null;
+  const { headMarkup: hoistedHeadTags, bodyMarkup: bodyScriptsOnly } = partitionBodyScripts(
+    scripts?.custom_body_scripts,
+  );
 
+ 
   return (
-    <html lang={locale} dir={dir} className={`${font.className} `} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={dir}
+      className={`${font.variable} ${font.className} overflow-x-clip`}
+      suppressHydrationWarning
+    >
       <head>
-        {scripts?.custom_head_scripts && (
-          <script
-            dangerouslySetInnerHTML={{ __html: scripts.custom_head_scripts }}
-          />
-        )}
+        <meta name="referrer" content={SITE_REFERRER_POLICY} />
+        <link
+          rel="preload"
+          href={fontPreload.href}
+          as="font"
+          type={fontPreload.type}
+          crossOrigin="anonymous"
+        />
+        <GlobalSchemaScript locale={locale} />
+        <HeadTagsFromMarkup markup={hoistedHeadTags} />
+        <CustomHeadFromSettings markup={scripts?.custom_head_scripts} />
       </head>
-      <body className=" relative overflow-x-hidden ">
-        <OrganizationJsonLd locale={locale} />
+      <body className="relative max-w-full min-h-dvh overflow-x-clip">
         <QueryProvider>
-          <NextIntlClientProvider messages={messages}>
-            <BreadcrumbJsonLd />
-            <DirectionProvider direction={dir}>
-              <Navbar/>
-              {children}
-              <Footer />
-              <FloatingSocials />
-              <Toaster  position="top-right"/>
-            </DirectionProvider>
-          </NextIntlClientProvider>
+          <SmoothScrollProvider>
+            <NextIntlClientProvider messages={messages}>
+              <DirectionProvider direction={dir}>
+                <Navbar />
+                {children}
+                <Footer />
+                <FloatingSocials />
+                <Toaster position="top-right" />
+              </DirectionProvider>
+            </NextIntlClientProvider>
+          </SmoothScrollProvider>
         </QueryProvider>
 
-        {scripts?.custom_body_scripts && (
+        {bodyScriptsOnly ? (
           <div
-            dangerouslySetInnerHTML={{ __html: scripts.custom_body_scripts }}
+            className="cms-body-scripts"
+            dangerouslySetInnerHTML={{ __html: bodyScriptsOnly }}
           />
-        )}
+        ) : null}
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ import {
 import * as motion from "framer-motion/client";
 import { Crosshair, Eye } from "lucide-react";
 
+import { RichHtml } from "@/features/shared/components/rich-html";
 import { useTranslations } from "next-intl";
 import { VisionSection } from "../types";
 import Image from "next/image";
@@ -45,7 +46,8 @@ export default function VissionAndMession({data}:{data:VisionSection|undefined})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription dangerouslySetInnerHTML={{ __html: data?.vision_description ||"" }} className="text-center text-base font-semibold leading-relaxed mb-4 ">
+              <CardDescription className="text-center text-base font-semibold leading-relaxed mb-4">
+                <RichHtml html={data?.vision_description} />
               </CardDescription>
             </CardContent>
           </Card>
@@ -78,7 +80,8 @@ export default function VissionAndMession({data}:{data:VisionSection|undefined})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription dangerouslySetInnerHTML={{ __html: data?.message_description ||"" }} className="text-center text-base font-semibold leading-relaxed mb-4">
+              <CardDescription className="text-center text-base font-semibold leading-relaxed mb-4">
+                <RichHtml html={data?.message_description} />
               </CardDescription>
             </CardContent>
           </Card>

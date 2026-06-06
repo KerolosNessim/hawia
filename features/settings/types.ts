@@ -22,10 +22,32 @@ export interface SettingSeo {
   meta_description: string;
 }
 
+export interface SettingsFooterCountry {
+  id: number;
+  name: string | { ar: string; en: string };
+  image?: string | null;
+  image_alt?: string | null;
+}
+
+export interface SettingsFooterService {
+  id: number;
+  slug: string;
+  slug_local?: { ar?: string; en?: string };
+  title: string;
+  highlight_description?: string;
+  meta_title?: string;
+  image_alt?: string | null;
+  sort_order?: number;
+  countries: SettingsFooterCountry[];
+}
+
 export interface SettingsData {
   general: {
     site_name: string;
     site_description: string;
+    /** Home page meta from general settings (fallback if `seo` has no `home` row). */
+    home_meta_title?: string | null;
+    home_meta_description?: string | null;
     logo: string;
     favicon: string;
     timezone: string;
@@ -34,6 +56,10 @@ export interface SettingsData {
   contact: {
     email: string;
     phones: SettingPhone[];
+    /** WhatsApp / phone for course enrollment (from dashboard settings). */
+    courses_phone?: string | null;
+    address_ar?: string | null;
+    address_en?: string | null;
   };
   offices: SettingOffice[];
   working_hours: {
@@ -45,6 +71,10 @@ export interface SettingsData {
   };
   social_media: SettingSocialMedia[];
   seo: SettingSeo[];
+  scripts?: ScriptsData;
+  footer?: {
+    services?: SettingsFooterService[];
+  };
 }
 
 export interface SettingsResponse {

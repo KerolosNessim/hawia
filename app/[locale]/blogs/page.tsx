@@ -1,8 +1,9 @@
 import BlogCard from "@/features/blogs/components/blog-card";
 import BlogCategoriesFilter from "@/features/blogs/components/blog-categories-filter";
 import { BlogListPagination } from "@/features/blogs/components/blog-list-pagination";
-import { blogCategoryPath, blogIndexHref } from "@/features/blogs/lib/blog-routes";
-import { buildBreadcrumbJsonLd, jsonLdScript } from "@/features/blogs/lib/json-ld";
+import { blogCategoryPath, blogIndexHref, localePath } from "@/features/blogs/lib/blog-routes";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { absoluteUrlFromPath, buildCanonicalUrl, serializeBlogIndexSchema } from "@/lib/seo/schema";
 import {
   blogToCardPayload,
   fetchPublicBlogCategories,
@@ -15,11 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
+import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { cn } from "@/lib/utils";
-
-const BLOG_LIST_PER_PAGE = 9;
 
 type SearchParamsType = Record<string, string | string[] | undefined>;
 
@@ -35,15 +35,6 @@ function parseSearch(sp: SearchParamsType): string {
   return raw.trim();
 }
 
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
-
 export async function generateMetadata({
   params,
   searchParams,
@@ -57,21 +48,27 @@ export async function generateMetadata({
   const sp = searchParams ? await searchParams : {};
   const page = parsePage(sp);
   const search = parseSearch(sp);
-  const canonicalPath = blogIndexHref(locale, page > 1 ? page : 1, { search });
-  const canonical = (await absolutePath(canonicalPath)) ?? undefined;
+  const pathname = blogIndexHref(locale, page > 1 ? page : 1, { search });
 
-  return {
+  const { meta } = await fetchPublicBlogsPaginated({
+    paginationPath: localePath(locale, "/blogs"),
+    page,
+    per_page: BLOG_LIST_PER_PAGE,
+    search: search || undefined,
+  });
+
+  return buildStaticPageMetadata({
+    locale,
+    pathname,
+    pageKey: "blog",
     title: t("metaTitle"),
     description: t("metaDescription"),
-    robots: { index: true, follow: true },
-    alternates: canonical ? { canonical } : undefined,
-    openGraph: {
-      title: t("metaTitle"),
-      description: t("metaDescription"),
-      locale: locale === "ar" ? "ar_SA" : "en_US",
-      type: "website",
+    pagination: {
+      currentPage: meta.current_page,
+      lastPage: meta.last_page,
+      hrefForPage: (p) => blogIndexHref(locale, p > 1 ? p : 1, { search }),
     },
-  };
+  });
 }
 
 export default async function BlogPage(props: {
@@ -90,7 +87,7 @@ export default async function BlogPage(props: {
     fetchPublicBlogCategories(locale),
     fetchVisibleBlogCountByCategoryId(),
     fetchPublicBlogsPaginated({
-      paginationPath: `/${locale}/blogs`,
+      paginationPath: localePath(locale, "/blogs"),
       page,
       per_page: BLOG_LIST_PER_PAGE,
       search: search || undefined,
@@ -107,30 +104,24 @@ export default async function BlogPage(props: {
     key: String(b.id),
   }));
 
-  const blogIndexAbs = (await absolutePath(`/${locale}/blogs`)) ?? `/${locale}/blogs`;
-  const listAbs =
-    (await absolutePath(blogIndexHref(locale, page, { search }))) ?? blogIndexAbs;
+  const blogIndexAbs = buildCanonicalUrl(locale, "/blogs");
+  const listAbs = absoluteUrlFromPath(blogIndexHref(locale, page > 1 ? page : 1, { search }));
 
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
-    { name: t("breadcrumbBlog"), url: blogIndexAbs },
-  ]);
-
-  const webPageLd = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "@id": `${listAbs}#webpage`,
-    url: listAbs,
+  const blogSchemaJson = serializeBlogIndexSchema({
+    pageUrl: page > 1 || search ? listAbs : blogIndexAbs,
     name: t("title"),
     description: t("metaDescription"),
-    isPartOf: { "@type": "WebSite", name: "Howeyah" },
-  };
-
-  const structuredData = jsonLdScript([breadcrumbLd, webPageLd]);
+    blogName: t("title"),
+    inLanguage: locale === "ar" ? "ar" : "en",
+    breadcrumbs: [
+      { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/") },
+      { name: t("breadcrumbBlog"), url: blogIndexAbs },
+    ],
+  });
 
   return (
     <div className="space-y-12 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={blogSchemaJson} />
 
       <PageHeader title={t("title")} description={t("description")} image="/blogs-banner.jfif" />
 
@@ -183,7 +174,7 @@ export default async function BlogPage(props: {
 
         <form
           method="get"
-          action={`/${locale}/blogs`}
+          action={localePath(locale, "/blogs")}
           className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center"
         >
           <label className="sr-only" htmlFor="blog-index-search">
@@ -213,7 +204,7 @@ export default async function BlogPage(props: {
                   article={article}
                   index={index}
                   isRtl={locale === "ar"}
-                  isLight
+                  theme="light"
                 />
               ))}
             </div>
@@ -226,7 +217,6 @@ export default async function BlogPage(props: {
           search={search}
           previousLabel={t("paginationPrevious")}
           nextLabel={t("paginationNext")}
-          isRtl={locale === "ar"}
         />
       </div>
     </div>

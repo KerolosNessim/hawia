@@ -47,8 +47,13 @@ export default function ArticlesSection({ items }: { items?: BlogCardPayload[] }
         </svg>
       </div>
 
-      <div className="container  space-y-12">
-        <SectionHeader title={t("title")} subtitle={t("subtitle")} />
+      <div className="container min-w-0 max-w-full space-y-12">
+        <SectionHeader
+          title={t("title")}
+          subtitle={t("subtitle")}
+          titleColor="text-white"
+          subtitleColor="text-gray-400"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {articles.map((article, index) => (
@@ -57,6 +62,7 @@ export default function ArticlesSection({ items }: { items?: BlogCardPayload[] }
               article={article}
               index={index}
               isRtl={isRtl}
+              theme="dark"
             />
           ))}
         </div>

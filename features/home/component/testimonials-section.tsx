@@ -30,41 +30,37 @@ function TestimonialCard({
   image?: string;
 }) {
   return (
-    <div className="p-2 h-full ">
-      <Card className="h-full ring-brand  backdrop-blur-sm ring-1   transition-all duration-300 flex flex-col justify-between overflow-visible">
-        <CardContent>
-          {/* Quote icon */}
+    <div className="h-full p-2">
+      <Card className="flex h-full flex-col justify-between overflow-hidden border border-white/10 bg-gray-800/90 shadow-lg ring-1 ring-brand/40 backdrop-blur-sm transition-all duration-300 hover:border-brand/50 hover:ring-brand/60">
+        <CardContent className="pt-6">
           <div className="mb-4 flex items-center justify-between">
-            <Quote className="w-8 h-8 text-brand opacity-80" />
-            {/* Stars */}
+            <Quote className="h-8 w-8 text-brand opacity-90" />
             <div className="flex gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-4 h-4 ${
-                    i < rating ? "text-brand" : "text-brand "
+                  className={`h-4 w-4 ${
+                    i < rating ? "text-brand" : "text-gray-600"
                   }`}
                   fill={i < rating ? "currentColor" : "none"}
                 />
               ))}
             </div>
           </div>
-          <p className="text-gray-900 leading-relaxed text-sm md:text-base">
-            {quote}
-          </p>
+          <p className="text-sm leading-relaxed text-gray-100 md:text-base">{quote}</p>
         </CardContent>
 
-        <CardFooter className="border-t border-brand bg-transparent mt-4 pt-4 pb-4 flex items-center gap-4">
-          <Avatar className="size-12 ring-2 ring-brand ring-offset-2">
+        <CardFooter className="mt-4 flex items-center gap-4 border-t border-brand/30 bg-gray-900/40 pt-4 pb-4">
+          <Avatar className="size-12 ring-2 ring-brand ring-offset-2 ring-offset-gray-900">
             <AvatarImage
               src={image || "/user.webp"}
               alt={name}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
             />
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-bold text-brand ">{name}</span>
-            <span className="text-gray-900text-sm">{role}</span>
+            <span className="font-bold text-brand">{name}</span>
+            <span className="text-sm text-gray-400">{role}</span>
           </div>
         </CardFooter>
       </Card>
@@ -72,11 +68,11 @@ function TestimonialCard({
   );
 }
 
-export default function TestimonialsSection() {
+export default function TestimonialsSection({ countryId }: { countryId?: number }) {
   const t = useTranslations("testimonialsSection");
   const locale = useLocale();
   const isRtl = locale === "ar";
-  const { data, isLoading } = useTestimonials();
+  const { data, isLoading } = useTestimonials(countryId);
 
   const testimonialRows = Array.isArray(data?.data?.testimonials)
     ? data.data.testimonials
@@ -100,16 +96,50 @@ export default function TestimonialsSection() {
       }[])
     : [];
 
-  const testimonials = apiTestimonials?.length > 0 ? apiTestimonials : staticTestimonials;
+  const testimonials =
+    apiTestimonials?.length > 0
+      ? apiTestimonials
+      : countryId == null
+        ? staticTestimonials
+        : [];
 
   if (isLoading) return null;
+  if (countryId != null && testimonials.length === 0) return null;
 
   return (
-    <section className="container py-16 space-y-8">
+    <section className="relative overflow-hidden bg-gray-900 py-16">
+      <div
+        className="pointer-events-none absolute inset-0 text-brand opacity-5"
+        aria-hidden
+      >
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern
+              id="testimonials-wavy"
+              x="0"
+              y="0"
+              width="100"
+              height="100"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M0 50 Q25 0 50 50 T100 50"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#testimonials-wavy)" />
+        </svg>
+      </div>
+
+      <div className="container relative z-10 space-y-8 px-4">
       <SectionHeader
         title={data?.data?.content?.title || t("title")}
-        subtitle={data?.data?.content?.description || t("subtitle")}
-        subtitleColor="text-gray-500"
+        subtitleHtml={data?.data?.content?.description || t("subtitle")}
+        subtitleColor="text-gray-400 [&_p]:text-gray-400"
+        titleColor="text-white [&_h2]:text-white [&_h3]:text-white"
       />
 
       <motion.div
@@ -149,14 +179,15 @@ export default function TestimonialsSection() {
           {/* Navigation buttons — positions swap automatically via start/end in RTL */}
           <CarouselPrevious
             isRtl={locale == "ar"}
-            className={`max-md:hidden size-10  bg-brand text-white hover:bg-gray-900 hover:text-brand disabled:opacity-30`}
+            className="max-md:hidden size-10 border border-white/20 bg-brand text-white hover:border-brand hover:bg-white hover:text-gray-900 disabled:opacity-30"
           />
           <CarouselNext
             isRtl={locale == "ar"}
-            className={`max-md:hidden size-10  bg-brand text-white hover:bg-gray-900 hover:text-brand disabled:opacity-30`}
+            className="max-md:hidden size-10 border border-white/20 bg-brand text-white hover:border-brand hover:bg-white hover:text-gray-900 disabled:opacity-30"
           />
         </Carousel>
       </motion.div>
+      </div>
     </section>
   );
 }

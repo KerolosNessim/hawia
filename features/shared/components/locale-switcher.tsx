@@ -1,6 +1,9 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useJobOpeningsBilingual } from "@/features/careers/hooks/useJobOpeningsBilingual";
+import { useGetServices } from "@/features/services/hooks/useGetServices";
+import { resolveLocalizedPathname } from "@/features/shared/lib/resolve-localized-pathname";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
 import ReactCountryFlag from "react-country-flag";
@@ -11,19 +14,53 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
-export default function LocaleSwitcher() {
+function hreflangTarget(newLocale: string): string | null {
+  if (typeof document === "undefined") return null;
+  const link = document.querySelector(
+    `link[rel="alternate"][hreflang="${newLocale}"]`,
+  ) as HTMLLinkElement | null;
+  return link?.href ?? null;
+}
+
+function syncLocaleCookie(newLocale: string): void {
+  document.cookie = `NEXT_LOCALE=${newLocale};path=/;SameSite=Lax`;
+}
+
+type LocaleSwitcherProps = {
+  triggerClassName?: string;
+};
+
+export default function LocaleSwitcher({ triggerClassName }: LocaleSwitcherProps) {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
+  const { data: servicesResponse } = useGetServices();
+  const services = Array.isArray(servicesResponse?.data) ? servicesResponse.data : [];
+  const { data: jobOpeningsBilingual } = useJobOpeningsBilingual();
 
   const handleChange = (newLocale: string) => {
-    // استخدم startTransition لتأخير التبديل حتى ينتهي التفاعل مع اللغة
+    if (newLocale === locale) return;
+
+    const nextPath = resolveLocalizedPathname(pathname, newLocale, {
+      services,
+      jobOpenings: jobOpeningsBilingual ?? [],
+    });
+
+    // Service/blog detail pages expose localized slugs via hreflang when list lookup misses.
+    if (nextPath === pathname) {
+      const alternateUrl = hreflangTarget(newLocale);
+      if (alternateUrl) {
+        syncLocaleCookie(newLocale);
+        window.location.href = alternateUrl;
+        return;
+      }
+    }
+
     startTransition(() => {
-      const segments = pathname.split("/");
-      segments[1] = newLocale; // أول segment هو اللغة
-      router.push(segments.join("/"));
+      router.replace(nextPath, { locale: newLocale });
     });
   };
 
@@ -31,21 +68,30 @@ export default function LocaleSwitcher() {
     <Select
       dir={locale === "ar" ? "rtl" : "ltr"}
       onValueChange={handleChange}
-      defaultValue={locale}
+      value={locale}
       disabled={isPending}
     >
       <SelectTrigger
-        className="w-fit bg-brand text-base size-14! rounded-full font-semibold hover:bg-main-navy transition-all duration-300  px-3 flex items-center justify-center"
+        className={cn(
+          triggerClassName ??
+            "flex size-14! w-fit items-center justify-center rounded-full bg-brand px-3 text-base font-semibold transition-all duration-300 hover:bg-main-navy",
+          triggerClassName &&
+            "p-0! overflow-hidden border-0 shadow-none [&_img]:size-full [&_svg]:size-full",
+        )}
         withArrow={false}
       >
         <ReactCountryFlag
           countryCode={locale === "ar" ? "SA" : "US"}
           svg
-          style={{
-            width: "25px",
-            height: "25px",
-          }}
-          className="rounded-full object-cover"
+          style={
+            triggerClassName
+              ? { width: "100%", height: "100%" }
+              : { width: "25px", height: "25px" }
+          }
+          className={cn(
+            "rounded-full object-cover",
+            triggerClassName && "size-full",
+          )}
         />
       </SelectTrigger>
       <SelectContent position="popper">

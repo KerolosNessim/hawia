@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import * as motion from "framer-motion/client";
 import Image from "next/image";
 import { WhyUsSection } from "../types";
+import { RichHtml } from "@/features/shared/components/rich-html";
 
 export default function Values({ data }: { data: WhyUsSection | undefined }) {
   const t = useTranslations("about");
@@ -20,11 +21,10 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
             {data?.title || t("why_choose_title")}
           </h2>
           {data?.description ? (
-            <div
-              className="font-semibold flex items-baseline gap-2 [&>p]:text-brand [&>p]:font-bold"
-              dangerouslySetInnerHTML={{ __html: data?.description || "" }}
-            >
-            </div>
+            <RichHtml
+              html={data.description}
+              className="font-semibold [&_p]:text-brand [&_p]:font-bold"
+            />
           ) : (
             <ul className="space-y-3  ">
               {whyChoose?.map((item: string, index: number) => (
@@ -45,11 +45,10 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
           </h2>
           {
             data?.values_description ? (
-              <div
-                className="font-semibold flex items-baseline gap-2 [&>p]:text-brand [&>p]:font-bold"
-                dangerouslySetInnerHTML={{ __html: data?.values_description || "" }}
-              >
-              </div>
+              <RichHtml
+                html={data.values_description}
+                className="font-semibold [&_p]:text-brand [&_p]:font-bold"
+              />
             ) : (
           <ul className="space-y-3  ">
             {values?.map(
@@ -60,7 +59,7 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
                 >
                   <span className="w-2 h-2 bg-brand rounded-full shrink-0"></span>
                   <span className="text-brand font-bold">{item.title}</span>
-                  <p>{item.description}</p>
+                  <RichHtml html={item.description} className="inline" />
                 </li>
               ),
             )}

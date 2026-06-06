@@ -1,5 +1,7 @@
-import { apiClient } from "@/lib/api";
+import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { getStaticResolvedCourse } from "@/features/courses/lib/static-course-mocks";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
+import { apiClient } from "@/lib/api";
 
 export type CatalogCourseSummary = {
   id: string;
@@ -22,9 +24,12 @@ export type ResolvedCourseLesson = {
 export type ResolvedPublicCourse = {
   id: string;
   slug: string;
+  slugLocal?: { ar?: string; en?: string };
   /** Localized main title */
   title: string;
   description: string;
+  metaTitle?: string;
+  metaDescription?: string;
   priceLabel: string;
   comparePriceLabel: string | null;
   imageSrc: string;
@@ -49,19 +54,49 @@ function unwrapArray(body: unknown): Record<string, unknown>[] {
 
 function pickLoc(field: unknown, locale: string): string {
   if (field == null) return "";
-  if (typeof field === "string") return field;
+  if (typeof field === "string") return field.trim();
   if (typeof field === "object" && !Array.isArray(field)) {
     const o = field as Record<string, unknown>;
     const ar = o.ar;
     const en = o.en;
     if (locale.startsWith("ar")) {
-      if (typeof ar === "string" && ar) return ar;
-      if (typeof en === "string") return en;
+      if (typeof ar === "string" && ar.trim()) return ar.trim();
+      if (typeof en === "string" && en.trim()) return en.trim();
     } else {
-      if (typeof en === "string" && en) return en;
-      if (typeof ar === "string") return ar;
+      if (typeof en === "string" && en.trim()) return en.trim();
+      if (typeof ar === "string" && ar.trim()) return ar.trim();
     }
   }
+  return "";
+}
+
+/** Reads localized SEO fields from API rows (`meta_title`, `meta_title_ar`, etc.). */
+function pickLocalizedField(
+  r: Record<string, unknown>,
+  key: string,
+  locale: string,
+): string {
+  const primary = pickLoc(r[key], locale);
+  if (primary) return primary;
+
+  const suffix = locale.startsWith("ar") ? "ar" : "en";
+  const flat = r[`${key}_${suffix}`];
+  if (typeof flat === "string" && flat.trim()) return flat.trim();
+
+  const camel =
+    key === "meta_title"
+      ? locale.startsWith("ar")
+        ? r.metaTitleAr
+        : r.metaTitleEn
+      : locale.startsWith("ar")
+        ? r.metaDescriptionAr
+        : r.metaDescriptionEn;
+  if (typeof camel === "string" && camel.trim()) return camel.trim();
+
+  const otherSuffix = suffix === "ar" ? "en" : "ar";
+  const fallback = r[`${key}_${otherSuffix}`];
+  if (typeof fallback === "string" && fallback.trim()) return fallback.trim();
+
   return "";
 }
 
@@ -73,6 +108,41 @@ function readId(r: Record<string, unknown>): string {
 function readSlug(r: Record<string, unknown>): string | null {
   const s = r.slug ?? r.url_slug;
   return typeof s === "string" && s.trim() ? s.trim() : null;
+}
+
+function readSlugForLocale(r: Record<string, unknown>, locale: string): string | null {
+  const local = r.slug_local;
+  if (local && typeof local === "object" && !Array.isArray(local)) {
+    const o = local as Record<string, unknown>;
+    const key = locale.startsWith("ar") ? "ar" : "en";
+    const localized = o[key];
+    if (typeof localized === "string" && localized.trim()) return localized.trim();
+    const fallback = o.en ?? o.ar;
+    if (typeof fallback === "string" && fallback.trim()) return fallback.trim();
+  }
+  return readSlug(r);
+}
+
+function collectSlugVariants(r: Record<string, unknown>): string[] {
+  const out = new Set<string>();
+  const primary = readSlug(r);
+  if (primary) out.add(primary);
+  const local = r.slug_local;
+  if (local && typeof local === "object" && !Array.isArray(local)) {
+    for (const v of Object.values(local as Record<string, unknown>)) {
+      if (typeof v === "string" && v.trim()) out.add(v.trim());
+    }
+  }
+  return [...out];
+}
+
+function recordMatchesIdentifier(
+  r: Record<string, unknown>,
+  identifier: string,
+): boolean {
+  const decoded = decodePathSegment(identifier);
+  if (readId(r) === decoded || readId(r) === identifier) return true;
+  return collectSlugVariants(r).some((s) => s === decoded || s === identifier);
 }
 
 function parseDescription(raw: unknown, locale: string): string {
@@ -109,13 +179,8 @@ function parseObjectives(raw: unknown, locale: string): string[] {
 }
 
 export function mediaUrlFromApi(path: string): string {
-  const t = path.trim();
-  if (!t) return "";
-  if (/^https?:\/\//i.test(t)) return t;
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-  const origin = base.replace(/\/?api$/i, "");
-  if (t.startsWith("/")) return `${origin}${t}`;
-  return `${origin}/${t}`;
+  const resolved = resolveMediaUrl(path.trim() || null);
+  return resolved === "/blog.webp" ? "/course.webp" : resolved;
 }
 
 function coverFromRecord(r: Record<string, unknown>): string {
@@ -167,7 +232,7 @@ export async function fetchCoursesCatalog(locale: string): Promise<CatalogCourse
       if (!id) return null;
       const active = r.is_active ?? r.isActive;
       if (active === false || active === 0 || active === "0") return null;
-      const slug = readSlug(r);
+      const slug = readSlugForLocale(r, locale) ?? readSlug(r);
       return {
         id,
         slug,
@@ -219,15 +284,16 @@ export async function fetchCourseSectionsPublic(
             : row.duration != null
               ? String(row.duration)
               : null;
-        return {
+        const lesson: ResolvedCourseLesson = {
           id,
           title: pickLoc(row.title, locale),
           preview,
           durationLabel: dur,
-          video_url: typeof row.video_url === "string" ? row.video_url : undefined,
         };
+        if (typeof row.video_url === "string") lesson.video_url = row.video_url;
+        return lesson;
       })
-      .filter((x): x is ResolvedCourseLesson => x != null);
+      .filter((x): x is ResolvedCourseLesson => x !== null);
   } catch {
     return [];
   }
@@ -238,12 +304,37 @@ function recordToResolved(
   locale: string,
   lessons: ResolvedCourseLesson[],
 ): ResolvedPublicCourse {
-  const slug = readSlug(r) ?? "";
+  const slug = readSlugForLocale(r, locale) ?? readSlug(r) ?? "";
+  const titleRaw = r.title;
+  const title =
+    typeof titleRaw === "string" && titleRaw.trim()
+      ? titleRaw.trim()
+      : pickLoc(titleRaw, locale);
+  const descriptionRaw = r.description;
+  const description =
+    typeof descriptionRaw === "string" && descriptionRaw.trim()
+      ? descriptionRaw
+      : parseDescription(descriptionRaw, locale);
+
+  const metaTitle = pickLocalizedField(r, "meta_title", locale);
+  const metaDescription = pickLocalizedField(r, "meta_description", locale);
+  const slugLocalRaw = r.slug_local;
+  const slugLocal =
+    slugLocalRaw && typeof slugLocalRaw === "object" && !Array.isArray(slugLocalRaw)
+      ? {
+          ar: pickLoc((slugLocalRaw as Record<string, unknown>).ar, "ar") || undefined,
+          en: pickLoc((slugLocalRaw as Record<string, unknown>).en, "en") || undefined,
+        }
+      : undefined;
+
   return {
     id: readId(r),
     slug,
-    title: pickLoc(r.title, locale),
-    description: parseDescription(r.description, locale),
+    slugLocal,
+    title: title || pickLoc(titleRaw, locale),
+    description,
+    metaTitle: metaTitle || undefined,
+    metaDescription: metaDescription || undefined,
     priceLabel: priceLabelFromRecord(r) || "—",
     comparePriceLabel: comparePriceFromRecord(r),
     imageSrc: coverFromRecord(r),
@@ -252,7 +343,38 @@ function recordToResolved(
   };
 }
 
-/** Resolve a course from URL segment: numeric id, slug, or list lookup. */
+async function resolveCourseRow(
+  identifier: string,
+  locale: string,
+): Promise<Record<string, unknown> | null> {
+  const decoded = decodePathSegment(identifier);
+
+  let row = await fetchCourseRowBySlug(decoded);
+  if (row) return row;
+
+  const listBody = await apiClient.get<unknown>("/v1/courses");
+  const list = unwrapArray(listBody);
+  const match = list.find((rec) => recordMatchesIdentifier(rec, decoded)) as
+    | Record<string, unknown>
+    | undefined;
+  if (!match) return null;
+
+  const slugCandidates = [
+    decoded,
+    readSlugForLocale(match, locale),
+    readSlug(match),
+    ...collectSlugVariants(match),
+  ].filter((s): s is string => Boolean(s));
+
+  for (const slug of [...new Set(slugCandidates)]) {
+    const full = await fetchCourseRowBySlug(slug);
+    if (full) return full;
+  }
+
+  return match;
+}
+
+/** Resolve a course from URL segment: numeric id, localized slug, or list lookup. */
 export async function resolvePublicCourse(
   identifier: string,
   locale: string,
@@ -260,26 +382,11 @@ export async function resolvePublicCourse(
   const staticCourse = getStaticResolvedCourse(identifier, locale);
   if (staticCourse) return staticCourse;
 
-  let row: Record<string, unknown> | null = await fetchCourseRowBySlug(identifier);
-
-  if (!row) {
-    const listBody = await apiClient.get<unknown>("/v1/courses");
-    const list = unwrapArray(listBody);
-    row =
-      (list.find(
-        (rec) => readId(rec) === String(identifier) || readSlug(rec) === identifier,
-      ) as Record<string, unknown> | undefined) ?? null;
-
-    if (row) {
-      const slug = readSlug(row);
-      if (slug) {
-        const full = await fetchCourseRowBySlug(slug);
-        if (full) row = full;
-      }
-    }
-  }
-
+  const row = await resolveCourseRow(identifier, locale);
   if (!row || !readId(row)) return null;
+
+  const active = row.is_active ?? row.isActive;
+  if (active === false || active === 0 || active === "0") return null;
 
   const courseId = readId(row);
   const lessons = await fetchCourseSectionsPublic(courseId, locale);

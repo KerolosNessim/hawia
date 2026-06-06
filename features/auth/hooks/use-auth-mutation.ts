@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { login, register, logout } from "../services/auth-service";
 import { useAuthStore } from "../store/auth-store";
 import { setAuthToken, removeAuthToken } from "@/lib/cookies";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 

@@ -1,8 +1,22 @@
+import {
+  normalizePublicBlogTags,
+  parseTagMetaFromApiPayload,
+  type PublicBlogTag,
+  type PublicBlogTagMeta,
+} from "@/features/blogs/lib/blog-tag";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { blogPostPath } from "@/features/blogs/lib/blog-routes";
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
+import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { apiClient } from "@/lib/api";
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
+import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
+import {
+  extractBlogCategoriesFromRaw,
+  pickLatestBlogCategory,
+  type BlogCategoryRef,
+} from "@/features/blogs/lib/pick-blog-category";
 import type { Locale } from "next-intl";
 
 export type PublicBlogCategory = {
@@ -37,12 +51,34 @@ export type PublicBlog = {
   subtitleRichSource?: unknown;
   /** Raw API `content` for bilingual HTML bodies. */
   contentRichSource?: unknown;
+  /** Resolved default (English) FAQ HTML when API returns bilingual `faq`. */
+  faq?: string;
+  /** New API shape: FAQ accordion items from backend. */
+  faq_items?: { question: string; answer: string }[];
+  /** Raw API `faq` for bilingual FAQ HTML — use with `pickLocalizedRichText`. */
+  faqRichSource?: unknown;
+  /** Show dedicated table of contents block on the post page. */
+  toc_enabled: boolean;
+  /** `after_meta` | `before_body` | `after_body` | `before_faq` */
+  toc_placement: string;
+  /** Resolved default (English) TOC HTML when API returns bilingual `table_of_contents`. */
+  table_of_contents?: string;
+  /** Raw API `table_of_contents` — use with `pickLocalizedRichText`. */
+  tableOfContentsRichSource?: unknown;
   image: string | null;
   image_alt: string | null;
   canonical_url: string | null;
   is_searchable: boolean;
   publisher_name: string;
-  tags: string[];
+  author_id: number | null;
+  author: {
+    id: number;
+    name: string;
+    job_title: string | null;
+    image: string | null;
+    slug: string | null;
+  } | null;
+  tags: PublicBlogTag[];
   reading_time: number | null;
   meta_title: string | null;
   meta_description: string | null;
@@ -50,6 +86,8 @@ export type PublicBlog = {
   is_active: boolean;
   published_at: string | null;
   category: { id: number; name: string; slug?: string } | null;
+  /** All categories from API; primary `category` is the latest assignment. */
+  categories?: BlogCategoryRef[];
   created_at: string | null;
 };
 
@@ -83,10 +121,32 @@ function isApiEnvelopeFailure(payload: Record<string, unknown>): boolean {
  * Resolves a single blog JSON body whether the backend uses `{ data: blog }`, `{ blog }`,
  * nests again, returns the model at the root (no envelope), or uses `data: [blog]` for show.
  */
+function redirectOnlyRow(rec: Record<string, unknown>): Record<string, unknown> | null {
+  const data = asRecord(rec.data);
+  const redirect = asRecord(data?.redirect) ?? asRecord(rec.redirect);
+  if (!redirect) return null;
+  const status = Number(redirect.status ?? redirect.code ?? 0);
+  if (!Number.isFinite(status) || status <= 0) return null;
+  return data ?? { redirect };
+}
+
+/**
+ * Blog show payload: full post, or `{ redirect }` when deleted / slug retired (failure envelope).
+ */
+function pickBlogShowPayload(payload: unknown): Record<string, unknown> | null {
+  const rec = asRecord(payload);
+  if (!rec) return null;
+
+  const redirectRow = redirectOnlyRow(rec);
+  if (redirectRow) return redirectRow;
+
+  return pickBlogPayloadRecord(payload);
+}
+
 function pickBlogPayloadRecord(payload: unknown): Record<string, unknown> | null {
   const rec = asRecord(payload);
   if (!rec) return null;
-  if (isApiEnvelopeFailure(rec)) return null;
+  if (isApiEnvelopeFailure(rec)) return redirectOnlyRow(rec);
 
   const id = rec.id;
   const slugVal = rec.slug;
@@ -118,18 +178,7 @@ function pickBlogPayloadRecord(payload: unknown): Record<string, unknown> | null
 
 /** Slug as captured from the Next route — safe-decode segments that arrive percent-encoded. */
 export function normalizeBlogSlugFromRoute(routeSlug: string): string {
-  let s = routeSlug.trim();
-  if (!s) return s;
-  try {
-    let prev = "";
-    while (prev !== s) {
-      prev = s;
-      s = decodeURIComponent(s.replace(/\+/g, "%20"));
-    }
-  } catch {
-    /* keep s */
-  }
-  return s;
+  return decodePathSegment(routeSlug);
 }
 
 /** Compare slugs tolerant of encoding + Unicode normalization (Arabic NFC/NFD vs API). */
@@ -190,6 +239,37 @@ function pickLocalizedDescription(field: unknown, lang: "ar" | "en"): string {
   return pickLocalizedRichText(field, lang);
 }
 
+function faqArrayToHtml(field: unknown): string {
+  if (!Array.isArray(field)) return "";
+  const chunks: string[] = [];
+  for (const item of field) {
+    const row = asRecord(item);
+    if (!row) continue;
+    const question = typeof row.question === "string" ? row.question.trim() : "";
+    const rawAnswer = typeof row.answer === "string" ? row.answer.trim() : "";
+    const answer = stripLeadingDuplicateHeading(rawAnswer, question);
+    if (!question && !answer) continue;
+    if (question) chunks.push(question);
+    if (answer) chunks.push(answer);
+  }
+  return chunks.join("");
+}
+
+function normalizeFaqItems(field: unknown): { question: string; answer: string }[] {
+  if (!Array.isArray(field)) return [];
+  return field
+    .map((item) => {
+      const row = asRecord(item);
+      if (!row) return null;
+      const question = typeof row.question === "string" ? row.question.trim() : "";
+      const rawAnswer = typeof row.answer === "string" ? row.answer.trim() : "";
+      const answer = stripLeadingDuplicateHeading(rawAnswer, question);
+      if (!question && !answer) return null;
+      return { question, answer };
+    })
+    .filter((x): x is { question: string; answer: string } => x != null);
+}
+
 function normalizeCategory(raw: Record<string, unknown>, locale: Locale): PublicBlogCategory | null {
   const id = raw.id;
   if (typeof id !== "number" && typeof id !== "string") return null;
@@ -231,23 +311,19 @@ function normalizeCategory(raw: Record<string, unknown>, locale: Locale): Public
   };
 }
 
-function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
+export function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
   const id = raw.id;
   if (typeof id !== "number" && typeof id !== "string") return null;
   const slug = typeof raw.slug === "string" ? raw.slug : "";
   if (!slug) return null;
 
-  const tagsRaw = raw.tags;
-  const tags = Array.isArray(tagsRaw) ? tagsRaw.map((t) => String(t)) : [];
+  const tags = normalizePublicBlogTags(raw.tags);
 
-  let category: PublicBlog["category"] = null;
-  const cat = asRecord(raw.category);
-  if (cat != null && cat.id != null) {
-    const cid = typeof cat.id === "number" ? cat.id : Number(cat.id);
-    const cname = typeof cat.name === "string" ? cat.name : "";
-    const cslug = typeof cat.slug === "string" ? cat.slug : undefined;
-    if (Number.isFinite(cid)) category = { id: cid as number, name: cname, slug: cslug };
-  }
+  const categoryRefs = extractBlogCategoriesFromRaw(raw);
+  const latestRef = pickLatestBlogCategory(categoryRefs);
+  const category: PublicBlog["category"] = latestRef
+    ? { id: latestRef.id, name: latestRef.name, slug: latestRef.slug }
+    : null;
 
   const title = typeof raw.title === "string" ? raw.title : pickLocalizedRichText(raw.title, "en");
   const subtitle =
@@ -257,6 +333,25 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
       ? raw.description
       : pickLocalizedRichText(raw.description, "en");
   const content = typeof raw.content === "string" ? raw.content : pickLocalizedRichText(raw.content, "en");
+  const faq =
+    typeof raw.faq === "string"
+      ? raw.faq
+      : pickLocalizedRichText(raw.faq, "en") || faqArrayToHtml(raw.faq);
+  const faq_items = normalizeFaqItems(raw.faq);
+  const table_of_contents =
+    typeof raw.table_of_contents === "string"
+      ? raw.table_of_contents
+      : pickLocalizedRichText(raw.table_of_contents, "en");
+
+  const tocEnabledRaw = raw.toc_enabled ?? raw.tocEnabled;
+  const toc_enabled =
+    tocEnabledRaw === true || tocEnabledRaw === 1 || tocEnabledRaw === "1";
+
+  const tocPlacementRaw = raw.toc_placement ?? raw.tocPlacement;
+  const toc_placement =
+    typeof tocPlacementRaw === "string" && tocPlacementRaw.trim()
+      ? tocPlacementRaw.trim()
+      : "before_body";
 
   return {
     id: typeof id === "number" ? id : Number(id),
@@ -269,12 +364,41 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
     descriptionRichSource: raw.description,
     subtitleRichSource: raw.subtitle,
     contentRichSource: raw.content,
+    faq,
+    ...(faq_items.length ? { faq_items } : {}),
+    faqRichSource: Array.isArray(raw.faq) ? undefined : raw.faq,
+    toc_enabled,
+    toc_placement,
+    table_of_contents,
+    tableOfContentsRichSource: raw.table_of_contents,
     image: typeof raw.image === "string" ? raw.image : null,
     image_alt: typeof raw.image_alt === "string" ? raw.image_alt : null,
     canonical_url: typeof raw.canonical_url === "string" ? raw.canonical_url : null,
     is_searchable:
       raw.is_searchable !== false && raw.is_searchable !== 0 && raw.is_searchable !== "0",
     publisher_name: typeof raw.publisher_name === "string" ? raw.publisher_name : "",
+    author_id:
+      typeof raw.author_id === "number"
+        ? raw.author_id
+        : raw.author_id != null
+          ? Number(raw.author_id) || null
+          : null,
+    author:
+      raw.author && typeof raw.author === "object" && !Array.isArray(raw.author)
+        ? (() => {
+            const a = raw.author as Record<string, unknown>;
+            const id =
+              typeof a.id === "number" ? a.id : a.id != null ? Number(a.id) || 0 : 0;
+            if (!id) return null;
+            return {
+              id,
+              name: typeof a.name === "string" ? a.name : "",
+              job_title: typeof a.job_title === "string" ? a.job_title : null,
+              image: typeof a.image === "string" ? a.image : null,
+              slug: typeof a.slug === "string" ? a.slug : null,
+            };
+          })()
+        : null,
     tags,
     reading_time:
       typeof raw.reading_time === "number"
@@ -288,6 +412,7 @@ function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
     is_active: raw.is_active !== false && raw.is_active !== 0 && raw.is_active !== "0",
     published_at: typeof raw.published_at === "string" ? raw.published_at : null,
     category,
+    ...(categoryRefs.length ? { categories: categoryRefs } : {}),
     created_at: typeof raw.created_at === "string" ? raw.created_at : null,
   };
 }
@@ -386,11 +511,24 @@ export function findPublicBlogCategoryBySlug(
 
 export type FetchBlogsQuery = {
   blog_category_id?: string | number;
+  country_id?: string | number;
   category_slug?: string;
   search?: string;
+  /** Filter by article tag label (CMS `tags[]` on blog posts). */
+  tag?: string;
   page?: number;
   per_page?: number;
 };
+
+/** Case-insensitive match for blog tag labels. */
+export function blogTagMatches(blogTag: PublicBlogTag | string, filterTag: string): boolean {
+  const label = typeof blogTag === "string" ? blogTag : blogTag.label;
+  return label.trim().toLowerCase() === filterTag.trim().toLowerCase();
+}
+
+export function blogHasTag(blog: PublicBlog, tag: string): boolean {
+  return blog.tags.some((t) => blogTagMatches(t, tag));
+}
 
 function parseBlogListEnvelope(raw: unknown): { rows: unknown[]; meta: Record<string, unknown> } {
   const rec = asRecord(raw);
@@ -421,7 +559,9 @@ export type FetchPublicBlogsPaginatedParams = {
   page?: number;
   per_page?: number;
   search?: string;
+  tag?: string;
   blog_category_id?: string | number;
+  country_id?: string | number;
   category_slug?: string;
 };
 
@@ -434,7 +574,10 @@ export async function fetchPublicBlogsPaginated(
   if (params.search?.trim()) q.search = params.search.trim();
   if (params.blog_category_id != null && params.blog_category_id !== "")
     q.blog_category_id = String(params.blog_category_id);
+  if (params.country_id != null && params.country_id !== "")
+    q.country_id = String(params.country_id);
   if (params.category_slug?.trim()) q.category_slug = params.category_slug.trim();
+  if (params.tag?.trim()) q.tag = params.tag.trim();
 
   try {
     const raw = await apiClient.get<unknown>("/v1/blogs", {
@@ -466,10 +609,98 @@ export async function fetchPublicBlogsPaginated(
   }
 }
 
+/** Tag archive SEO meta (`GET /v1/blogs/tags/{name}` or `tag` on filtered list). */
+export async function fetchPublicBlogTagMeta(tagLabel: string): Promise<PublicBlogTagMeta> {
+  const label = decodePathSegment(tagLabel).trim();
+  const fallback: PublicBlogTagMeta = { label, index: true, follow: true };
+
+  try {
+    const raw = await apiClient.get<unknown>(`/v1/blogs/tags/${encodeURIComponent(label)}`);
+    const parsed = parseTagMetaFromApiPayload(raw, label);
+    if (parsed.label) return parsed;
+  } catch {
+    // optional dedicated endpoint
+  }
+
+  try {
+    const raw = await apiClient.get<unknown>("/v1/blogs", {
+      query: { tag: label, per_page: "1", page: "1" },
+    });
+    return parseTagMetaFromApiPayload(raw, label);
+  } catch {
+    return fallback;
+  }
+}
+
+/** Lists visible blogs that include the given tag (API filter with client-side fallback). */
+export async function fetchPublicBlogsByTag(
+  tag: string,
+  params: { paginationPath: string; page?: number; per_page?: number },
+): Promise<{ blogs: PublicBlog[]; meta: LaravelPaginationMeta; tagMeta: PublicBlogTagMeta }> {
+  const tagLabel = decodePathSegment(tag).trim();
+  const page = params.page ?? 1;
+  const perPage = params.per_page ?? BLOG_LIST_PER_PAGE;
+
+  const tagMeta = await fetchPublicBlogTagMeta(tagLabel);
+
+  const apiResult = await fetchPublicBlogsPaginated({
+    paginationPath: params.paginationPath,
+    page,
+    per_page: perPage,
+    tag: tagLabel,
+  });
+
+  const apiFilteredPage =
+    apiResult.blogs.length > 0 && apiResult.blogs.every((b) => blogHasTag(b, tagLabel));
+
+  if (apiFilteredPage) return { ...apiResult, tagMeta };
+
+  const all: PublicBlog[] = [];
+  let currentPage = 1;
+  let lastPage = 1;
+  do {
+    const { blogs, meta } = await fetchPublicBlogsPaginated({
+      paginationPath: "/v1/blogs",
+      page: currentPage,
+      per_page: 50,
+    });
+    all.push(...blogs);
+    lastPage = meta.last_page;
+    currentPage++;
+  } while (currentPage <= lastPage);
+
+  const filtered = all.filter((b) => blogHasTag(b, tagLabel));
+  const total = filtered.length;
+  const last = Math.max(1, Math.ceil(total / perPage));
+  const safePage = Math.min(Math.max(1, page), last);
+  const start = (safePage - 1) * perPage;
+  const pageRows = filtered.slice(start, start + perPage);
+
+  const meta =
+    completeLaravelPaginationMeta(
+      {
+        current_page: safePage,
+        last_page: last,
+        per_page: perPage,
+        total,
+        from: total === 0 ? 0 : start + 1,
+        to: Math.min(start + perPage, total),
+      },
+      params.paginationPath,
+    ) ??
+    completeLaravelPaginationMeta(
+      { current_page: 1, last_page: 1, per_page: perPage, total: 0 },
+      params.paginationPath,
+    )!;
+
+  return { blogs: pageRows, meta, tagMeta };
+}
+
 export async function fetchPublicBlogs(query?: FetchBlogsQuery): Promise<PublicBlog[]> {
   const { blogs } = await fetchPublicBlogsPaginated({
     paginationPath: "/v1/blogs",
     blog_category_id: query?.blog_category_id,
+    country_id: query?.country_id,
     category_slug: query?.category_slug,
     search: query?.search,
     page: query?.page,
@@ -504,15 +735,38 @@ export async function fetchVisibleBlogCountByCategoryId(): Promise<Map<number, n
   return map;
 }
 
+/** Raw show payload (blog row or redirect-only object). */
+export async function fetchBlogShowRow(slugParam: string): Promise<Record<string, unknown> | null> {
+  const slug = normalizeBlogSlugFromRoute(slugParam);
+  try {
+    const raw = await apiClient.get<unknown>(`/v1/blogs/${encodeURIComponent(slug)}`);
+    return pickBlogShowPayload(raw);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBlog | null> {
   const slug = normalizeBlogSlugFromRoute(slugParam);
 
   try {
-    const raw = await apiClient.get<unknown>(`/v1/blogs/${encodeURIComponent(slug)}`);
-    const data = pickBlogPayloadRecord(raw);
+    const data = await fetchBlogShowRow(slug);
     const one = data ? normalizeBlog(data) : null;
+    if (process.env.NODE_ENV === "development") {
+      console.log("[fetchPublicBlogBySlug] API", {
+        slugParam,
+        slug,
+        data,
+        normalized: one,
+        visible: one ? isPublicBlogVisible(one) : false,
+      });
+    }
     if (one && isPublicBlogVisible(one)) return one;
-  } catch {
+    if (data && asRecord(data.redirect)) return null;
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[fetchPublicBlogBySlug] API error", { slugParam, slug, err });
+    }
     /* try list fallback */
   }
 
@@ -527,11 +781,21 @@ export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBl
       });
       lastPage = Math.max(1, meta.last_page);
       const found = blogs.find((b) => blogSlugsMatch(b.slug, slug));
-      if (found) return found;
+      if (found) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[fetchPublicBlogBySlug] list fallback hit", { slug, found });
+        }
+        return found;
+      }
       page++;
     } while (page <= lastPage);
-  } catch {
-    /* */
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[fetchPublicBlogBySlug] list fallback error", { slug, err });
+    }
+  }
+  if (process.env.NODE_ENV === "development") {
+    console.log("[fetchPublicBlogBySlug] not found", { slugParam, slug });
   }
   return null;
 }

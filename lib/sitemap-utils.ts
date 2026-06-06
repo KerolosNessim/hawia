@@ -18,6 +18,13 @@ export type AllSlugsResponse = {
   };
 };
 
+import {
+  blogCategoryPath,
+  blogPostPath,
+  localePath,
+} from "@/features/blogs/lib/blog-routes";
+import type { Locale } from "next-intl";
+
 export type SitemapEntry = {
   url: string;
   lastModified?: Date;
@@ -36,7 +43,8 @@ export function getApiUrl(): string {
 export async function fetchAllSlugs(): Promise<AllSlugsResponse["data"]> {
   try {
     const res = await fetch(`${getApiUrl()}/v1/all-slugs`, {
-      next: { revalidate: 3600 },
+      cache: "no-store",
+      next: { revalidate: 0 },
       headers: { Accept: "application/json" },
     });
     if (res.ok) {
@@ -49,6 +57,97 @@ export async function fetchAllSlugs(): Promise<AllSlugsResponse["data"]> {
     console.error("Failed to fetch all-slugs for sitemap:", error);
   }
   return {};
+}
+
+const STATIC_PAGE_PATHS: { path: string; priority: number; changeFrequency: SitemapEntry["changeFrequency"] }[] = [
+  { path: "/", priority: 1.0, changeFrequency: "daily" },
+  { path: "/about", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/contact-us", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/faq", priority: 0.8, changeFrequency: "weekly" },
+  { path: "/courses", priority: 0.9, changeFrequency: "daily" },
+  { path: "/packages", priority: 0.9, changeFrequency: "daily" },
+  { path: "/services", priority: 0.9, changeFrequency: "daily" },
+  { path: "/clients", priority: 0.9, changeFrequency: "daily" },
+  { path: "/privacy-policy", priority: 0.5, changeFrequency: "yearly" },
+  { path: "/refund-policy", priority: 0.5, changeFrequency: "yearly" },
+  { path: "/terms-of-use", priority: 0.5, changeFrequency: "yearly" },
+  { path: "/login", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/register", priority: 0.7, changeFrequency: "monthly" },
+];
+
+/** Static + product URLs (services, packages, courses, clients) for `pages-{locale}.xml`. */
+export async function buildPagesSitemapEntries(locale: Locale): Promise<SitemapEntry[]> {
+  const baseUrl = getBaseUrl();
+  const now = new Date();
+  const slugData = await fetchAllSlugs();
+  const seen = new Set<string>();
+  const entries: SitemapEntry[] = [];
+
+  const push = (
+    pathname: string,
+    priority: number,
+    changeFrequency: SitemapEntry["changeFrequency"],
+  ) => {
+    const url = `${baseUrl}${localePath(locale, pathname)}`;
+    if (seen.has(url)) return;
+    seen.add(url);
+    entries.push({ url, lastModified: now, changeFrequency, priority });
+  };
+
+  for (const page of STATIC_PAGE_PATHS) {
+    push(page.path, page.priority, page.changeFrequency);
+  }
+
+  const addDynamic = (
+    slugs: string[] | undefined,
+    routePrefix: string,
+    priority: number,
+    changeFrequency: SitemapEntry["changeFrequency"],
+  ) => {
+    if (!slugs?.length) return;
+    for (const slug of slugs) {
+      if (!slug) continue;
+      push(`/${routePrefix}/${encodeURIComponent(slug)}`, priority, changeFrequency);
+    }
+  };
+
+  addDynamic(slugData.services, "services", 0.9, "weekly");
+  addDynamic(slugData.packages, "packages", 0.8, "weekly");
+  addDynamic(slugData.package_categories, "packages/categories", 0.8, "weekly");
+  addDynamic(slugData.courses, "courses", 0.8, "weekly");
+  addDynamic(slugData.solutions, "clients", 0.8, "weekly");
+
+  return entries;
+}
+
+/** Blog index, category pages, and article URLs for `posts-{locale}.xml`. */
+export async function buildPostsSitemapEntries(locale: Locale): Promise<SitemapEntry[]> {
+  const baseUrl = getBaseUrl();
+  const now = new Date();
+  const slugData = await fetchAllSlugs();
+  const seen = new Set<string>();
+  const entries: SitemapEntry[] = [];
+
+  const push = (pathname: string, priority: number, changeFrequency: SitemapEntry["changeFrequency"]) => {
+    const url = `${baseUrl}${localePath(locale, pathname)}`;
+    if (seen.has(url)) return;
+    seen.add(url);
+    entries.push({ url, lastModified: now, changeFrequency, priority });
+  };
+
+  push("/blogs", 0.9, "daily");
+
+  for (const slug of slugData.blog_categories ?? []) {
+    if (!slug) continue;
+    push(blogCategoryPath(slug), 0.8, "weekly");
+  }
+
+  for (const slug of slugData.blogs ?? []) {
+    if (!slug) continue;
+    push(blogPostPath(slug), 0.7, "weekly");
+  }
+
+  return entries;
 }
 
 function escapeXml(str: string): string {

@@ -1,22 +1,19 @@
+import {
+  buildCollectionPageSchemaGraph,
+  buildBreadcrumbList,
+  buildPackageProductSchemaGraph,
+  jsonLdGraph,
+  type JsonLd,
+} from "@/lib/seo/schema";
 import type { PublicPackageCard, PublicPackageDetail } from "@/features/packages/services/packages-public-api";
 
-type JsonLd = Record<string, unknown>;
-
 export function jsonLdScript(graph: JsonLd | JsonLd[]): string {
-  const payload = Array.isArray(graph) ? { "@context": "https://schema.org", "@graph": graph } : graph;
-  return JSON.stringify(payload);
+  const nodes = Array.isArray(graph) ? graph : [graph];
+  return jsonLdGraph(nodes);
 }
 
 export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]): JsonLd {
-  return {
-    "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: item.name,
-      item: item.url,
-    })),
-  };
+  return buildBreadcrumbList(items);
 }
 
 export function buildPackageCollectionJsonLd(opts: {
@@ -26,32 +23,18 @@ export function buildPackageCollectionJsonLd(opts: {
   packages: PublicPackageCard[];
   packageUrl: (pkg: PublicPackageCard) => string;
 }): JsonLd[] {
-  const itemListId = `${opts.url}#packages`;
-  const itemList: JsonLd = {
-    "@type": "ItemList",
-    "@id": itemListId,
+  return buildCollectionPageSchemaGraph({
+    pageUrl: opts.url,
     name: opts.name,
     description: opts.description,
-    numberOfItems: opts.packages.length,
-    itemListElement: opts.packages.map((pkg, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      url: opts.packageUrl(pkg),
+    inLanguage: "ar",
+    breadcrumbs: [],
+    items: opts.packages.map((pkg) => ({
       name: pkg.title,
+      url: opts.packageUrl(pkg),
     })),
-  };
-
-  const collection: JsonLd = {
-    "@type": "CollectionPage",
-    "@id": `${opts.url}#webpage`,
-    url: opts.url,
-    name: opts.name,
-    description: opts.description,
-    isPartOf: { "@type": "WebSite", name: "Howeyah" },
-    mainEntity: { "@id": itemListId },
-  };
-
-  return [collection, itemList];
+    listIdSuffix: "packages",
+  });
 }
 
 export function buildPackageProductJsonLd(opts: {
@@ -60,39 +43,17 @@ export function buildPackageProductJsonLd(opts: {
   description: string;
   inLanguage: string;
 }): JsonLd {
-  const product: JsonLd = {
-    "@type": "Product",
-    "@id": `${opts.url}#package`,
-    url: opts.url,
+  const graphs = buildPackageProductSchemaGraph({
+    pageUrl: opts.url,
     name: opts.pkg.title,
     description: opts.description,
     inLanguage: opts.inLanguage,
-    brand: { "@type": "Brand", name: "Howeyah" },
-  };
-
-  if (opts.pkg.imageUrl) product.image = [opts.pkg.imageUrl];
-  if (opts.pkg.categoryTitle) product.category = opts.pkg.categoryTitle;
-  if (opts.pkg.features.length) {
-    product.additionalProperty = opts.pkg.features.map((feature) => ({
-      "@type": "PropertyValue",
-      name: feature.title,
-      value: feature.isIncluded ? "Included" : "Not included",
-    }));
-  }
-
-  const numericPrice = opts.pkg.price ? Number(opts.pkg.price) : null;
-  if (numericPrice != null && Number.isFinite(numericPrice)) {
-    const offer: JsonLd = {
-      "@type": "Offer",
-      price: numericPrice,
-      availability: "https://schema.org/InStock",
-      url: opts.url,
-    };
-    if (opts.pkg.currency && /^[A-Z]{3}$/.test(opts.pkg.currency.trim())) {
-      offer.priceCurrency = opts.pkg.currency.trim();
-    }
-    product.offers = offer;
-  }
-
-  return product;
+    imageUrl: opts.pkg.imageUrl,
+    categoryTitle: opts.pkg.categoryTitle,
+    features: opts.pkg.features,
+    price: opts.pkg.price ? Number(opts.pkg.price) : null,
+    currency: opts.pkg.currency,
+    breadcrumbs: [],
+  });
+  return graphs.find((n) => n["@type"] === "Product") ?? graphs[0]!;
 }

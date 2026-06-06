@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 export function useCountry() {
-  const [country, setCountry] = useState<string>('EG'); // Default fallback
+  const [country, setCountry] = useState<string>('SA'); // Default fallback
 
   useEffect(() => {
     // Read the user_country cookie from document.cookie set by middleware

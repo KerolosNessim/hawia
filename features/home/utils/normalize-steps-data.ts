@@ -2,6 +2,7 @@ import type { SolutionSingleItem } from "../types";
 
 function isStepLike(x: unknown): boolean {
   if (typeof x !== "object" || x === null) return false;
+  if ("title" in x || "description" in x) return true;
   const c = (x as Record<string, unknown>).content;
   return typeof c === "object" && c !== null && ("title" in c || "description" in c);
 }

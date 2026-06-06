@@ -29,9 +29,11 @@
       "blogs": "Blog",
       "blog": "Article",
       "packages": "Packages",
+      "categories": "Categories",
       "courses": "Courses",
       "faq": "FAQ",
       "contact-us": "Contact Us",
+      "ai-services": "AI Services",
       "services": "Services",
       "login": "Login",
       "register": "Register"
@@ -47,7 +49,9 @@
     "navbar": {
     "home": "home",
     "about": "about",
+    "careers": "careers",
     "services": "services",
+    "aiServices": "AI services",
     "contact": "contact",
     "clients": "clients",
     "blog": "blog",
@@ -72,7 +76,10 @@
   "not-found": {
     "title": "404 - Page Not Found",
     "description": "Sorry, the page you are looking for does not exist or has been moved.",
-    "backHome": "Back to Home"
+    "subtitle": "This page could not be found",
+    "hint": "Check the link or return to the homepage to continue browsing Howeyah.",
+    "backHome": "Back to Home",
+    "contactUs": "Contact Us"
   },
   "hero": {
     "title": "Howeyah",
@@ -104,6 +111,9 @@
   "why-choose-us": {
     "title": "Why Choose Howeyah Marketing?",
     "description": "At Howeyah, we believe that every success begins with an innovative idea and precise execution. We turn your vision into a tangible reality through innovative marketing strategies and exclusive content, backed by accurate market research, to provide customized solutions that ensure your marketing goals are achieved efficiently and confidently.",
+    "about": "About Us",
+    "showMore": "Show more",
+    "showLess": "Show less",
     "features": [
       {
         "title": "Leading Local and International Experience:",
@@ -211,6 +221,7 @@
   "adsSection": {
     "title": "Our Innovative Advertising Solutions",
     "subtitle":"Every shot here reflects the strength of Howeyah, the best advertising company in Saudi Arabia, in turning digital marketing strategies into real results. Through it, we see the impact of our paid campaigns and SEO in increasing our clients' website visibility, improving their search rankings, and attracting a targeted audience, ensuring rapid and sustainable growth for their businesses.",
+    "showAll": "Show all",
     "seo":"Client Samples (SEO)",
     "ads":"Client Samples (ADS)",
     "programming":"Client Samples (Programming)",
@@ -273,7 +284,77 @@
     "empty": "No packages are available at the moment.",
     "emptyCategory": "No packages in this category yet.",
     "otherTab": "Other",
-    "details": "Details"
+    "details": "Details",
+    "viewCategory": "View all in this category"
+  },
+  "servicesPage": {
+    "title": "Our Services",
+    "description": "Explore digital marketing services tailored to your market — SEO, ads, social media, and more.",
+    "empty": "No services are available for this country yet.",
+    "metaTitle": "Marketing Services | Howeyah",
+    "metaDescription": "Browse Howeyah marketing services by country — SEO, advertising, social media management, e-commerce, and web development.",
+    "breadcrumbHome": "Home",
+    "breadcrumbServices": "Services",
+    "paginationPrevious": "Previous",
+    "paginationNext": "Next",
+    "viewAll": "View all services"
+  },
+  "aiServicesPage": {
+    "title": "AI Services",
+    "description": "I want to sculpt all the details related to features, including SEO, catalog, packages, section builder, schema, etc.",
+    "empty": "No AI services are available at the moment.",
+    "viewAll": "View all AI services",
+    "bookFreeConsultation": "Book your free consultation now",
+    "contactDirect": "Contact us directly",
+    "aiToolsCta": "AI tools"
+  },
+  "aiServicesContentPage": {
+    "metaTitle": "AI Content Studio | Howeyah",
+    "metaDescription": "Explore AI-powered content tools, watch the product overview, and learn how Howeyah helps you scale marketing with intelligent automation.",
+    "breadcrumb": "Content studio",
+    "title": "AI Content Studio",
+    "description": "Generate, optimize, and publish content faster with AI workflows built for SEO, catalogs, and multi-channel campaigns.",
+    "cardsSectionTitle": "What you get",
+    "cardsSectionSubtitle": "Everything you need to plan, create, and ship content from one place.",
+    "cards": [
+      {
+        "title": "Smart drafting",
+        "description": "Turn briefs into on-brand copy for blogs, landing pages, and product descriptions in minutes."
+      },
+      {
+        "title": "SEO-ready output",
+        "description": "Structured headings, meta fields, and keyword-aware suggestions aligned with your site schema."
+      },
+      {
+        "title": "Workflow automation",
+        "description": "Trigger reviews, approvals, and publishing steps without leaving your content pipeline."
+      },
+      {
+        "title": "Performance insights",
+        "description": "Track engagement signals and refine templates based on what converts for your audience."
+      }
+    ],
+    "videoSectionTitle": "Product walkthrough",
+    "videoSectionSubtitle": "Watch how teams use AI content tools end to end.",
+    "playlistLabel": "More videos",
+    "videoThumbnailAlt": "Video thumbnail — AI content studio overview",
+    "videoCaption": "2 min overview · YouTube",
+    "youtubeLabel": "Watch on YouTube",
+    "contentTitle": "How it works",
+    "contentParagraphs": [
+      "Our AI content studio connects your brand voice, product data, and marketing goals so every asset stays consistent across Arabic and English experiences.",
+      "Use guided prompts to produce first drafts, then refine with your team in the same interface—no copy-paste between disconnected tools."
+    ],
+    "contentBullets": [
+      "Import briefs from services, packages, or custom CMS fields",
+      "Preview rich HTML before publish with the same renderer as live pages",
+      "Export or push directly to blogs, service pages, and campaign sections",
+      "Human-in-the-loop controls for tone, compliance, and final approval"
+    ],
+    "ctaTitle": "Ready to scale your content?",
+    "ctaDescription": "Talk to our team about AI workflows tailored to your catalog, SEO goals, and publishing cadence.",
+    "actionButton": "Contact us",
+    "secondaryButton": "Browse AI services"
   },
   "packagesPage": {
     "title": "Our Packages",
@@ -282,9 +363,15 @@
     "metaTitle": "Marketing Packages and Service Bundles | Howeyah",
     "metaDescription": "Explore Howeyah marketing packages, compare service bundles, pricing, and included features, and choose the right package for your growth goals.",
     "categoriesHeading": "Browse packages by category",
+    "categoriesIndexTitle": "Package categories",
+    "categoriesIndexDescription": "Browse Howeyah packages by category and compare service bundles for your goals.",
+    "categoriesIndexMetaTitle": "Package Categories | Howeyah",
+    "categoriesIndexMetaDescription": "Browse Howeyah marketing package categories and open each category to compare bundles, pricing, and included features.",
     "breadcrumbHome": "Home",
     "breadcrumbPackages": "Packages",
-    "allPackages": "All packages"
+    "breadcrumbCategories": "Categories",
+    "allPackages": "All packages",
+    "emptyCategories": "No package categories are available at the moment."
   },
   "packageDetail": {
     "back": "All packages",
@@ -320,6 +407,51 @@
       }
     ]
   },
+  "homePromoBanners": {
+    "sectionLabel": "Promotional offers",
+    "sectionEyebrow": "Featured services",
+    "sectionTitle": "Grow with Howeyah",
+    "sectionSubtitle": "Explore our latest offers and start the journey that fits your business goals.",
+    "goToSlide": "Go to slide {index}",
+    "slides": [
+      {
+        "id": "social-media",
+        "badge": "Social media management",
+        "title": "Social media management",
+        "subtitle": "Stay close to your audience—always!",
+        "description": "We manage your accounts with a professional presence, consistent content, and strategies that build trust and turn followers into loyal customers.",
+        "buttonText": "Contact us now",
+        "buttonLink": "/contact-us",
+        "image": "",
+        "imageAlt": "Social media management illustration",
+        "themeClass": "bg-gradient-to-br from-[#1a0b3c] via-[#2d1260] to-[#1a0b3c]"
+      },
+      {
+        "id": "seo-growth",
+        "badge": "Search engine optimization",
+        "title": "Rank higher on Google",
+        "subtitle": "Organic traffic that compounds over time",
+        "description": "Technical SEO, content optimization, and keyword strategy tailored to your market—so the right customers find you when they search.",
+        "buttonText": "Explore SEO services",
+        "buttonLink": "/services",
+        "image": "/ads-2.webp",
+        "imageAlt": "SEO and growth",
+        "themeClass": "bg-gradient-to-br from-[#0f172a] via-[#1e3a5f] to-[#0f172a]"
+      },
+      {
+        "id": "packages",
+        "badge": "Marketing packages",
+        "title": "Bundles built for your goals",
+        "subtitle": "Clear pricing, measurable outcomes",
+        "description": "Compare packages designed for startups and established brands—campaigns, content, and channel management in one plan.",
+        "buttonText": "View packages",
+        "buttonLink": "/packages",
+        "image": "/ads-3.webp",
+        "imageAlt": "Marketing packages",
+        "themeClass": "bg-gradient-to-br from-[#1a0b2e] via-[#4c1d95] to-[#1a0b2e]"
+      }
+    ]
+  },
   "blogsPage": {
     "metaTitle": "Blog | Howeyah",
     "metaDescription": "Latest articles on digital marketing, branding, and growth from Howeyah.",
@@ -338,7 +470,13 @@
     "searchSubmit": "Search",
     "paginationPrevious": "Previous",
     "paginationNext": "Next",
-    "categoryNoIndexNotice": "This category is marked noindex and may be hidden from search engines."
+    "categoryNoIndexNotice": "This category is marked noindex and may be hidden from search engines.",
+    "tagMetaTitle": "Articles tagged: {tag} | Howeyah",
+    "tagMetaDescription": "Browse published articles tagged “{tag}” on the Howeyah blog.",
+    "tagTitle": "Articles: {tag}",
+    "tagDescription": "All published articles linked to this tag.",
+    "tagEmpty": "No published articles are tagged “{tag}” yet.",
+    "tagNoIndexNotice": "This tag archive is marked noindex and may be hidden from search engines."
   },
   "blogDetail": {
     "notFoundTitle": "Article not found",
@@ -352,7 +490,8 @@
     "ratingTitle": "How was this content?",
     "ratingHint": "Click the stars to rate.",
     "averageRating": "Average: {average} / {max}",
-    "ratingsCount": "Ratings: {count}"
+    "ratingsCount": "Ratings: {count}",
+    "faqHeading": "Frequently Asked Questions"
   },
   "contactSection": {
     "title": "Contact Us Now",
@@ -377,7 +516,8 @@
     "brandDescription": "Leaving a mark at the core of your brand",
     "registeredTrademark": "Registered Trademark No. 181546",
     "trademarkCertificate": "Trademark Certificate",
-    "authenticatedBy": "Authenticated by the Ministry of Commerce & Investment",
+    "authenticatedBy": "Verified with the Ministry of Commerce & Investment",
+    "ministryLogoAlt": "Ministry of Commerce certification badge",
     "omanServicesTitle": "Most Requested Services in Oman:",
     "turkeyServicesTitle": "Most Requested Services in Turkey:",
     "saudiServicesTitle": "Most Requested Services in Saudi Arabia:",
@@ -404,16 +544,35 @@
     ],
     "officesTitle": "Our Offices",
     "offices": [
-      "Turkey Office: Istanbul - Beylikdüzü - Cumhuriyet Mah. - Ikarus Complex",
-      "Oman Office: Muscat - Seeb - Al Khoudh Bldg 304 - Complex 333 - Road 1002",
-      "Egypt Office: Cairo - 6th of October - 1st District - 1st Neighborhood",
-      "Saudi Arabia Office: Jeddah - Al Rawdah District"
+      {
+        "label": "Turkey Office",
+        "address": "Fatih, opposite Historia Mall"
+      },
+      {
+        "label": "Sultanate of Oman Office",
+        "address": "Barka, Souq Street"
+      }
+    ],
+    "pagesTitle": "Quick links",
+    "pageLinks": [
+      { "href": "/about", "label": "About us" },
+      { "href": "/clients", "label": "Our work" },
+      { "href": "/blogs", "label": "Blog" },
+      { "href": "/courses", "label": "Courses" },
+      { "href": "/packages", "label": "Packages" },
+      { "href": "/services", "label": "Services" },
+      { "href": "/faq", "label": "FAQ" },
+      { "href": "/ai-services", "label": "AI services" },
+      { "href": "/contact-us", "label": "Contact us" },
+      { "href": "/careers", "label": "Employment & training" },
+      { "href": "/terms-of-use", "label": "Terms & conditions" },
+      { "href": "/privacy-policy", "label": "Privacy policy" },
+      { "href": "/refund-policy", "label": "Refund policy" }
     ],
     "contactTitle": "Mobile / WhatsApp",
     "phones": [
-      "(+90) 536 031 67 75",
-      "(+968) 9520 4555",
-      "(+968) 9525 1971"
+      "+905360316775",
+      "+96895204555"
     ],
     "email": "info@howeyah.com",
     "copyright": "© 2024 All rights reserved - Howeyah Company",
@@ -422,9 +581,30 @@
     "terms": "Terms of Use",
     "refund": "Refund Policy"
   },
+  "trademarkCertificatePage": {
+    "metaTitle": "Trademark Certificate | Howeyah",
+    "metaDescription": "Howeyah registered trademark certificate No. 181546, authenticated by the Ministry of Commerce and Investment.",
+    "title": "Trademark Certificate",
+    "description": "View the official registered trademark certificate for Howeyah.",
+    "authenticatedBy": "Verified with the Ministry of Commerce & Investment",
+    "ministryLogoAlt": "Ministry of Commerce certification badge",
+    "registeredNote": "Registered trademark No. {number}",
+    "pdfTitle": "Trademark certificate",
+    "openPdf": "Open certificate (PDF)"
+  },
   "singleService": {
     "title": "Search Engine Optimization (SEO) Services",
     "description": "Let your customers find you first",
+    "articleTagsHeading": "Related article tags",
+    "clientPortfolio": {
+      "title": "Client work",
+      "subtitle": "Results from brands we have partnered with",
+      "readCaseStudy": "Read case study",
+      "viewAll": "View all",
+      "challenge": "Challenge",
+      "whatWeDid": "What we did",
+      "results": "Results"
+    },
       "seo_section": {
     "description_top": "Making your website easy to use and understand for both visitors and Google search engines enhances your visibility and ranking in search results. It increases the number of targeted visitors based on using the most relevant and commonly searched keywords. لذلك، many business owners and website operators seek the best SEO companies to achieve their goals and increase their profits.",
     "title": "Optimize your website and improve its ranking among the top pages on global search engines",
@@ -655,6 +835,10 @@
   },
     "seoPackages": {
     "title": "SEO Packages",
+    "detailsBtn": "Details",
+    "pricesFrom": "Prices start from",
+    "orderNow": "Order now",
+    "close": "Close",
         "seoPackages": [
       {
         "title": "Basic SEO Package",
@@ -686,6 +870,7 @@
 "about":{
   "title":"About Us",
   "description":"We are a leading company in the field of website and application development, providing high-quality services to our clients around the world",
+  "watchVideo": "Watch on YouTube",
   "identity":{
   "title": "Howeyah for Digital Marketing and Solutions",
   "description":[
@@ -736,7 +921,9 @@
 },
 "faq":{
   "title":"Frequently Asked Questions",
-  "description":"We are always here to achieve your brand's success"
+  "description":"We are always here to achieve your brand's success",
+  "breadcrumbHome": "Home",
+  "breadcrumbFaq": "FAQ"
 },
 "contact":{
   "title":"Contact Us",
@@ -768,6 +955,8 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "userOrEmail": "Username or email",
     "submit": "Register",
     "login": "Login",
@@ -793,15 +982,10 @@
     "breadcrumbHome":"Home",
     "breadcrumbClients":"Clients",
     "empty":"No client work is available yet.",
+    "emptyFiltered":"No client work in this category yet.",
+    "filterAll":"All",
     "back":"Back to clients",
-    "not_found":"This client work could not be found.",
-    "tabs":[
-      "All",
-      "seo",
-      "Digital Marketing",
-      "Web Design",
-      "Brand Identity"
-    ]
+    "not_found":"This client work could not be found."
   },
   "courses":{
     "title":"Training Courses",

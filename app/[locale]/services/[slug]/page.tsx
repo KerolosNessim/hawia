@@ -1,127 +1,265 @@
-import OfferServiceSection from "@/features/services/components/offer-service-section";
-import SeoCheckForm from "@/features/services/components/seo-check-form";
-import SeoFaq from "@/features/services/components/seo-faq";
-import SeoPackages from "@/features/services/components/seo-packages";
-import SeoSteps from "@/features/services/components/seo-steps";
-import SeoTools from "@/features/services/components/seo-tools";
-import { getSingleService } from "@/features/services/services/get-single-service";
-import PageContact from "@/features/shared/components/page-contact";
-import PageHeader from "@/features/shared/components/page-header";
-import * as motion from "framer-motion/client";
-import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import Image from "next/image";
+import DependenciesSection from "@/features/home/component/depndnces-sction";
+import ServicePageScript from "@/features/services/components/service-page-script";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const res = await getSingleService(slug);
-  return {
-    title: res?.data?.meta_title,
-    description: res?.data?.meta_description,
-  };
+import RelatedServicesSection from "@/features/services/components/related-services-section";
+import ServiceArticleTags from "@/features/services/components/service-article-tags";
+import { ServicePageSections } from "@/features/services/components/service-page-sections";
+import { parseCountryId } from "@/features/services/lib/parse-services-search-params";
+import { resolveServiceCountryId } from "@/features/services/lib/resolve-service-country-id";
+import { getServices } from "@/features/services/services/get-services";
+import { fetchPublicCountriesPrepared } from "@/features/services/services/public-services-api";
+
+import { buildServiceMetadata } from "@/features/services/lib/service-metadata";
+
+import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
+
+import {
+
+  isGoneStatus,
+
+  isPermanentRedirectStatus,
+
+} from "@/features/services/lib/service-slug-redirect";
+
+import { resolveServicePage } from "@/features/services/services/resolve-service-page";
+
+export const dynamic = "force-dynamic";
+
+import PageHeader from "@/features/shared/components/page-header";
+
+import { RichHtml } from "@/features/shared/components/rich-html";
+
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { buildCanonicalUrl, serializeServicePageSchema } from "@/lib/seo/schema";
+
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
+
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
+
+import { getPathname, redirect } from "@/i18n/navigation";
+
+import * as motion from "framer-motion/client";
+
+import type { Locale } from "next-intl";
+
+import { getLocale, getTranslations } from "next-intl/server";
+
+import type { Metadata } from "next";
+
+import { cookies } from "next/headers";
+
+import { permanentRedirect, redirect as nextRedirect } from "next/navigation";
+
+import type { ServicesSearchParams } from "@/features/services/lib/parse-services-search-params";
+
+
+
+type Props = {
+  params: Promise<{ locale: Locale; slug: string }>;
+  searchParams?: Promise<ServicesSearchParams>;
+};
+
+
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+
+  const { locale, slug } = await params;
+
+  const resolved = await resolveServicePage(slug, locale);
+
+  if (!resolved || resolved.kind === "gone") {
+    return { title: "Service", robots: { index: false, follow: false } };
+  }
+
+  if (resolved.kind === "redirect") {
+    return { title: "Service", robots: { index: false, follow: false } };
+  }
+
+  return buildServiceMetadata(resolved.data, locale);
+
 }
 
-export default async function ServicePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
+
+
+function applySlugRedirect(locale: Locale, toSlug: string, status: number, toPath?: string): never {
+
+  const href = servicePostPath(toSlug);
+
+  const pathname = getPathname({ locale, href });
+
+  if (isGoneStatus(status)) {
+
+    redirectToNotFound(locale);
+
+  }
+
+  if (toPath) {
+    if (isPermanentRedirectStatus(status)) {
+      permanentRedirect(toPath);
+    }
+    nextRedirect(toPath);
+  }
+
+  if (isPermanentRedirectStatus(status)) {
+
+    permanentRedirect(pathname);
+
+  }
+
+  redirect({ href, locale });
+
+}
+
+
+
+export default async function ServicePage({ params, searchParams }: Props) {
+
+  const { slug, locale: routeLocale } = await params;
+  const sp = searchParams ? await searchParams : {};
+
+  const locale = (await getLocale()) as Locale;
+
   const t = await getTranslations("singleService");
-  const whySeo = t.raw("why_seo.items") as string[];
-  const res = await getSingleService(slug);
-  const service = res?.data ?? {};
-  console.log(service);
+
+
+
+  const resolved = await resolveServicePage(slug, locale);
+
+  if (!resolved) redirectToNotFound(locale);
+
+  if (resolved.kind === "gone") redirectToNotFound(locale);
+
+  if (resolved.kind === "redirect") {
+
+    applySlugRedirect(routeLocale, resolved.toSlug, resolved.status, resolved.toPath);
+
+  }
+
+
+
+  const service = resolved.data;
+
+
+
+  const serviceSlug = pickServiceSlug(service, locale);
+
+  const serviceAbs = buildCanonicalUrl(locale, `/services/${encodeURIComponent(serviceSlug)}`);
+
+  const heroTitle = service.singlePageTitle?.trim() || service.title;
+  const heroSubtitle =
+    service.subtitle?.trim() || service.description?.trim() || "";
+
+  const tBreadcrumb = await getTranslations({ locale, namespace: "seo.breadcrumb" });
+
+  const faqItems = service.pageSections
+
+    .filter((section) => section.key === "faqs")
+
+    .flatMap((section) => (section.data as { items?: { question: string; answer: string }[] }).items ?? []);
+
+  const serviceDescription = plainTextFromHtml(
+    service.meta_description?.trim() ||
+      service.description ||
+      service.subtitle ||
+      "",
+  ).slice(0, 320);
+
+  const serviceSchemaJson = serializeServicePageSchema({
+    pageUrl: serviceAbs,
+    name: plainTextFromHtml(heroTitle),
+    description: serviceDescription,
+    serviceType: plainTextFromHtml(service.meta_title || heroTitle),
+    inLanguage: locale === "ar" ? "ar" : "en",
+    areaServed: service.countries,
+    breadcrumbs: [
+      { name: tBreadcrumb("home"), url: buildCanonicalUrl(locale, "/") },
+      { name: tBreadcrumb("services"), url: buildCanonicalUrl(locale, "/services") },
+      { name: plainTextFromHtml(heroTitle), url: serviceAbs },
+    ],
+    faqItems: faqItems.length
+      ? faqItems.map((item) => ({ question: item.question, answer: item.answer }))
+      : undefined,
+    faqName:
+      faqItems.length > 0
+        ? plainTextFromHtml(service.faqs?.title ?? "") || plainTextFromHtml(service.title)
+        : undefined,
+  });
+
+  const cookieStore = await cookies();
+  const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
+  const preparedCountries = await fetchPublicCountriesPrepared();
+  const relatedCountryId = resolveServiceCountryId({
+    serviceCountries: service.countries ?? [],
+    urlCountryId: parseCountryId(sp),
+    allCountries: preparedCountries.countries,
+    userCountryCode,
+    idAlias: preparedCountries.idAlias,
+  });
+
+  const servicesListRes = await getServices(locale, { country_id: relatedCountryId });
+  const relatedServices = (servicesListRes.data ?? []).filter((s) => s.id !== service.id);
+
+
+
   return (
+
     <div>
+
+      {service.pageScript ? <ServicePageScript scriptHtml={service.pageScript} /> : null}
+
+      <PageSchemaScript json={serviceSchemaJson} />
+
       <PageHeader
-        title={service?.title || t("title")}
-        image={service?.image || "/whySeo.webp"}
+        titleHtml={heroTitle}
+        descriptionHtml={heroSubtitle || undefined}
+        image={service.image || "/whySeo.webp"}
+        imageAlt={service.image_alt || ""}
       />
-      <div className=" py-16 space-y-16">
-        {/* description */}
-        {service?.highlight_description && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-            dangerouslySetInnerHTML={{
-              __html: service?.highlight_description || "",
-            }}
-            className="container bg-gray-900 p-6 rounded-xl text-center text-white space-y-4 leading-loose"
-          ></motion.div>
-        )}
 
-        {/* why seo */}
-        {service?.benefits && (
-          <div className=" container flex items-center justify-center gap-10">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl font-bold text-brand mb-4">
-                {service?.benefits?.title || t("why_seo.title")}
-              </h2>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: service?.benefits?.description || "",
-                }}
-              ></div>
-            </motion.div>
-            <motion.div
-              className="w-2/3 max-lg:hidden"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <Image
-                src={service?.benefits?.image || "/whySeo.webp"}
-                alt=""
-                width={500}
-                height={500}
-                className="w-auto h-auto mask-blob "
-              />
-            </motion.div>
-          </div>
-        )}
+      {service.description?.trim() && service.pageSections.length === 0 ? (
 
-        {/* check form  */}
-        {/* <SeoCheckForm /> */}
+        <div className="container py-12">
 
-        {/* what we offer */}
-        {service?.offerings && (
-          <OfferServiceSection offerings={service?.offerings} />
-        )}
+          <RichHtml html={service.description} className="cms-rich-html max-w-4xl mx-auto space-y-4" />
 
-        {/* seo steps */}
-        {service?.steps && <SeoSteps steps={service?.steps} />}
-        {/* seo tools */}
+        </div>
 
-        {service?.tools && <SeoTools tools={service?.tools} />}
+      ) : null}
 
-        {/* seo faq */}
-        {service?.faqs && <SeoFaq faq={service?.faqs} />}
-
-        {/* seo packages */}
-        {/* <SeoPackages /> */}
-
-        {/* contact */}
-        {service?.ctas && (
-          <PageContact
-            title={service?.ctas?.title}
-            phone={service?.ctas?.phone_number}
-            description={service?.ctas?.description}
+      {service.highlight_description ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="container py-10 text-center leading-loose"
+        >
+          <RichHtml
+            html={service.highlight_description}
+            className="cms-rich-html mx-auto max-w-4xl space-y-4 rounded-xl border border-brand/30 bg-brand/5 p-6"
           />
-        )}
+        </motion.div>
+      ) : null}
+
+      <ServicePageSections service={service} excludeKeys={["articleTags"]} />
+
+      {service.ourAccreditations ? (
+        <DependenciesSection accreditation={service.ourAccreditations} />
+      ) : null}
+      {service.ourClients ? (
+        <DependenciesSection accreditation={service.ourClients} />
+      ) : null}
+
+      <div className="space-y-16 pb-16">
+        <RelatedServicesSection services={relatedServices} countryId={relatedCountryId} />
+
+        {service.articleTags.length > 0 ? (
+          <ServiceArticleTags tags={service.articleTags} heading={t("articleTagsHeading")} />
+        ) : null}
       </div>
+
     </div>
+
   );
+
 }

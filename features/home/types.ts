@@ -39,11 +39,20 @@ export interface Hero {
   phone: string;
   stats: HeroStat[];
   seo: HeroSEO;
+  country_id?: number;
 }
 
 export interface AccreditationImage {
   id: number;
   url: string;
+  image_alt?: string | { ar?: string | null; en?: string | null } | null;
+  service_ids?: number[];
+  services?: {
+    id: number;
+    slug?: string | null;
+    slug_local?: { ar?: string | null; en?: string | null } | null;
+    title?: string | { ar?: string | null; en?: string | null } | null;
+  }[];
 }
 
 export interface Accreditation {
@@ -53,9 +62,18 @@ export interface Accreditation {
   images: AccreditationImage[];
 }
 
+export interface AccreditationResponse {
+  status: string | boolean;
+  message: string;
+  data: Accreditation;
+}
+
 export interface PartnerImage {
   id: number;
   url: string;
+  image_alt?: string | { ar?: string | null; en?: string | null } | null;
+  service_ids?: number[];
+  services?: AccreditationImage["services"];
 }
 
 export interface Partner {
@@ -67,10 +85,26 @@ export interface Partner {
   seo: HeroSEO;
 }
 
+export interface PartnersPaginatedMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface PartnersResponse {
+  status: string | boolean;
+  message: string;
+  data: {
+    data: Partner[];
+    meta: PartnersPaginatedMeta;
+  };
+}
+
 export interface LandingPageData {
-  hero: Hero;
-  accreditation: Accreditation;
-  partners: Partner[];
+  hero?: Hero;
+  accreditation?: Accreditation;
+  partners?: Partner[] | { data?: Partner[] };
 }
 
 export interface LandingPageResponse {
@@ -86,7 +120,15 @@ export interface WhyUsContent {
 }
 
 export interface WhyUsMedia {
-    image: string;
+    image?: string | { ar?: string; en?: string } | null;
+    images?: { ar?: string; en?: string } | null;
+    image_alt?: { ar?: string | null; en?: string | null } | string | null;
+}
+
+export interface WhyUsGalleryImage {
+    id: number;
+    url: string;
+    image_alt?: { ar?: string | null; en?: string | null } | string | null;
 }
 
 export interface WhyUsItem {
@@ -104,6 +146,8 @@ export interface WhyUsData {
     id: number;
     slug: string;
     content: WhyUsContent;
+    media?: WhyUsMedia;
+    images?: WhyUsGalleryImage[];
     items: WhyUsItem[];
     seo: WhyUsSeo;
 }
@@ -118,6 +162,9 @@ export interface WhyUsResponse {
 export interface SolutionSingleItem {
     id: number,
     slug: string | null,
+    slug_local?: { ar?: string | null; en?: string | null } | null,
+    title?: string,
+    description?: string,
     content: {
         title: string,
         description: string

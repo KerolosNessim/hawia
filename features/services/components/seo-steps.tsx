@@ -1,46 +1,78 @@
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import { ServiceSectionItemCard } from "@/features/services/components/service-section-item-card";
+import { hasSectionImage } from "@/features/services/lib/has-section-image";
 import SectionHeader from "@/features/shared/components/section-header";
-import React from "react";
+import { RichHtml } from "@/features/shared/components/rich-html";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Section } from "../types";
+import { sectionItemCardClassName, sectionSubtitleColor } from "../lib/section-tone";
+import type { SectionTone } from "../lib/section-tone";
+import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
+import type { Section, SectionItem } from "../types";
 
-interface Item {
-  id: string;
-  title: string;
-  description: string;
-}
-export default function SeoSteps({steps}: {steps: Section}) {
+export default function SeoSteps({
+  steps,
+  tone = "dark",
+}: {
+  steps: Section;
+  tone?: SectionTone;
+}) {
   const t = useTranslations("singleService.seoSteps");
-  const items = t.raw("steps") as Item[];
-  return (
-    <div className="py-12 bg-gray-900">
-      <div className="container space-y-8">
-        <SectionHeader title={steps?.title || t("title")} subtitle={steps?.description || t("subtitle")} />
-        {/* content */}
-        <div className="flex items-center">
-          {/* items */}
-          <div className="grid lg:grid-cols-2 grid-cols-1 gap-4">
-            {steps?.items?.map((item:any,index:number) => (
-              <div key={index} className="bg-gray-700 p-4 rounded-xl border border-brand text-white">
-                <p className=" font-bold">
-                  <span>{item?.title}</span>
-                </p>
-                <p className=" mt-2">{item?.description}</p>
-              </div>
-            ))}
+  const hasImage = hasSectionImage(steps?.image);
+  const displayItems = orderSectionItemsForDisplay(steps?.items);
 
+  return (
+    <div className="container space-y-8">
+        <SectionHeader
+          titleHtml={steps?.title || undefined}
+          title={t("title")}
+          subtitleHtml={steps?.description || t("subtitle")}
+          subtitleColor={sectionSubtitleColor(tone)}
+        />
+        <div
+          className={cn(
+            "flex items-center gap-8",
+            !hasImage && "justify-center",
+          )}
+        >
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-4",
+              hasImage ? "lg:grid-cols-2 flex-1" : "w-full max-w-4xl",
+            )}
+          >
+            {displayItems.map((item: SectionItem, index: number) => (
+              <ServiceSectionItemCard
+                key={`${item.sort_order ?? index}-${index}`}
+                link={item.link}
+                icon={item.icon}
+                className={sectionItemCardClassName(tone)}
+              >
+                <RichHtml html={item.title} as="p" className="font-bold" />
+                <RichHtml
+                  html={item.description}
+                  className={cn(
+                    "mt-2",
+                    tone === "dark" ? "text-gray-200" : "text-gray-600",
+                  )}
+                />
+              </ServiceSectionItemCard>
+            ))}
           </div>
-          <div className=" max-lg:hidden shrink-0">
-            <Image
-              src={steps?.image || "/whySeo.webp"}
-              alt=""
-              width={500}
-              height={500}
-              className="w-auto h-auto mask-blob "
-            />
-          </div>
+          {hasImage && steps.image ? (
+            <div className="shrink-0 max-lg:mx-auto max-lg:w-full max-lg:max-w-md">
+              <Image
+                src={steps.image}
+                alt={steps.image_alt ?? ""}
+                width={500}
+                height={500}
+                className="mask-blob h-auto w-auto max-w-full"
+                unoptimized={isRemoteMediaUrl(steps.image)}
+              />
+            </div>
+          ) : null}
         </div>
-      </div>
     </div>
   );
 }

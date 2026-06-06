@@ -3,23 +3,25 @@ import { PublicPackageCardGrid } from "@/features/packages/components/public-pac
 import {
   fetchPublicPackagesByCategorySlug,
 } from "@/features/packages/services/packages-public-api";
-import { buildBreadcrumbJsonLd, buildPackageCollectionJsonLd, jsonLdScript } from "@/features/packages/lib/json-ld";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import {
+  buildBreadcrumbList,
+  buildCollectionPageSchemaGraph,
+  buildCanonicalUrl,
+  jsonLdGraph,
+} from "@/lib/seo/schema";
 import { Link } from "@/i18n/navigation";
+import {
+  buildPageMetadata,
+  getAbsoluteUrl,
+  localePathname,
+} from "@/lib/seo/metadata-helpers";
+import type { Locale } from "next-intl";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { getTranslations } from "next-intl/server";
 
 type Props = Readonly<{ params: Promise<{ locale: string; categorySlug: string }> }>;
-
-async function absolutePath(path: string): Promise<string | null> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (path.startsWith("http")) return path;
-  return `${proto}://${host}${path.startsWith("/") ? path : `/${path}`}`;
-}
 
 function categoryDescription(categoryTitle: string, packagesCount: number, locale: string) {
   if (locale.startsWith("ar")) {
@@ -45,22 +47,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     (locale.startsWith("ar") ? `${category.title} | الباقات` : `${category.title} | Packages`);
   const description =
     category.metaDescription?.trim() || categoryDescription(category.title, packages.length, locale).slice(0, 160);
-  const canonical =
-    (await absolutePath(`/${locale}/packages/categories/${encodeURIComponent(category.slug)}`)) ??
-    undefined;
+  const loc = locale as Locale;
 
-  return {
+  return buildPageMetadata({
+    locale: loc,
+    pathname: localePathname(
+      loc,
+      `/packages/categories/${encodeURIComponent(category.slug)}`,
+    ),
     title,
     description,
-    robots: { index: true, follow: true },
-    alternates: canonical ? { canonical } : undefined,
-    openGraph: {
-      title,
-      description,
-      locale: locale === "ar" ? "ar_SA" : "en_US",
-      type: "website",
-    },
-  };
+  });
 }
 
 export default async function PackageCategoryPage({ params }: Props) {
@@ -69,35 +66,45 @@ export default async function PackageCategoryPage({ params }: Props) {
   const detail = await getTranslations("packagesSection");
   const { category, packages } = await fetchPublicPackagesByCategorySlug(categorySlug, locale);
 
-  if (!category) notFound();
+  if (!category) redirectToNotFound();
 
-  const packagesUrl = (await absolutePath(`/${locale}/packages`)) ?? `/${locale}/packages`;
-  const categoryUrl =
-    (await absolutePath(`/${locale}/packages/categories/${encodeURIComponent(category.slug)}`)) ??
-    `/${locale}/packages/categories/${encodeURIComponent(category.slug)}`;
+  const loc = locale as Locale;
+  const packagesUrl = buildCanonicalUrl(loc, "/packages");
+  const categoryUrl = buildCanonicalUrl(
+    loc,
+    `/packages/categories/${encodeURIComponent(category.slug)}`,
+  );
   const description =
     category.metaDescription?.trim() || categoryDescription(category.title, packages.length, locale);
-  const packageBaseUrl =
-    (await absolutePath(`/${locale}/packages`)) ?? `/${locale}/packages`;
+  const categoriesUrl = buildCanonicalUrl(loc, "/packages/categories");
 
-  const breadcrumbLd = buildBreadcrumbJsonLd([
-    { name: t("breadcrumbHome"), url: (await absolutePath(`/${locale}`)) ?? `/${locale}` },
-    { name: t("breadcrumbPackages"), url: packagesUrl },
-    { name: category.title, url: categoryUrl },
+  const categorySchemaJson = jsonLdGraph([
+    ...buildCollectionPageSchemaGraph({
+      pageUrl: categoryUrl,
+      name: category.title,
+      description,
+      inLanguage: loc === "ar" ? "ar" : "en",
+      breadcrumbs: [],
+      items: packages.map((pkg) => ({
+        name: pkg.title,
+        url: buildCanonicalUrl(loc, `/packages/${encodeURIComponent(pkg.slug)}`),
+      })),
+      listIdSuffix: "packages",
+    }),
+    buildBreadcrumbList(
+      [
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/") },
+        { name: t("breadcrumbPackages"), url: packagesUrl },
+        { name: t("breadcrumbCategories"), url: categoriesUrl },
+        { name: category.title, url: categoryUrl },
+      ],
+      categoryUrl,
+    ),
   ]);
-  const collectionLd = buildPackageCollectionJsonLd({
-    name: category.title,
-    description,
-    url: categoryUrl,
-    packages,
-    packageUrl: (pkg) =>
-      `${packageBaseUrl}/${encodeURIComponent(pkg.slug)}`,
-  });
-  const structuredData = jsonLdScript([breadcrumbLd, ...collectionLd]);
 
   return (
     <div className="space-y-16 pb-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      <PageSchemaScript json={categorySchemaJson} />
       <PageHeader title={category.title} description={description} image="/hero-bg.webp" />
       <div className="container mx-auto space-y-8 px-4">
         <Link

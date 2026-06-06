@@ -1,15 +1,15 @@
-import { apiClient, ApiError } from "@/lib/api";
-import type { AdsResponse } from "../types";
+import {
+  fetchSolutionCategoriesSection,
+  type SolutionCategoriesSectionData,
+} from "@/features/clients/services/clients-public-api";
+
+export type { SolutionCategoriesSectionData };
 
 /**
- * Public solutions block for the home page (`/v1/solutions`).
- * Returns `null` when the API reports missing section (e.g. not seeded yet) so the page still renders.
+ * Home “client samples” section — `GET /v1/solutions/categories`.
  */
-export async function getAdsData(): Promise<AdsResponse | null> {
-  try {
-    return await apiClient.get<AdsResponse>("/v1/solutions");
-  } catch (e) {
-    if (e instanceof ApiError) return null;
-    throw e;
-  }
+export async function getAdsData(countryId?: number): Promise<SolutionCategoriesSectionData | null> {
+  const { getLocale } = await import("next-intl/server");
+  const locale = await getLocale();
+  return fetchSolutionCategoriesSection(locale, { countryId });
 }
