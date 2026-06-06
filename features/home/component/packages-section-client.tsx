@@ -57,7 +57,7 @@ export default function PackagesSectionClient({
     (uncategorized.length > 0 ? "__other__" : categories[0]?.id ?? "__other__");
 
   return (
-    <section className="py-16 space-y-8">
+    <section className="py-16 space-y-8 finger-print-background">
       <SectionHeader title={title} />
       <Tabs defaultValue={defaultTab} className="w-full flex flex-col items-center max-md:gap-12 static">
         <TabsList className="flex flex-wrap justify-center mb-26 md:mb-12 gap-2 bg-transparent h-auto">

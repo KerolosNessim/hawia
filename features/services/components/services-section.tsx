@@ -61,7 +61,8 @@ export default function ServicesSection({ countryId }: { countryId?: number }) {
   }
 
   return (
-    <section className="container space-y-8 py-16">
+    <section className=" py-16 background-dark-img ">
+      <div className="container space-y-8">
       <SectionHeader
         title={t("title")}
         subtitle={t("subtitle")}
@@ -86,6 +87,7 @@ export default function ServicesSection({ countryId }: { countryId?: number }) {
         >
           {tPage("viewAll")}
         </Link>
+        </div>
       </div>
     </section>
   );

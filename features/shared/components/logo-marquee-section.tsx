@@ -39,7 +39,7 @@ export default function LogoMarqueeSection({
   const card = (image: LogoTileItem, key: string) => (
     <div
       key={key}
-      className="group relative mx-2 flex h-32 w-44 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/60 bg-neutral-50/40 p-8 transition-all duration-300 hover:border-brand hover:shadow-md"
+      className="group relative mx-2 flex h-32 w-44 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/60 bg-neutral-50/40 p-2 transition-all duration-300 hover:border-brand hover:shadow-md"
     >
       <Image
         src={image.url}
@@ -55,7 +55,7 @@ export default function LogoMarqueeSection({
   return (
     <section
       className={cn(
-        "space-y-8 overflow-hidden py-16",
+        "space-y-8 overflow-hidden py-16 finger-print-background",
         variant === "white" ? "bg-white" : "bg-muted/20",
         className,
       )}

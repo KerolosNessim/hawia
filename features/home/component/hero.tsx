@@ -8,8 +8,6 @@ import { useMemo } from "react";
 import type { Hero } from "../types";
 import BookingDialog from "@/features/booking/components/booking-dialog";
 
-const heroCtaBtnClass =
-  "h-auto min-h-11 w-full justify-center gap-1.5 rounded-full bg-brand px-6 py-4 text-sm font-medium text-background max-xl:min-h-10 max-xl:px-5 max-xl:py-3.5";
 
 export default function HeroSection({heroData}:{heroData:Hero}) {
   const t = useTranslations("hero");
@@ -69,7 +67,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
             transition={{ duration: 1, delay: 2 }}
             className="mx-auto mt-4 grid w-full max-w-xs grid-cols-1 gap-3 max-xl:mt-2 max-xl:px-4 xl:max-w-lg xl:grid-cols-2"
           >
-            <Button asChild className={heroCtaBtnClass}>
+            <Button asChild className={  "h-auto min-h-11 w-full justify-center gap-1.5 rounded-full   bg-brand px-6 py-4 text-sm font-medium text-background max-xl:min-h-10 max-xl:px-5 max-xl:py-3.5"}>
               <a href={`tel:${heroData?.phone}`}>
                 <Phone className="size-4 rtl:rotate-y-180" />
                 {t("contactUs")}
@@ -78,7 +76,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
             <div className="w-full min-w-0 [&_span]:block [&_span]:w-full [&_button]:w-full">
               <BookingDialog
                 trigger={
-                  <Button className={heroCtaBtnClass}>
+                  <Button className={  "h-auto min-h-11 w-full justify-center gap-1.5 rounded-full bg-black/70  hover:bg-brand px-6 py-4 text-sm font-medium text-background max-xl:min-h-10 max-xl:px-5 max-xl:py-3.5"}>
                     <FileText className="size-4 rtl:rotate-y-180" />
                     {t("bookNow") || "Book Now"}
                   </Button>

@@ -294,8 +294,12 @@
 
   [data-slot="card"] .cms-rich-html::-webkit-scrollbar,
   [data-slot="card"] [data-slot="card-title"] .cms-rich-html::-webkit-scrollbar,
-  [data-slot="card"] [data-slot="card-description"] .cms-rich-html::-webkit-scrollbar,
-  [data-slot="card"] [data-slot="card-content"] .cms-rich-html::-webkit-scrollbar {
+  [data-slot="card"]
+    [data-slot="card-description"]
+    .cms-rich-html::-webkit-scrollbar,
+  [data-slot="card"]
+    [data-slot="card-content"]
+    .cms-rich-html::-webkit-scrollbar {
     display: none;
   }
 
@@ -307,15 +311,26 @@
   }
 
   /* Service cards: keep CMS text readable on hover (light tint, no forced white-on-dark) */
-  .group:hover .service-card .service-card__title.cms-rich-html :is(p, span, strong, em),
-  .group:hover .service-card .service-card__subtitle.cms-rich-html :is(p, span, strong, em),
-  .group:hover .service-card .service-card__description.cms-rich-html :is(p, span, strong, em) {
+  .group:hover
+    .service-card
+    .service-card__title.cms-rich-html
+    :is(p, span, strong, em),
+  .group:hover
+    .service-card
+    .service-card__subtitle.cms-rich-html
+    :is(p, span, strong, em),
+  .group:hover
+    .service-card
+    .service-card__description.cms-rich-html
+    :is(p, span, strong, em) {
     background-color: transparent !important;
     color: inherit;
   }
 
   /* Blog cards: excerpt color follows section theme (overrides CMS inline colors) */
-  [data-blog-card-theme="dark"] .blog-card-excerpt.cms-rich-html :is(p, span, strong, em, li, div) {
+  [data-blog-card-theme="dark"]
+    .blog-card-excerpt.cms-rich-html
+    :is(p, span, strong, em, li, div) {
     color: rgb(255 255 255) !important;
   }
 
@@ -323,7 +338,9 @@
     color: var(--color-brand) !important;
   }
 
-  [data-blog-card-theme="light"] .blog-card-excerpt.cms-rich-html :is(p, span, strong, em, li, div) {
+  [data-blog-card-theme="light"]
+    .blog-card-excerpt.cms-rich-html
+    :is(p, span, strong, em, li, div) {
     color: rgb(75 85 99) !important;
   }
 
@@ -332,7 +349,9 @@
   }
 
   /* Home promo slides: brand background — readable CMS copy (override inline editor colors) */
-  [data-promo-banner="slide"] .promo-banner-rich.cms-rich-html :is(p, span, strong, em, li, div, h1, h2, h3, h4) {
+  [data-promo-banner="slide"]
+    .promo-banner-rich.cms-rich-html
+    :is(p, span, strong, em, li, div, h1, h2, h3, h4) {
     color: rgb(255 255 255) !important;
   }
 
@@ -342,17 +361,15 @@
   }
 
   /* Home — لماذا تختارنا (matches stats / steps dark band) */
-  [data-home-section="why-choose-us"] {
-    background-color: #111827 !important;
-    color: #f9fafb;
-  }
 
   [data-home-section="why-choose-us"] .cms-rich-html :is(p, li, td, span, div) {
-    color: #d1d5db !important;
+    color: #d1d5db ;
     background-color: transparent !important;
   }
 
-  [data-home-section="why-choose-us"] .cms-rich-html :is(h1, h2, h3, h4, h5, h6) {
+  [data-home-section="why-choose-us"]
+    .cms-rich-html
+    :is(h1, h2, h3, h4, h5, h6) {
     color: var(--color-brand) !important;
     background-color: transparent !important;
   }
@@ -361,7 +378,9 @@
     color: var(--color-brand) !important;
   }
 
-  [data-home-section="why-choose-us"] .cms-rich-html :is(.editor-toc, .cms-toc) {
+  [data-home-section="why-choose-us"]
+    .cms-rich-html
+    :is(.editor-toc, .cms-toc) {
     border-color: rgb(255 255 255 / 0.12) !important;
     background-color: rgb(255 255 255 / 0.06) !important;
   }
@@ -409,4 +428,19 @@
   .mask-blob {
     @apply mask-[url(/blob.svg)] mask-contain mask-no-repeat mask-center;
   }
+}
+
+.finger-print-background {
+  background-image: url(/finger-print.webp) !important;
+
+}
+
+.background-dark-img {
+  background-image: url(/dark-bg.webp) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+
 }

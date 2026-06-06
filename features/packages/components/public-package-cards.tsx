@@ -137,6 +137,7 @@ export function PublicPackageCardGrid({
       <p className="mx-auto max-w-xl py-12 text-center text-muted-foreground">{emptyHint}</p>
     );
   }
+  console.log(items );
 
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -153,7 +154,7 @@ export function PublicPackageCardGrid({
             <Card
               className={`flex h-full flex-col overflow-hidden rounded-2xl transition-shadow duration-300 group-hover/card:shadow-xl ${
                 pkg.isFeatured
-                  ? "z-10 border-2 border-brand bg-white shadow-lg ring-2 ring-brand/25"
+                  ? "z-10 border-2 border-brand bg-white shadow-lg ring-2 ring-brand/25 scale-107"
                   : "border border-gray-200 bg-white"
               }`}
             >

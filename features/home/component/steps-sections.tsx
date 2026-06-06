@@ -51,7 +51,7 @@ export default function StepsSection({ countryId }: { countryId?: number }) {
   if (countryId != null && items.length === 0) return null;
 
   return (
-    <section className="py-24 bg-gray-900 relative overflow-hidden">
+    <section className="py-24 finger-print-background relative overflow-hidden">
       {/* Decorative Wavy Background Pattern (Simplified) */}
       <div className="absolute inset-0 opacity-5 pointer-events-none text-brand">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -101,14 +101,14 @@ export default function StepsSection({ countryId }: { countryId?: number }) {
                 >
                   <div className="relative">
                     {/* Circle Image/Icon */}
-                    <div className="w-28 h-28 rounded-full bg-white shadow-[0_10px_40px_rgba(0,0,0,0.08)] flex items-center justify-center border border-gray-100 group hover:scale-110 transition-transform duration-300 overflow-hidden">
+                    <div className="w-28 h-28 p-4 rounded-full bg-white shadow-[0_10px_40px_rgba(0,0,0,0.08)] flex items-center justify-center border border-gray-100 group hover:scale-110 transition-transform duration-300 overflow-hidden">
                       {step.image ? (
                         <Image
                           src={step.image}
                           alt={step.title}
                           width={80}
                           height={80}
-                          className="w-full h-full object-contain"
+                          className="w-[80%] object-contain"
                         />
                       ) : (
                         <Icon className="w-10 h-10 text-brand" />
@@ -125,7 +125,7 @@ export default function StepsSection({ countryId }: { countryId?: number }) {
                     </h3>
                     <RichHtml
                       html={step.description}
-                      className="text-gray-200 mt-2 text-sm max-w-[180px] leading-relaxed"
+                      className=" mt-2 text-sm max-w-[180px] leading-relaxed"
                     />
                   </div>
                 </motion.div>

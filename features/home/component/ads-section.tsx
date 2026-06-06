@@ -19,8 +19,8 @@ export default async function AdsSection({ countryId }: { countryId?: number }) 
   const subtitle = section.descriptionHtml || t("subtitle");
 
   return (
-    <section className="relative space-y-8 overflow-hidden bg-gray-900 py-16">
-      <div
+    <section className="relative space-y-8 overflow-hidden finger-print-background py-16">
+      {/* <div
         className="pointer-events-none absolute inset-0 text-brand opacity-5"
         aria-hidden
       >
@@ -44,7 +44,7 @@ export default async function AdsSection({ countryId }: { countryId?: number }) 
           </defs>
           <rect width="100%" height="100%" fill="url(#ads-wavy)" />
         </svg>
-      </div>
+      </div> */}
 
       <div className="container relative z-10 px-4">
         <SectionHeader title={title} subtitleHtml={subtitle} />
@@ -63,7 +63,7 @@ export default async function AdsSection({ countryId }: { countryId?: number }) 
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="rounded-lg bg-linear-to-b from-brand to-white p-6 text-center text-gray-900 transition-all duration-300 hover:from-white hover:to-brand hover:text-white"
+                className="shadow-lg rounded-lg bg-linear-to-b from-brand to-white p-6 text-center text-gray-900 transition-all duration-300 hover:from-white hover:to-brand hover:text-white"
               >
                 <Image
                   src={item.imageUrl}
@@ -71,7 +71,7 @@ export default async function AdsSection({ countryId }: { countryId?: number }) 
                   width={100}
                   height={100}
                   unoptimized={isRemoteMediaUrl(item.imageUrl)}
-                  className="mx-auto size-24 object-contain sm:size-28"
+                  className="mx-auto size-24 object-contain sm:size-40"
                 />
                 <h3 className="my-2 text-xl font-extrabold">{item.title}</h3>
               </motion.div>

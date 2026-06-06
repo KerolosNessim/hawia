@@ -48,7 +48,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
     const inner = (
     <div
       key={index}
-      className="group relative mx-2 flex h-32 w-44 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/50 bg-neutral-50/30 p-8 transition-all duration-300 hover:border-brand hover:bg-neutral-50/50 dark:border-neutral-800/50 dark:bg-neutral-900/30 dark:hover:border-primary/30 dark:hover:bg-neutral-900/50"
+      className="group relative mx-2 flex h-32 w-44 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/50 bg-neutral-50/30 p-2 transition-all duration-300 hover:border-brand hover:bg-neutral-50/50 dark:border-neutral-800/50 dark:bg-neutral-900/30 dark:hover:border-primary/30 dark:hover:bg-neutral-900/50"
     >
       <Image
         src={image}
@@ -78,7 +78,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
   if (images.length === 0) return null;
 
   return (
-    <section className=" py-16 space-y-8 overflow-hidden">
+    <section className=" py-16 space-y-8 overflow-hidden finger-print-background">
       <div className="container max-w-6xl ">
       <SectionHeader
         title={accreditation?.title || t("title")}

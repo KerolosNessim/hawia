@@ -16,7 +16,7 @@ import { pickServiceSlug, servicePostPath } from "../lib/services-routes";
 import { Service } from "../types";
 
 const serviceCardTitleClassName =
-  "service-card__title line-clamp-2 min-h-14 w-full text-center text-xl font-bold text-foreground";
+  "service-card__title line-clamp-2 min-h-14 w-full text-center text-xl font-bold text-white";
 
 export default function ServicesCard({
   item,
@@ -48,7 +48,7 @@ export default function ServicesCard({
         viewport={{ once: true }}
         className="h-full group"
       >
-        <Card className="service-card flex h-full min-h-88 flex-col bg-card transition-[box-shadow,background-color,ring-color] duration-300 group-hover:bg-brand/5 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-brand group-hover:ring-offset-2">
+        <Card className="service-card flex h-full min-h-88 flex-col bg-white/20 backdrop-blur-lg transition-[box-shadow,background-color,ring-color] duration-300 group-hover:bg-brand/5 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-brand ">
           <CardHeader className="shrink-0">
             <CardTitle className="flex w-full min-w-0 flex-col items-center gap-2">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand/20 text-brand transition-colors duration-300 group-hover:bg-brand group-hover:text-white md:h-20 md:w-20">
@@ -65,7 +65,7 @@ export default function ServicesCard({
                 <RichHtml
                   html={subtitle}
                   as="p"
-                  className="service-card__subtitle line-clamp-2 min-h-10 w-full text-center text-sm font-medium text-muted-foreground"
+                  className="service-card__subtitle line-clamp-2 min-h-10 w-full text-center text-sm font-medium text-white"
                 />
               ) : (
                 <span className="min-h-10" aria-hidden />

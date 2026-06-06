@@ -184,7 +184,7 @@ export default async function Home({ searchParams }: PageProps) {
     >
       <PageSchemaScript json={homeSchemaJson} />
       {hero ? <HeroSection heroData={hero} /> : null}
-      <div className="relative bg-gray-900 text-white">
+      <div className="relative  text-white">
         <div className="container relative z-20 mx-auto min-w-0 max-w-full px-4 sm:px-6 lg:-translate-y-16 lg:pb-10 max-lg:pt-16 max-lg:pb-8">
           <HeroStats stats={hero?.stats} />
         </div>
@@ -194,8 +194,8 @@ export default async function Home({ searchParams }: PageProps) {
       <StepsSection countryId={homeCountryId} />
       <DependenciesSection accreditation={accreditation} />
       <AdsSection countryId={homeCountryId} />
-      <ClientsSection countryId={homeCountryId} initialPartners={landing.partners} />
       <TestimonialsSection countryId={homeCountryId} />
+      <ClientsSection countryId={homeCountryId} initialPartners={landing.partners} />
       <PackagesSection countryId={homeCountryId} />
       <ArticlesSection items={latestBlogs} />
       {promoBanners ? <PromoBannersSlider {...promoBanners} /> : null}

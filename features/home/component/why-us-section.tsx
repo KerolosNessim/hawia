@@ -85,8 +85,11 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
   const description = section?.content?.description || t("description");
 
   const coverUrl =
-    resolveWhyUsCoverUrl(section?.media?.image, locale, section?.media?.images) ??
-    null;
+    resolveWhyUsCoverUrl(
+      section?.media?.image,
+      locale,
+      section?.media?.images,
+    ) ?? null;
 
   const galleryImages = mapGalleryImages(
     pickWhyUsGalleryFromSection(section),
@@ -95,8 +98,11 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
   );
 
   const coverAlt =
-    pickImageAlt(section?.media?.image_alt, locale, typeof title === "string" ? title : "") ||
-    (typeof title === "string" ? title : "");
+    pickImageAlt(
+      section?.media?.image_alt,
+      locale,
+      typeof title === "string" ? title : "",
+    ) || (typeof title === "string" ? title : "");
 
   const illustrationSrc = coverUrl ?? FALLBACK_ILLUSTRATION;
   const useRemoteCover = isRemoteMediaUrl(illustrationSrc);
@@ -104,34 +110,8 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
   return (
     <section
       data-home-section="why-choose-us"
-      className="home-why-us-dark relative w-full bg-gray-900 py-16 text-white md:py-20 lg:py-24"
+      className=" relative w-full   pb-16   text-gray-900 finger-print-background"
     >
-      <div
-        className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.06] text-brand"
-        aria-hidden
-      >
-        <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern
-              id="why-us-wavy"
-              x="0"
-              y="0"
-              width="100"
-              height="100"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M0 50 Q 25 25, 50 50 T 100 50"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#why-us-wavy)" />
-        </svg>
-      </div>
-
       <div className="container relative mx-auto min-w-0 px-5 sm:px-6 md:px-8 lg:px-10">
         {isLoading ? (
           <div className="flex h-64 items-center justify-center">
@@ -150,16 +130,16 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
                 {typeof title === "string" && title.includes("<") ? (
                   <RichHtml
                     html={title}
-                    className="cms-rich-html text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-[2rem] lg:leading-tight [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h3]:!text-brand [&_p]:mb-0"
+                    className="cms-rich-html text-2xl font-bold leading-tight  sm:text-3xl lg:text-[2rem] lg:leading-tight [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h3]:!text-brand [&_p]:mb-0"
                   />
                 ) : (
-                  <h2 className="text-2xl font-bold leading-tight text-white sm:text-3xl lg:text-[2rem]">
+                  <h2 className="text-2xl font-bold leading-tight  sm:text-3xl lg:text-[2rem]">
                     {title}
                   </h2>
                 )}
                 <RichHtml
                   html={description}
-                  className="cms-rich-html text-base leading-relaxed text-gray-300 sm:text-lg [&_*]:!text-inherit [&_a]:!text-brand [&_p:last-child]:mb-0 [&_p]:mb-3"
+                  className="cms-rich-html text-base leading-relaxed  sm:text-lg [&_*]:!text-inherit [&_a]:!text-brand [&_p:last-child]:mb-0 [&_p]:mb-3"
                 />
               </div>
 
