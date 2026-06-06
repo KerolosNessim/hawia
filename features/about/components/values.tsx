@@ -9,6 +9,8 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
   const whyChoose = t.raw("why_choose");
   const values = t.raw("values");
   return (
+    <section className="finger-print-background">
+
     <div className=" container flex items-center justify-center gap-10">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -83,5 +85,6 @@ export default function Values({ data }: { data: WhyUsSection | undefined }) {
         />
       </motion.div>
     </div>
+    </section>
   );
 }

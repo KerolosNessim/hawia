@@ -72,7 +72,7 @@ export default function ServicesCard({
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex min-h-0 flex-1 flex-col">
+          <CardContent className="flex flex-1 flex-col">
             <CardDescription className="flex flex-1 flex-col text-center text-base font-semibold leading-relaxed text-muted-foreground">
               <RichHtml
                 html={description}

@@ -167,13 +167,13 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
                       );
                       requestAnimationFrame(() => getLenisInstance()?.resize());
                     }}
-                    className="h-auto min-h-10 rounded-full border-white/25 bg-transparent px-6 py-2.5 text-sm font-medium text-white hover:border-brand hover:bg-brand/10 hover:text-white"
+                    className="h-12 rounded-full bg-brand px-6 py-2.5 text-sm font-medium text-white hover:border-brand hover:bg-brand/90 hover:text-white"
                   >
                     {t("showMore")}
                   </Button>
                 ) : null}
 
-                <Link href="/about" className="inline-flex">
+                <Link href="/about" className="inline-flex h-12" >
                   <Button className={whyUsCtaBtnClass}>
                     <ArrowRight
                       className="size-4 shrink-0 rtl:rotate-180"

@@ -428,6 +428,9 @@
   .mask-blob {
     @apply mask-[url(/blob.svg)] mask-contain mask-no-repeat mask-center;
   }
+  .mask-about {
+    @apply mask-[url(/shape-9.svg)] mask-contain mask-no-repeat mask-center;
+  }
 }
 
 .finger-print-background {

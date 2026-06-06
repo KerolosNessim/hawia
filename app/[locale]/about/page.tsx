@@ -25,6 +25,7 @@ import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { Locale } from "next-intl";
 import { getLocale } from "next-intl/server";
 import type { Metadata } from "next";
+import SectionHeader from "@/features/shared/components/section-header";
 
 export async function generateMetadata({
   params,
@@ -113,29 +114,30 @@ export default async function AboutPage() {
         image={data?.image || "/hero-bg.webp"}
         descriptionHtml={data?.description || t("description")}
       />
-      <AboutVideoDialog
-        videoUrl={data?.video_url}
-        watchLabel={t("watchVideo")}
-      />
-      {/* identity */}
-      <Identity
-        title={data?.sections[0]?.title || t("identity.title")}
-        description={data?.sections[0]?.description || ""}
-        image={data?.sections[0]?.image || "/about-identity.webp"}
-      />
+
+      <div className="space-y-16 finger-print-background">
+        <AboutVideoDialog
+          videoUrl={data?.video_url}
+          watchLabel={t("watchVideo")}
+        />
+        {/* identity */}
+        <Identity
+          title={data?.sections[0]?.title || t("identity.title")}
+          description={data?.sections[0]?.description || ""}
+          image={data?.sections[0]?.image || "/about-identity.webp"}
+        />
+      </div>
       {/* vision and mession */}
-      <VissionAndMession data={data?.vision_sections[0] } />
+      <VissionAndMession
+        image={data?.image || "/hero-bg.webp"}
+        data={data?.vision_sections[0]}
+      />
       {/* services */}
       <ServicesSection />
       {/* values */}
-      <Values data={data?.why_us_sections[0]}/>
+      <Values data={data?.why_us_sections[0]} />
       {/* ideal client */}
-      {/* <div className="bg-gray-900 px-5 py-10">
-        <SectionHeader
-          title={t("ideal_client_title")}
-          subtitle={t("ideal_client")}
-        />
-      </div> */}
+
       <LogoMarqueeSection
         title={accreditation?.title || tAccreditations("title")}
         subtitleHtml={accreditation?.description || tAccreditations("subtitle")}
@@ -149,10 +151,19 @@ export default async function AboutPage() {
         images={partnerTiles}
         rowCount={3}
       />
-
+      <div className="container rounded-3xl shadow-lg bg-white px-5 py-10">
+        <SectionHeader
+          title={t("ideal_client_title")}
+          subtitle={t("ideal_client")}
+          subtitleColor="text-gray-500"
+          titleColor="text-gray-900"
+        />
+      </div>
       <PageContact
         title={data?.contact_sections[0]?.title || t("contact.title")}
-        description={data?.contact_sections[0]?.description || t("contact.description")}
+        description={
+          data?.contact_sections[0]?.description || t("contact.description")
+        }
         phone={data?.contact_sections[0]?.phone}
       />
     </div>

@@ -1,92 +1,110 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import * as motion from "framer-motion/client";
-import { Crosshair, Eye } from "lucide-react";
-
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import * as motion from "framer-motion/client";
+import { Crosshair, Eye, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { VisionSection } from "../types";
 import Image from "next/image";
+import { VisionSection } from "../types";
 
-export default function VissionAndMession({data}:{data:VisionSection|undefined}) {
-  const t = useTranslations("about");
+const VICTOR_FRAME = "/public/shape-9.svg";
+const FALLBACK_IMAGE = "/hero-bg.webp";
+
+type VisionMissionCardProps = {
+  title: string;
+  description?: string;
+  icon: LucideIcon;
+  iconImage?: string;
+  delay?: number;
+};
+
+function VisionMissionCard({
+  title,
+  description,
+  icon: Icon,
+  iconImage,
+  delay = 0,
+}: VisionMissionCardProps) {
   return (
-    <div className="py-16 bg-gray-900">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 container">
-        {/* vision */}
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.8 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="h-full group"
-        >
-          <Card className="h-full group-hover:ring-brand! group-hover:ring-2 group-hover:ring-offset-2  transition-all duration-300">
-            <CardHeader>
-              <CardTitle className=" gap-2 flex flex-col items-center">
-                                {data?.vision_image ? (
-                  <Image
-                    src={data.vision_image}
-                    alt="logo"
-                    width={500}
-                    height={500}
-                    className="w-16 h-auto rounded-full"
-                  />
-                ) : (
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand/20 flex items-center justify-center text-brand ">
-                    <Eye className="w-8 h-8 md:w-10 md:h-10" />
-                  </div>
-                )}
-                <p className="text-xl  font-bold  ">{ data?.vision_title ||t("vision.title")}</p>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-center text-base font-semibold leading-relaxed mb-4">
-                <RichHtml html={data?.vision_description} />
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </motion.div>
-        {/* mession */}
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.8 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="h-full group"
-        >
-          <Card className="h-full group-hover:ring-brand! group-hover:ring-2 group-hover:ring-offset-2  transition-all duration-300">
-            <CardHeader>
-              <CardTitle className=" gap-2 flex flex-col items-center">
-                                {data?.message_image ? (
-                  <Image
-                    src={data?.message_image}
-                    alt="logo"
-                    width={500}
-                    height={500}
-                    className="w-16 h-auto rounded-full"
-                  />
-                ) : (
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand/20 flex items-center justify-center text-brand ">
-                    <Crosshair className="w-8 h-8 md:w-10 md:h-10" />
-                  </div>
-                )}
-                <p className="text-xl  font-bold ">{ data?.message_title ||t("mession.title")}</p>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-center text-base font-semibold leading-relaxed mb-4">
-                <RichHtml html={data?.message_description} />
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </motion.div>
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      viewport={{ once: true }}
+      className="rounded-2xl bg-slate-50 p-6 sm:p-8"
+    >
+      <div className="mb-5 flex ">
+        {iconImage ? (
+          <Image
+            src={iconImage}
+            alt=""
+            width={56}
+            height={56}
+            unoptimized={isRemoteMediaUrl(iconImage)}
+            className="size-14 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex size-14 items-center justify-center rounded-full bg-brand text-white shadow-sm">
+            <Icon className="size-7" aria-hidden />
+          </div>
+        )}
       </div>
-    </div>
+
+      <h3 className="mb-3  text-xl font-bold text-gray-900 sm:text-2xl">
+        {title}
+      </h3>
+
+      {description ? (
+        <RichHtml
+          html={description}
+          className="cms-rich-html  text-base leading-relaxed text-gray-600 [&_p:last-child]:mb-0 [&_p]:mb-3"
+        />
+      ) : null}
+    </motion.article>
+  );
+}
+
+
+
+export default function VissionAndMession({
+  data,
+  image,
+}: {
+  data: VisionSection | undefined;
+  image: string;
+}) {
+  const t = useTranslations("about");
+
+  return (
+    <section className="relative overflow-hidden finger-print-background bg-white py-16 md:py-20">
+      <div className="container relative">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-5 lg:gap-14 xl:gap-16">
+        <div className=" lg:col-span-2">
+          <Image
+            src={image || "/about-identity.webp"}
+            alt=""
+            width={500}
+            height={500}
+            className="w-full h-auto mask-about "
+          />
+        </div>
+          <div className=" flex flex-col gap-6  lg:col-span-3">
+            <VisionMissionCard
+              title={data?.vision_title || t("vision.title")}
+              description={data?.vision_description}
+              icon={Eye}
+              iconImage={data?.vision_image}
+              delay={0}
+            />
+            <VisionMissionCard
+              title={data?.message_title || t("mession.title")}
+              description={data?.message_description}
+              icon={Crosshair}
+              iconImage={data?.message_image}
+              delay={0.1}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
