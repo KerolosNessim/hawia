@@ -144,7 +144,7 @@ function imageUrlsFromRecord(row: Record<string, unknown>): string[] {
     const url = imageRecord ? mediaUrlFromApi(imageRecord.url ?? imageRecord.path) : mediaUrlFromApi(image);
     if (url && !urls.includes(url)) urls.push(url);
   }
-  return urls;
+  return urls.filter(Boolean);
 }
 
 function categoryFromRecord(

@@ -2,76 +2,80 @@
 
 import Image from "next/image";
 import * as motion from "framer-motion/client";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Link } from "@/i18n/navigation";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
+import type { PublicClientCard } from "@/features/clients/services/clients-public-api";
+
+const FALLBACK_IMAGE = "/hero-bg.webp";
+
+function resolveClientImageUrl(imageUrl: string | null | undefined): string {
+  const trimmed = imageUrl?.trim();
+  return trimmed || FALLBACK_IMAGE;
+}
 
 interface ClientCardProps {
-  slug: string;
-  title: string;
-  description?: string;
-  image: string;
+  client: PublicClientCard;
+  onOpen: (client: PublicClientCard) => void;
   className?: string;
 }
 
 export default function ClientCard({
-  slug,
-  title,
-  description,
-  image,
+  client,
+  onOpen,
   className,
 }: ClientCardProps) {
-  const href = `/clients/${encodeURIComponent(slug)}`;
+  const { title, descriptionPlain } = client;
+  const imageSrc = resolveClientImageUrl(client.imageUrl);
 
   return (
-    <Link
-      href={href}
+    <motion.article
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen(client)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen(client);
+        }
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
       className={cn(
-        "group/card block h-full focus-visible:rounded-[2.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
+        "group/card block h-full cursor-pointer focus-visible:rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
         className,
       )}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="relative aspect-4/5 w-full overflow-hidden rounded-[2.5rem] p-8 shadow-2xl transition-all duration-500 group-hover/card:scale-[1.02]"
-      >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-[60%] w-[60%] rounded-full bg-[#ccff00] opacity-20 blur-[100px]" />
-          <div className="absolute top-0 h-full w-full bg-linear-to-b from-brand to-white" />
-        </div>
-
-        <div className="relative z-10 flex h-[70%] w-full flex-col items-center justify-center">
-          <motion.div
-            className="relative h-full w-full"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Image
-              src={image}
-              alt={title}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-              className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
-            />
-          </motion.div>
-        </div>
-
-        <div className="absolute bottom-6 left-6 right-6 z-30">
-          <div className="rounded-3xl border border-white/10 bg-white/85 px-5 py-4 shadow-lg backdrop-blur">
-            <h3 className="text-lg font-bold text-gray-900 lg:text-xl">{title}</h3>
-            {description ? (
-              <RichHtml
-                html={description}
-                className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-gray-600"
-              />
-            ) : null}
+      <Card className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 transition-all duration-300 group-hover/card:border-brand/40 group-hover/card:shadow-xl">
+        <div className="relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden border-b border-gray-100 bg-linear-to-b from-brand/10 to-muted/20 p-4 sm:p-5">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="h-3/5 w-3/5 rounded-full bg-brand/15 blur-3xl" />
           </div>
+          <Image
+            src={imageSrc}
+            alt={title}
+            width={1200}
+            height={900}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 440px"
+            className="relative z-10 h-full w-full object-contain object-center drop-shadow-md transition-transform duration-300 group-hover/card:scale-[1.02]"
+            unoptimized={isRemoteMediaUrl(imageSrc)}
+          />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-tr from-[#ccff0010] to-transparent" />
-      </motion.div>
-    </Link>
+        <CardContent className="flex flex-1 flex-col justify-center p-5 sm:p-6">
+          <h3 className="line-clamp-2 text-lg font-bold leading-snug text-gray-900 transition-colors group-hover/card:text-brand lg:text-xl">
+            {title}
+          </h3>
+          {descriptionPlain ? (
+            <RichHtml
+              html={descriptionPlain}
+              className="mt-2 line-clamp-2 text-sm leading-relaxed text-gray-600"
+            />
+          ) : null}
+        </CardContent>
+      </Card>
+    </motion.article>
   );
 }

@@ -1,8 +1,7 @@
 import PageHeader from "@/features/shared/components/page-header";
-import { PublicPackageCardGrid } from "@/features/packages/components/public-package-cards";
+import PackagesPageBrowser from "@/features/packages/components/packages-page-browser";
 import { fetchPackagesSectionData } from "@/features/packages/services/packages-public-api";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
-import { Link } from "@/i18n/navigation";
 import { localePathname } from "@/lib/seo/metadata-helpers";
 import {
   buildBreadcrumbList,
@@ -77,30 +76,14 @@ export default async function PackagesPage() {
         description={t("description")}
         image="/hero-bg.webp"
       />
-      <div className="container mx-auto space-y-10 px-4">
-        {sectionData.categories.length ? (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground">
-              {t("categoriesHeading")}
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              {sectionData.categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/packages/categories/${encodeURIComponent(category.slug)}`}
-                  className="rounded-full border border-brand/30 bg-brand/5 px-5 py-2 text-sm font-semibold text-brand transition hover:bg-brand hover:text-white"
-                >
-                  {category.title}
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <PublicPackageCardGrid
-          items={items}
+      <div className="container mx-auto px-4">
+        <PackagesPageBrowser
+          categoriesHeading={t("categoriesHeading")}
           detailsFallback={detail("details")}
           emptyHint={t("empty")}
+          emptyCategoryHint={detail("emptyCategory")}
+          otherTabLabel={detail("otherTab")}
+          sectionData={sectionData}
         />
       </div>
     </div>

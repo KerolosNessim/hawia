@@ -17,3 +17,5 @@ export { serializeClientWorkSchema, buildClientWorkSchemaGraph } from "./pages/c
 export { serializeFaqPageSchema, buildFaqPageSchemaGraph } from "./pages/faq-page";
 export { serializeCoursePageSchema, buildCoursePageSchemaGraph } from "./pages/course";
 export type { CoursePageSchemaInput, CourseLessonSchemaItem } from "./pages/course";
+export { serializeJobPostingSchema, buildJobPostingSchemaGraph } from "./pages/job-posting";
+export type { JobPostingSchemaInput } from "./pages/job-posting";

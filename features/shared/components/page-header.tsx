@@ -117,8 +117,9 @@ export default function PageHeader({
 
   return (
     <section
+      data-slot="page-header"
       className={cn(
-        "relative flex flex-col overflow-hidden",
+        "relative isolate z-[1] flex flex-col overflow-hidden bg-black",
         /* Mobile: min height + grow with content; desktop: fixed hero height */
         "min-h-[50vh] md:min-h-0 md:h-[40vh] lg:h-[60vh]",
       )}
@@ -126,13 +127,13 @@ export default function PageHeader({
       <img
         src={image}
         alt={imageAlt}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 z-0 h-full w-full object-cover"
         onError={(e) => {
           e.currentTarget.src = "/hero-bg.webp";
         }}
       />
 
-      <div className="absolute inset-0 bg-black/70" />
+      <div className="absolute inset-0 z-[1] bg-black/70" aria-hidden />
 
       <div className="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/40 backdrop-blur-sm">
         <div className="container py-1.5 sm:py-2 md:py-3">

@@ -1,4 +1,5 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
+import type { CountryRouteCode } from "@/features/shared/lib/country-routes";
 import { getCanonicalSiteUrl } from "@/lib/seo/site-url";
 import type { Locale } from "next-intl";
 
@@ -9,8 +10,13 @@ export function absoluteUrlFromPath(path: string, origin?: string): string {
   return `${base}${normalized}`;
 }
 
-export function buildCanonicalUrl(locale: Locale, pathname: string, origin?: string): string {
-  return absoluteUrlFromPath(localePath(locale, pathname), origin);
+export function buildCanonicalUrl(
+  locale: Locale,
+  pathname: string,
+  countryCode: CountryRouteCode = "SA",
+  origin?: string,
+): string {
+  return absoluteUrlFromPath(localePath(locale, pathname, countryCode), origin);
 }
 
 /** Ensures path segments are encoded once for breadcrumb `item` URLs. */
@@ -23,9 +29,14 @@ export function encodePathSegmentsOnce(pathname: string): string {
 export function buildCanonicalUrlFromEncodedPath(
   locale: Locale,
   pathname: string,
+  countryCode: CountryRouteCode = "SA",
   origin?: string,
 ): string {
-  const withLocale = localePath(locale, encodePathSegmentsOnce(pathname));
+  const withLocale = localePath(
+    locale,
+    encodePathSegmentsOnce(pathname),
+    countryCode,
+  );
   return absoluteUrlFromPath(withLocale, origin);
 }
 

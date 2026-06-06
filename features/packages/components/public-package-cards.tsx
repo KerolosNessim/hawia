@@ -2,6 +2,11 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { PublicPackageCard } from "@/features/packages/services/packages-public-api";
+
+export type PackageVisualData = Pick<
+  PublicPackageCard,
+  "imageUrl" | "imageAlt" | "title" | "iconPreset"
+>;
 import { Link } from "@/i18n/navigation";
 import { Gem, Rocket, Target } from "lucide-react";
 import { motion } from "framer-motion";
@@ -10,19 +15,26 @@ import {
   DEFAULT_INLINE_IMG_HEIGHT,
   DEFAULT_INLINE_IMG_WIDTH,
 } from "@/lib/inline-image-alt";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 export function PackageImage({
   pkg,
   className,
+  iconClassName,
   wrapperClassName,
 }: {
-  pkg: PublicPackageCard;
+  pkg: PackageVisualData;
   className: string;
+  /** Used when API image is missing or fails to load. Defaults to `className`. */
+  iconClassName?: string;
   /** Outer frame (card circle vs detail hero). */
   wrapperClassName?: string;
 }) {
-  if (pkg.imageUrl) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageUrl = pkg.imageUrl?.trim();
+  const resolvedIconClassName = iconClassName ?? className;
+
+  if (imageUrl && !imageFailed) {
     return (
       <div
         className={
@@ -31,25 +43,26 @@ export function PackageImage({
         }
       >
         <img
-          src={pkg.imageUrl}
+          src={imageUrl}
           alt={pkg.imageAlt || pkg.title}
           width={DEFAULT_INLINE_IMG_WIDTH}
           height={DEFAULT_INLINE_IMG_HEIGHT}
           loading="lazy"
           decoding="async"
           className={`${className} h-auto max-w-full object-contain`}
+          onError={() => setImageFailed(true)}
         />
       </div>
     );
   }
-  return <PackageIcon pkg={pkg} className={className} />;
+  return <PackageIcon pkg={pkg} className={resolvedIconClassName} />;
 }
 
 export function PackageIcon({
   pkg,
   className,
 }: {
-  pkg: PublicPackageCard;
+  pkg: PackageVisualData;
   className: string;
 }) {
   const preset = pkg.iconPreset ?? "target";
@@ -137,8 +150,6 @@ export function PublicPackageCardGrid({
       <p className="mx-auto max-w-xl py-12 text-center text-muted-foreground">{emptyHint}</p>
     );
   }
-  console.log(items );
-
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
       {items.map((pkg, index) => (
@@ -162,7 +173,8 @@ export function PublicPackageCardGrid({
                 <div className="mx-auto mb-6 flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-50 p-2 shadow-sm">
                   <PackageImage
                     pkg={pkg}
-                    className={pkg.imageUrl ? "h-full w-full object-contain" : "h-10 w-10 text-brand"}
+                    className="h-full w-full object-contain"
+                    iconClassName="h-10 w-10 text-brand"
                     wrapperClassName="flex h-full w-full items-center justify-center"
                   />
                 </div>

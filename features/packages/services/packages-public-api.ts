@@ -1,3 +1,4 @@
+import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { apiClient } from "@/lib/api";
 import { pickImageAlt } from "@/lib/image-alt";
@@ -243,35 +244,75 @@ function slugObjectMatches(
   return false;
 }
 
-function mediaUrlFromApi(path: string): string {
-  const t = path.trim();
-  if (!t) return "";
-  if (/^https?:\/\//i.test(t)) return t;
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-  const origin = base.replace(/\/?api$/i, "");
-  if (t.startsWith("/")) return `${origin}${t}`;
-  return `${origin}/${t}`;
+const PACKAGE_ICON_PRESETS = new Set(["target", "gem", "rocket"]);
+
+function isPackageIconPreset(value: string): boolean {
+  return PACKAGE_ICON_PRESETS.has(value.trim().toLowerCase());
 }
 
-function packageImageUrlFromRecord(r: Record<string, unknown>): string | null {
-  const topLevel = pickString(r.image);
-  if (topLevel) return mediaUrlFromApi(topLevel);
-  const raw = r.icon_url ?? r.icon ?? r.thumbnail;
-  if (typeof raw === "string" && raw.trim()) return mediaUrlFromApi(raw);
-  if (raw && typeof raw === "object") {
+function toPackageImageUrl(path: string): string | null {
+  const resolved = resolveMediaUrl(path);
+  return resolved && resolved !== "/blog.webp" ? resolved : null;
+}
+
+function packageImageUrlFromValue(raw: unknown, locale: string): string | null {
+  if (raw == null) return null;
+
+  if (typeof raw === "object" && !Array.isArray(raw)) {
     const o = raw as Record<string, unknown>;
-    const url = o.url ?? o.path;
-    if (typeof url === "string" && url.trim()) return mediaUrlFromApi(url);
+    const nested = o.url ?? o.path;
+    if (typeof nested === "string" && nested.trim()) {
+      return toPackageImageUrl(nested);
+    }
   }
+
+  const path =
+    typeof raw === "string" ? raw.trim() : pickLoc(raw, locale).trim();
+  if (!path || isPackageIconPreset(path)) return null;
+  return toPackageImageUrl(path);
+}
+
+function packageImageUrlFromRecord(
+  r: Record<string, unknown>,
+  locale: string,
+): string | null {
+  const content = asRecord(r.content);
+  const candidates: unknown[] = [
+    r.image,
+    r.images,
+    r.image_url,
+    r.icon_url,
+    r.thumbnail,
+    r.media_url,
+    content?.image,
+    content?.images,
+  ];
+
+  for (const candidate of candidates) {
+    const url = packageImageUrlFromValue(candidate, locale);
+    if (url) return url;
+  }
+  return null;
+}
+
+function readIconPreset(value: unknown): "target" | "gem" | "rocket" | null {
+  if (typeof value !== "string") return null;
+  const preset = value.trim().toLowerCase();
+  if (preset === "target" || preset === "gem" || preset === "rocket") return preset;
   return null;
 }
 
 function iconPresetFromRecord(
   r: Record<string, unknown>,
 ): "target" | "gem" | "rocket" | null {
-  const p = r.icon_preset;
-  if (p === "target" || p === "gem" || p === "rocket") return p;
-  return null;
+  const content = contentRecordFromPackage(r);
+  return (
+    readIconPreset(r.icon_preset) ??
+    readIconPreset(r.icon) ??
+    readIconPreset(r.image) ??
+    readIconPreset(content?.image) ??
+    null
+  );
 }
 
 function priceLabelFromRecord(r: Record<string, unknown>): string {
@@ -357,7 +398,7 @@ function recordToCard(
     ? pickLoc(category.title ?? category.name, locale) || null
     : (fallbackCategory?.title ?? null);
   const title = pickLoc(r.title ?? content?.title, locale);
-  const imageUrl = packageImageUrlFromRecord(r);
+  const imageUrl = packageImageUrlFromRecord(r, locale);
   return {
     id,
     slug: slug || id,

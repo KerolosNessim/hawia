@@ -1,6 +1,7 @@
 import JobOpeningDetailPage from "@/features/careers/components/job-opening-detail-page";
 import { resolveJobOpeningBySlug } from "@/features/careers/api/jobsPublicApi";
 import { jobOpeningPath, pickJobOpeningSlug } from "@/features/careers/lib/job-slug";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { getPathname } from "@/i18n/navigation";
@@ -9,8 +10,10 @@ import {
   localePathname,
   localePathsForSlug,
 } from "@/lib/seo/metadata-helpers";
+import { buildCanonicalUrl, serializeJobPostingSchema } from "@/lib/seo/schema";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import type { Locale } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { permanentRedirect } from "next/navigation";
 
@@ -84,5 +87,28 @@ export default async function JobOpeningRoutePage({ params }: Props) {
     );
   }
 
-  return <JobOpeningDetailPage opening={opening} />;
+  const tSeo = await getTranslations({ locale, namespace: "seo.breadcrumb" });
+  const title = plainTextFromHtml(opening.title).trim() || (locale.startsWith("ar") ? "وظيفة" : "Job");
+  const pageUrl = buildCanonicalUrl(locale, jobOpeningPath(canonicalSlug));
+  const careersUrl = buildCanonicalUrl(locale, "/careers");
+  const jobSchemaJson = serializeJobPostingSchema({
+    pageUrl,
+    title,
+    description: opening.description,
+    employmentType: opening.job_type,
+    inLanguage: locale.startsWith("ar") ? "ar" : "en",
+    imageUrl: opening.media.image,
+    breadcrumbs: [
+      { name: tSeo("home"), url: buildCanonicalUrl(locale, "/") },
+      { name: tSeo("careers"), url: careersUrl },
+      { name: title, url: pageUrl },
+    ],
+  });
+
+  return (
+    <>
+      <PageSchemaScript json={jobSchemaJson} />
+      <JobOpeningDetailPage opening={opening} />
+    </>
+  );
 }

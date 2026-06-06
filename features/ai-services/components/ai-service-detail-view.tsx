@@ -14,12 +14,15 @@ type Props = {
   showHero?: boolean;
   /** AI tools CTA in the hero (first service on `/ai-services` only). */
   showHeaderAction?: boolean;
+  /** Continue section tone alternation when multiple services stack on one page. */
+  sectionStartIndex?: number;
 };
 
 export default async function AiServiceDetailView({
   service,
   showHero = true,
   showHeaderAction = false,
+  sectionStartIndex = 0,
 }: Props) {
   const t = await getTranslations("singleService");
   const tAi = await getTranslations("aiServicesPage");
@@ -68,7 +71,12 @@ export default async function AiServiceDetailView({
         </div>
       ) : null}
 
-      <ServicePageSections service={service} excludeKeys={["articleTags"]} />
+      <ServicePageSections
+        service={service}
+        excludeKeys={["articleTags"]}
+        surface="ai-services"
+        startIndex={sectionStartIndex}
+      />
 
       {service.articleTags.length > 0 ? (
         <div className="space-y-16 pb-16">

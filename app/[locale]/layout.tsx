@@ -121,7 +121,10 @@ export default async function RootLayout({
         <HeadTagsFromMarkup markup={hoistedHeadTags} />
         <CustomHeadFromSettings markup={scripts?.custom_head_scripts} />
       </head>
-      <body className="relative max-w-full min-h-dvh overflow-x-clip">
+      <body
+        className="relative max-w-full min-h-dvh overflow-x-clip"
+        suppressHydrationWarning
+      >
         <QueryProvider>
           <SmoothScrollProvider>
             <NextIntlClientProvider messages={messages}>

@@ -1,5 +1,5 @@
 import PageHeader from "@/features/shared/components/page-header";
-import ClientCard from "@/features/clients/components/client-card";
+import ClientsGrid from "@/features/clients/components/clients-grid";
 import ClientsCategoryFilter from "@/features/clients/components/clients-category-filter";
 import {
   countClientsByCategorySlug,
@@ -133,17 +133,7 @@ export default async function ClientsPage({ params, searchParams }: Props) {
         ) : null}
 
         {pageData.clients.length ? (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {pageData.clients.map((client) => (
-              <ClientCard
-                key={client.id}
-                slug={client.slug}
-                title={client.title}
-                description={client.descriptionPlain}
-                image={client.imageUrl}
-              />
-            ))}
-          </div>
+          <ClientsGrid clients={pageData.clients} />
         ) : (
           <p className="rounded-3xl border border-dashed border-gray-200 bg-white p-10 text-center text-muted-foreground">
             {t("emptyFiltered")}

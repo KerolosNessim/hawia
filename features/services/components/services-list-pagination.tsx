@@ -2,6 +2,8 @@
 
 import { LaravelResourcePagination } from "@/components/ui/laravel-resource-pagination";
 import { servicesIndexHref } from "@/features/services/lib/services-routes";
+import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
+import { useCountry } from "@/hooks/use-country";
 import type { LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import type { Locale } from "next-intl";
 import { useLocale } from "next-intl";
@@ -15,14 +17,14 @@ type Props = {
 
 export function ServicesListPagination({
   meta,
-  countryId,
   previousLabel,
   nextLabel,
 }: Props) {
   const locale = useLocale() as Locale;
+  const countryCode = resolveSupportedCountry(useCountry());
 
   const getPageUrl = (page: number) =>
-    servicesIndexHref(locale, page, { countryId });
+    servicesIndexHref(locale, page, { countryCode });
 
   return (
     <LaravelResourcePagination

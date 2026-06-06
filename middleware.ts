@@ -3,6 +3,11 @@ import { localePath } from '@/features/blogs/lib/blog-routes';
 import { routing } from './i18n/routing';
 import type { Locale } from 'next-intl';
 import { applySecurityHeaders } from '@/lib/security-headers';
+import {
+  parseCountryPath,
+  resolveSupportedCountry,
+  withCountryPrefix,
+} from '@/features/shared/lib/country-routes';
 import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
@@ -22,11 +27,6 @@ type ResolvedRedirect = {
   to?: string | null;
 };
 
-function resolveSupportedCountry(value: string | undefined): 'SA' | 'OM' {
-  const normalized = value?.trim().toUpperCase();
-  return normalized === 'OM' ? 'OM' : 'SA';
-}
-
 function redirectStatusCode(value: unknown): 301 | 302 | 307 | 308 | 404 | 410 | null {
   const n = Number(value);
   if (n === 301 || n === 302 || n === 307 || n === 308 || n === 404 || n === 410) return n;
@@ -38,11 +38,20 @@ function pickRedirectTarget(data: ResolvedRedirect): string {
 }
 
 function redirectLookupPaths(pathname: string): string[] {
-  if (/^\/(?:ar|en)\/(?:blogs|services)\//.test(pathname)) return [pathname];
-  if (/^\/(?:blogs|services)\//.test(pathname)) {
-    return [pathname, `/ar${pathname}`, `/en${pathname}`];
+  const { pathname: withoutCountry } = parseCountryPath(pathname);
+  const candidates = [pathname, withoutCountry];
+
+  const paths = new Set<string>();
+  for (const candidate of candidates) {
+    if (/^\/(?:ar|en)\/(?:blogs|services)\//.test(candidate)) paths.add(candidate);
+    if (/^\/(?:blogs|services)\//.test(candidate)) {
+      paths.add(candidate);
+      paths.add(`/ar${candidate}`);
+      paths.add(`/en${candidate}`);
+    }
   }
-  return [];
+
+  return [...paths];
 }
 
 async function resolveConfiguredRedirect(req: NextRequest, pathname: string) {
@@ -89,63 +98,73 @@ export default async function middleware(req: NextRequest) {
   const token = req.cookies.get('auth_token')?.value;
   const { pathname } = req.nextUrl;
 
-  // Extract locale prefix and path without locale (supports localePrefix: 'as-needed')
-  const pathParts = pathname.split('/');
+  const { countryCode: urlCountry, pathname: pathWithoutCountry } = parseCountryPath(pathname);
+
+  const detectedCountry = resolveSupportedCountry(
+    req.headers.get('x-vercel-ip-country') ||
+    req.headers.get('cf-ipcountry') ||
+    req.cookies.get('user_country')?.value,
+  );
+  const effectiveCountry = urlCountry;
+
+  // Oman visitors use `/om` URLs (e.g. `/om`, `/om/services`, `/om/en`).
+  if (detectedCountry === "OM" && urlCountry === "SA") {
+    const omanPath = withCountryPrefix("OM", pathname);
+    if (omanPath !== pathname) {
+      const redirectUrl = new URL(omanPath, req.url);
+      redirectUrl.search = req.nextUrl.search;
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl));
+    }
+  }
+
+  const pathParts = pathWithoutCountry.split('/');
   const localeSegment = pathParts[1];
   const hasLocalePrefix = routing.locales.includes(localeSegment as Locale);
   const currentLocale = (hasLocalePrefix ? localeSegment : routing.defaultLocale) as Locale;
   const actualPath = hasLocalePrefix
     ? `/${pathParts.slice(2).join('/')}` || '/'
-    : pathname;
+    : pathWithoutCountry;
 
-  const isProtectedRoute = protectedRoutes.some(route => actualPath.startsWith(route));
-  const isAuthRoute = authRoutes.some(route => actualPath === route);
-
-  const configuredRedirect = await resolveConfiguredRedirect(req, pathname);
+  const configuredRedirect = await resolveConfiguredRedirect(req, pathWithoutCountry);
   if (configuredRedirect) {
     return applySecurityHeaders(configuredRedirect);
   }
 
   // 1. If trying to access a protected route without a token
-  if (isProtectedRoute && !token) {
-    const loginUrl = new URL(localePath(currentLocale, '/login'), req.url);
+  if (protectedRoutes.some(route => actualPath.startsWith(route)) && !token) {
+    const loginUrl = new URL(
+      withCountryPrefix(effectiveCountry, localePath(currentLocale, '/login')),
+      req.url,
+    );
     return applySecurityHeaders(NextResponse.redirect(loginUrl));
   }
 
   // 2. If trying to access login/register with a token
-  if (isAuthRoute && token) {
-    const homeUrl = new URL(localePath(currentLocale, '/'), req.url);
+  if (authRoutes.some(route => actualPath === route) && token) {
+    const homeUrl = new URL(
+      withCountryPrefix(effectiveCountry, localePath(currentLocale, '/')),
+      req.url,
+    );
     return applySecurityHeaders(NextResponse.redirect(homeUrl));
   }
 
-  // Fallback to intlMiddleware for localization
-  const response = applySecurityHeaders(intlMiddleware(req));
+  const intlRequest =
+    urlCountry === "OM"
+      ? new NextRequest(new URL(pathWithoutCountry + req.nextUrl.search, req.url), req)
+      : req;
 
-  // Detect user country from headers (Cloudflare, Vercel, etc).
-  // On localhost those headers are empty, so preserve an existing cookie for QA.
-  const detectedCountry =
-    req.headers.get('x-vercel-ip-country') ||
-    req.headers.get('cf-ipcountry') ||
-    req.cookies.get('user_country')?.value ||
-    'SA';
-  const country = resolveSupportedCountry(detectedCountry);
-  
-  // Set the country as a cookie so it can be easily accessed on client and server
-  response.cookies.set('user_country', country, {
+  const response = applySecurityHeaders(intlMiddleware(intlRequest));
+
+  response.cookies.set('user_country', effectiveCountry, {
     path: '/',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 30,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
+    secure: process.env.NODE_ENV === 'production',
   });
 
   return response;
 }
 
 export const config = {
-  // Match all pathnames except for
-  // - /api (API routes)
-  // - /_next (Next.js internals)
-  // - /_static (static files)
-  // - /favicon.ico, etc. (static files)
   matcher: ['/((?!api|_next|_static|_vercel|[\\w-]+\\.\\w+).*)']
 };

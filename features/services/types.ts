@@ -105,6 +105,7 @@ export type ServicePackageItem = {
   sortOrder: number;
   icon: "rocket" | "gem" | "target";
   isFeatured: boolean;
+  image: string | null;
   imageAlt?: string | null;
   /** When set, clicking the package card navigates here. */
   link?: string | null;

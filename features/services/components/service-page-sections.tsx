@@ -9,10 +9,11 @@ import SeoTools from "@/features/services/components/seo-tools";
 import ServiceClientPortfolioSection from "@/features/services/components/service-client-portfolio-section";
 import { getOrderedServicePageSections } from "@/features/services/lib/collect-page-sections";
 import {
+  resolveSectionTone,
   sectionShellClassName,
   sectionSubtitleColor,
-  sectionToneAt,
   type SectionTone,
+  type ServicePageSurface,
 } from "@/features/services/lib/section-tone";
 import type {
   Benefits,
@@ -42,6 +43,8 @@ type Props = {
   excludeKeys?: ServicePageSectionKey[];
   /** First section tone index (0 = dark). Use to continue alternation after other blocks. */
   startIndex?: number;
+  /** Visual shell for special pages (e.g. `/ai-services` matches home white/dark bands). */
+  surface?: ServicePageSurface;
 };
 
 function sectionLinkFromData(data: { link?: string | null }): string | undefined {
@@ -121,6 +124,7 @@ function renderSectionInstance(
   service: SingleService,
   t: ReturnType<typeof useTranslations>,
   tone: SectionTone,
+  surface: ServicePageSurface,
 ) {
   switch (section.key) {
     case "benefits":
@@ -136,7 +140,13 @@ function renderSectionInstance(
     }
     case "steps": {
       const steps = section.data as Section;
-      return <SeoSteps steps={steps} tone={tone} />;
+      return (
+        <SeoSteps
+          steps={steps}
+          tone={tone}
+          layout={surface === "ai-services" && tone === "light" ? "timeline" : "cards"}
+        />
+      );
     }
     case "tools": {
       const tools = section.data as Tools;
@@ -195,24 +205,29 @@ export function ServicePageSections({
   service,
   excludeKeys = [],
   startIndex = 0,
+  surface = "default",
 }: Props) {
   const t = useTranslations("singleService");
   const excluded = new Set(excludeKeys);
   const order = getOrderedServicePageSections(service.pageSections).filter(
     (section) => !excluded.has(section.key),
   );
-
   return (
     <>
       {order.map((section, index) => {
-        const tone = sectionToneAt(startIndex + index);
+        const tone = resolveSectionTone(startIndex + index, surface);
         const blockKey = sectionBlockKey(section);
-        const inner = renderSectionInstance(section, service, t, tone);
+        const inner = renderSectionInstance(section, service, t, tone, surface);
         if (!inner) return null;
-
         return (
-          <div key={blockKey} className={sectionShellClassName(tone)}>
-            {inner}
+          <div
+            key={blockKey}
+            className={sectionShellClassName(tone, surface)}
+            {...(surface === "ai-services"
+              ? { "data-page-surface": "ai-services", "data-section-tone": tone }
+              : {})}
+          >
+            <div className="relative z-10">{inner}</div>
           </div>
         );
       })}

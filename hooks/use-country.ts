@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { parseCountryPath } from "@/features/shared/lib/country-routes";
+import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export function useCountry() {
-  const [country, setCountry] = useState<string>('SA'); // Default fallback
+  const pathname = usePathname();
+  const pathCountry = parseCountryPath(pathname).countryCode;
+  const [country, setCountry] = useState<string>(pathCountry);
 
   useEffect(() => {
-    // Read the user_country cookie from document.cookie set by middleware
     const match = document.cookie.match(/(?:^|; )user_country=([^;]*)/);
-    if (match && match[1]) {
-      setCountry(match[1]);
-    }
-  }, []);
+    const cookieCountry = match?.[1]?.trim().toUpperCase();
+    setCountry(cookieCountry || pathCountry);
+  }, [pathCountry]);
 
   return country;
 }

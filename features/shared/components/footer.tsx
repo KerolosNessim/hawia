@@ -144,7 +144,9 @@ export default function Footer() {
                             )}
                           </span>
                           <Link
-                            href={servicePostPath(pickServiceSlug(service, locale))}
+                            href={servicePostPath(pickServiceSlug(service, locale), {
+                              countryCode: country.code,
+                            })}
                             className="text-start text-sm font-medium text-gray-700 transition-colors hover:text-brand"
                           >
                             {pickServiceDisplayTitle(

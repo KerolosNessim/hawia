@@ -15,10 +15,6 @@ import type { Metadata } from "next";
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { buildCanonicalUrl, serializePackageProductSchema } from "@/lib/seo/schema";
-import {
-  DEFAULT_INLINE_IMG_HEIGHT,
-  DEFAULT_INLINE_IMG_WIDTH,
-} from "@/lib/inline-image-alt";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { SiteBreadcrumbBar } from "@/features/shared/components/site-breadcrumb";
 
@@ -141,23 +137,14 @@ export default async function PackageDetailPage({ params }: Props) {
 
       <div className="rounded-3xl border border-border/60 bg-white p-8 md:p-12 shadow-sm space-y-8">
         <div className="flex flex-col md:flex-row gap-8 md:items-start">
-          {pkg.imageUrl ? (
-            <div className="mx-auto md:mx-0 shrink-0 w-full max-w-sm">
-              <img
-                src={pkg.imageUrl}
-                alt={pkg.imageAlt || pkg.title}
-                width={DEFAULT_INLINE_IMG_WIDTH}
-                height={DEFAULT_INLINE_IMG_HEIGHT}
-                loading="lazy"
-                decoding="async"
-                className="h-auto max-h-64 w-full rounded-2xl border border-gray-100 bg-gray-50 object-contain p-3"
-              />
-            </div>
-          ) : (
-            <div className="mx-auto md:mx-0 shrink-0 flex h-[96px] w-[96px] items-center justify-center rounded-full border border-gray-100 bg-gray-50 p-5">
-              <PackageImage pkg={pkg} className="h-14 w-14 text-brand" />
-            </div>
-          )}
+          <div className="mx-auto flex w-full max-w-sm shrink-0 items-center justify-center md:mx-0">
+            <PackageImage
+              pkg={pkg}
+              className="h-auto max-h-64 w-full rounded-2xl border border-gray-100 bg-gray-50 object-contain p-3"
+              iconClassName="h-14 w-14 text-brand"
+              wrapperClassName="flex h-[96px] w-[96px] items-center justify-center rounded-full border border-gray-100 bg-gray-50 p-5"
+            />
+          </div>
           <div className="flex-1 text-center md:text-start space-y-4">
             <h1 className="text-3xl font-bold text-gray-900">{pkg.title}</h1>
             {priceUi ? (

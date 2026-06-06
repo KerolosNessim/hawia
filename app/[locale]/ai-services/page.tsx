@@ -1,7 +1,7 @@
 import AiServicesApiContentSection from "@/features/ai-services/components/ai-services-api-content-section";
 import AiServiceDetailView from "@/features/ai-services/components/ai-service-detail-view";
 import { countVisibleServicePageSections } from "@/features/services/lib/collect-page-sections";
-import { sectionShellClassName, sectionToneAt } from "@/features/services/lib/section-tone";
+import { sectionShellClassName } from "@/features/services/lib/section-tone";
 import { buildAiServicesPageMetadata } from "@/features/services/lib/ai-service-metadata";
 import { getAllServiceAisFull } from "@/features/services/services/get-service-ais";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
@@ -43,12 +43,6 @@ export default async function AiServicesPage() {
   }
 
   const primary = services[0];
-  const apiTone = sectionToneAt(
-    services.reduce(
-      (offset, svc) => offset + countVisibleServicePageSections(svc, ["articleTags"]),
-      0,
-    ),
-  );
   const pageUrl = buildCanonicalUrl(locale, "/ai-services");
   const schemaJson = serializeServicePageSchema({
     pageUrl,
@@ -67,16 +61,32 @@ export default async function AiServicesPage() {
   return (
     <div className="pb-16">
       <PageSchemaScript json={schemaJson} />
-      {services.map((service, index) => (
-        <AiServiceDetailView
-          key={service.id}
-          service={service}
-          showHero={index === 0}
-          showHeaderAction={index === 0}
-        />
-      ))}
-      <div className={sectionShellClassName(apiTone)}>
-        <AiServicesApiContentSection embedded tone={apiTone} />
+      {services.map((service, index) => {
+        const sectionStartIndex = services
+          .slice(0, index)
+          .reduce(
+            (offset, svc) => offset + countVisibleServicePageSections(svc, ["articleTags"]),
+            0,
+          );
+
+        return (
+          <AiServiceDetailView
+            key={service.id}
+            service={service}
+            showHero={index === 0}
+            showHeaderAction={index === 0}
+            sectionStartIndex={sectionStartIndex}
+          />
+        );
+      })}
+      <div
+        className={sectionShellClassName("light", "ai-services")}
+        data-page-surface="ai-services"
+        data-section-tone="light"
+      >
+        <div className="relative z-10">
+          <AiServicesApiContentSection embedded tone="light" />
+        </div>
       </div>
     </div>
   );

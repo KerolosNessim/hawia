@@ -1,3 +1,7 @@
+import {
+  type CountryRouteCode,
+  withCountryPrefix,
+} from "@/features/shared/lib/country-routes";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "next-intl";
 
@@ -29,13 +33,16 @@ export function blogTagHref(locale: Locale, tag: string, page: number): string {
   return q ? `${base}?${q}` : base;
 }
 
-/** Prefixes pathname with locale when required (`as-needed` omits prefix for default locale). */
-export function localePath(locale: Locale, pathname: string): string {
+/** Prefixes pathname with locale and optional Oman route segment (`/om`, `/om/en`, …). */
+export function localePath(
+  locale: Locale,
+  pathname: string,
+  countryCode: CountryRouteCode = "SA",
+): string {
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  if (locale === routing.defaultLocale) {
-    return path;
-  }
-  return `/${locale}${path}`;
+  const localized =
+    locale === routing.defaultLocale ? path : `/${locale}${path}`;
+  return withCountryPrefix(countryCode, localized);
 }
 
 export function blogPostHref(locale: Locale, slug: string): string {

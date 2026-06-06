@@ -1,6 +1,11 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
+import {
+  type CountryRouteCode,
+  countryRouteCodeFromId,
+  withCountryPrefix,
+} from "@/features/shared/lib/country-routes";
 import type { Locale } from "next-intl";
-import type { Service } from "../types";
+import type { Country, Service } from "../types";
 
 export function pickServiceSlug(
   service: Pick<Service, "slug"> & { slug_local?: { ar?: string; en?: string } },
@@ -11,36 +16,47 @@ export function pickServiceSlug(
   return (local ?? service.slug ?? "").trim();
 }
 
-export function servicePostPath(slug: string, opts?: { countryId?: number }): string {
+export function servicePostPath(
+  slug: string,
+  opts?: { countryCode?: CountryRouteCode },
+): string {
   const base = `/services/${encodeURIComponent(slug)}`;
-  if (opts?.countryId != null && opts.countryId > 0) {
-    return `${base}?country_id=${opts.countryId}`;
-  }
-  return base;
+  return withCountryPrefix(opts?.countryCode ?? "SA", base);
 }
 
-export function servicePostHref(locale: Locale, slug: string): string {
-  return localePath(locale, servicePostPath(slug));
+export function servicePostHref(
+  locale: Locale,
+  slug: string,
+  countryCode: CountryRouteCode = "SA",
+): string {
+  return localePath(locale, `/services/${encodeURIComponent(slug)}`, countryCode);
 }
 
 /** Path without locale prefix — use with `@/i18n/navigation` `Link`. */
 export function servicesIndexPath(
   page: number,
-  opts?: { countryId?: number },
+  opts?: { countryCode?: CountryRouteCode },
 ): string {
   const p = new URLSearchParams();
-  if (opts?.countryId != null && opts.countryId > 0) {
-    p.set("country_id", String(opts.countryId));
-  }
   if (page > 1) p.set("page", String(page));
   const q = p.toString();
-  return q ? `/services?${q}` : "/services";
+  const base = q ? `/services?${q}` : "/services";
+  return withCountryPrefix(opts?.countryCode ?? "SA", base);
 }
 
 export function servicesIndexHref(
   locale: Locale,
   page: number,
-  opts?: { countryId?: number },
+  opts?: { countryCode?: CountryRouteCode },
 ): string {
   return localePath(locale, servicesIndexPath(page, opts));
+}
+
+export function servicesCountryHref(
+  countries: Country[],
+  countryId: number,
+  page = 1,
+): string {
+  const countryCode = countryRouteCodeFromId(countries, countryId);
+  return servicesIndexPath(page, { countryCode });
 }

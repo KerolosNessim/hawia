@@ -1,4 +1,5 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
+import type { CountryRouteCode } from "@/features/shared/lib/country-routes";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
@@ -207,7 +208,11 @@ export async function buildPageMetadata(
   return base;
 }
 
-export function localePathname(locale: Locale, path: string): string {
-  return localePath(locale, path);
+export function localePathname(
+  locale: Locale,
+  path: string,
+  countryCode: CountryRouteCode = "SA",
+): string {
+  return localePath(locale, path, countryCode);
 }
 

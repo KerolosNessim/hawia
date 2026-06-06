@@ -11,6 +11,8 @@ import { Link } from "@/i18n/navigation";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
+import { useCountry } from "@/hooks/use-country";
+import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
 import { useLocale } from "next-intl";
 import { pickServiceSlug, servicePostPath } from "../lib/services-routes";
 import { Service } from "../types";
@@ -30,14 +32,14 @@ export default function ServicesCard({
   item: Service;
   icon: LucideIcon;
   index: number;
-  /** Preserves country context on service detail URLs (`?country_id=`). */
   countryId?: number;
   /** Related-services carousel only: plain `<h3>` with HTML stripped from title. */
     titleAsPlainH3?: boolean;
   titleDark?: boolean;
 }) {
   const locale = useLocale();
-  const href = servicePostPath(pickServiceSlug(item, locale), { countryId });
+  const countryCode = resolveSupportedCountry(useCountry());
+  const href = servicePostPath(pickServiceSlug(item, locale), { countryCode });
   const title = plainTextFromHtml(item?.title);
   const description = stripLeadingDuplicateHeading(item?.description, item?.title);
   const subtitle = stripLeadingDuplicateHeading(item?.subtitle, item?.title);

@@ -26,7 +26,7 @@ export default function SectionHeader({
   subtitleHtml,
   badge,
   align = "center",
-  subtitleColor = "text-gray-200",
+  subtitleColor = "text-gray-300",
   titleColor = "text-brand",
 }: SectionHeaderProps) {
   const locale = useLocale();
@@ -98,7 +98,7 @@ export default function SectionHeader({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           viewport={{ once: true }}
-          className={`cms-rich-html max-w-6xl text-gray-200 [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
+          className={`cms-rich-html max-w-6xl [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
           dangerouslySetInnerHTML={{ __html: enhancedSubtitleHtml }}
         />
       ) : subtitle ? (
@@ -107,7 +107,7 @@ export default function SectionHeader({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           viewport={{ once: true }}
-          className={`text-gray-200 max-w-6xl ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
+          className={`max-w-6xl ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
         >
           {subtitle}
         </motion.p>

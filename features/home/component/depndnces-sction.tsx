@@ -6,7 +6,9 @@ import Image from "next/image";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { pickImageAlt } from "@/lib/image-alt";
 import { Link } from "@/i18n/navigation";
+import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
 import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
+import { useCountry } from "@/hooks/use-country";
 import { pickLocalizedField } from "@/features/services/lib/pick-localized-field";
 
 import type { Accreditation } from "../types";
@@ -14,6 +16,7 @@ import type { Accreditation } from "../types";
 export default function DependenciesSection({ accreditation }: { accreditation?: Accreditation }) {
   const t = useTranslations("dependenciesSection");
   const locale = useLocale();
+  const countryCode = resolveSupportedCountry(useCountry());
 
   const images =
     accreditation?.images?.map((img) => ({
@@ -64,7 +67,7 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
     return serviceSlug ? (
       <Link
         key={index}
-        href={servicePostPath(serviceSlug)}
+        href={servicePostPath(serviceSlug, { countryCode })}
         aria-label={serviceTitle}
         className="block"
       >

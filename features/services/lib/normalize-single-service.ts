@@ -106,6 +106,19 @@ function parsePackageItems(raw: unknown, locale: string): ServicePackageItem[] {
         ? o.features.filter((f): f is string => typeof f === "string" && f.trim())
         : [];
       const sortOrder = Number.parseInt(String(o.sort_order ?? idx), 10);
+      const image =
+        resolveLocalizedImageUrl(o.image, locale, o.images) ??
+        (typeof o.image_url === "string" && o.image_url.trim()
+          ? resolveMediaUrl(o.image_url)
+          : null);
+      const resolvedImage =
+        image && image !== "/blog.webp" ? image : null;
+      const preset = o.icon_preset ?? o.icon;
+      const icon =
+        preset === "rocket" || preset === "gem" || preset === "target"
+          ? preset
+          : PACKAGE_ICONS[idx % PACKAGE_ICONS.length];
+
       return {
         title,
         descriptionHtml: descHtml,
@@ -114,18 +127,19 @@ function parsePackageItems(raw: unknown, locale: string): ServicePackageItem[] {
         price: o.price != null && String(o.price).trim() ? String(o.price).trim() : null,
         currency: typeof o.currency === "string" && o.currency.trim() ? o.currency.trim() : null,
         sortOrder: Number.isFinite(sortOrder) ? sortOrder : idx,
+        image: resolvedImage,
         imageAlt: pickLocalizedField(o.image_alt, locale) || null,
         link: pickSectionLink(o),
+        icon,
       };
     })
-    .filter((x): x is Omit<ServicePackageItem, "icon" | "isFeatured"> => x != null)
+    .filter((x): x is Omit<ServicePackageItem, "isFeatured"> => x != null)
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   const featuredIndex = parsed.length >= 3 ? 1 : parsed.length === 2 ? 1 : -1;
 
   return parsed.map((p, i) => ({
     ...p,
-    icon: PACKAGE_ICONS[i % PACKAGE_ICONS.length],
     isFeatured: i === featuredIndex,
   }));
 }

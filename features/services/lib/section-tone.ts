@@ -1,16 +1,46 @@
 import { cn } from "@/lib/utils";
 
 export type SectionTone = "dark" | "light";
+export type ServicePageSurface = "default" | "ai-services";
 
 export function sectionToneAt(index: number): SectionTone {
   return index % 2 === 0 ? "dark" : "light";
 }
 
-export function sectionShellClassName(tone: SectionTone): string {
-  return cn(
-    "w-full py-16 md:py-20",
-    tone === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900",
-  );
+/** AI services page starts with a white section, then alternates dark/light. */
+export function sectionToneAtForAiServices(index: number): SectionTone {
+  return index % 2 === 0 ? "light" : "dark";
+}
+
+export function resolveSectionTone(
+  index: number,
+  surface: ServicePageSurface = "default",
+): SectionTone {
+  if (surface === "ai-services") return sectionToneAtForAiServices(index);
+  return sectionToneAt(index);
+}
+
+export function sectionShellClassName(
+  tone: SectionTone,
+  surface: ServicePageSurface = "default",
+): string {
+  if (surface === "ai-services") {
+    return tone === "dark"
+      ? cn(
+          "relative w-full overflow-hidden background-dark-img-section py-16 text-white md:py-20",
+        )
+      : cn(
+          "relative w-full overflow-hidden finger-print-background bg-white py-16 text-gray-900 md:py-20",
+        );
+  }
+
+  if (tone === "dark") {
+    return cn(
+      "relative w-full overflow-hidden background-dark-img py-16 text-white md:py-20",
+    );
+  }
+
+  return cn("w-full bg-white py-16 text-gray-900 md:py-20");
 }
 
 export function sectionSubtitleColor(tone: SectionTone): string {

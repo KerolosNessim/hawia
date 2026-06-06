@@ -389,6 +389,134 @@
     background-color: transparent !important;
   }
 
+  /* Page heroes — photo + dim overlay only; strip CMS decorative band/pattern backgrounds */
+  [data-slot="page-header"],
+  [data-slot="page-header"] .cms-rich-html,
+  [data-slot="page-header"] .cms-rich-html * {
+    background-image: none !important;
+  }
+
+  [data-slot="page-header"] .cms-rich-html,
+  [data-slot="page-header"] .cms-rich-html * {
+    background-color: transparent !important;
+  }
+
+  [data-slot="page-header"] .cms-rich-html [style*="background"] {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  /* AI services — light sections (plain white shell, strip CMS decorative backgrounds) */
+  [data-page-surface="ai-services"][data-section-tone="light"] {
+    background-color: #fff !important;
+    background-image: none !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="light"] .cms-rich-html,
+  [data-page-surface="ai-services"][data-section-tone="light"] .cms-rich-html * {
+    background-image: none !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="light"]
+    .cms-rich-html
+    :is(p, li, td, span, div, strong, em) {
+    color: #4b5563 !important;
+    background-color: transparent !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="light"]
+    .cms-rich-html
+    [style*="color"] {
+    color: #4b5563 !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="light"]
+    .cms-rich-html
+    :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-brand) !important;
+    background-color: transparent !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="light"] .cms-rich-html a {
+    color: var(--color-brand) !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="light"]
+    .cms-rich-html
+    [style*="background"] {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  /* AI services — dark sections */
+  [data-page-surface="ai-services"][data-section-tone="dark"] .cms-rich-html,
+  [data-page-surface="ai-services"][data-section-tone="dark"] .cms-rich-html * {
+    background-image: none !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="dark"]
+    .cms-rich-html
+    :is(p, li, td, span, div, strong, em) {
+    color: #d1d5db !important;
+    background-color: transparent !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="dark"]
+    .cms-rich-html
+    [style*="color"] {
+    color: #d1d5db !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="dark"]
+    .cms-rich-html
+    :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--color-brand) !important;
+    background-color: transparent !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="dark"] .cms-rich-html a {
+    color: var(--color-brand) !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="dark"]
+    .cms-rich-html
+    [style*="background"] {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="dark"]
+    .cms-rich-html
+    :is(table, td, th, div, section, article) {
+    border-color: transparent !important;
+  }
+
+  [data-page-surface="ai-services"][data-section-tone="dark"]
+    .cms-rich-html
+    [style*="border"] {
+    border-color: transparent !important;
+  }
+
+  /* Clients detail dialog — light fingerprint section (strip CMS dark band styles) */
+  [data-client-detail-content] .cms-rich-html,
+  [data-client-detail-content] .cms-rich-html * {
+    background-color: transparent !important;
+  }
+
+  [data-client-detail-content] .cms-rich-html :is(p, li, td, span, div) {
+    color: #4b5563 !important;
+  }
+
+  [data-client-detail-content]
+    .cms-rich-html
+    :is(h1, h2, h3, h4, h5, h6, .editor-heading-h1, .editor-heading-h2, .editor-heading-h3, .editor-heading-h4, .editor-heading-h5, .editor-heading-h6) {
+    color: var(--color-brand) !important;
+  }
+
+  [data-client-detail-content] .cms-rich-html a {
+    color: var(--color-brand) !important;
+  }
+
   .cms-rich-html img,
   .cms-rich-html video,
   .cms-rich-html iframe,
@@ -446,4 +574,13 @@
   background-attachment: fixed !important;
   background-color: rgba(0, 0, 0, 0.5) !important;
 
+}
+
+/* Per-section dark band (no fixed attachment — avoids full-page bleed on stacked sections) */
+.background-dark-img-section {
+  background-color: #0a0a0a !important;
+  background-image: url(/dark-bg.webp) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }

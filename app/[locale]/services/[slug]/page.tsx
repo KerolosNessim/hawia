@@ -46,6 +46,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import type { Metadata } from "next";
 
+import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
+import { getServerCountryRouteCode } from "@/lib/get-country";
 import { cookies } from "next/headers";
 
 import { permanentRedirect, redirect as nextRedirect } from "next/navigation";
@@ -81,9 +83,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 
 
-function applySlugRedirect(locale: Locale, toSlug: string, status: number, toPath?: string): never {
-
-  const href = servicePostPath(toSlug);
+function applySlugRedirect(
+  locale: Locale,
+  toSlug: string,
+  status: number,
+  countryCode: ReturnType<typeof resolveSupportedCountry>,
+  toPath?: string,
+): never {
+  const href = servicePostPath(toSlug, { countryCode });
 
   const pathname = getPathname({ locale, href });
 
@@ -118,10 +125,11 @@ export default async function ServicePage({ params, searchParams }: Props) {
   const sp = searchParams ? await searchParams : {};
 
   const locale = (await getLocale()) as Locale;
+  const countryCode = resolveSupportedCountry(
+    (await cookies()).get("user_country")?.value ?? (await getServerCountryRouteCode()),
+  );
 
   const t = await getTranslations("singleService");
-
-
 
   const resolved = await resolveServicePage(slug, locale);
 
@@ -130,9 +138,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
   if (resolved.kind === "gone") redirectToNotFound(locale);
 
   if (resolved.kind === "redirect") {
-
-    applySlugRedirect(routeLocale, resolved.toSlug, resolved.status, resolved.toPath);
-
+    applySlugRedirect(routeLocale, resolved.toSlug, resolved.status, countryCode, resolved.toPath);
   }
 
 
@@ -143,7 +149,11 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
   const serviceSlug = pickServiceSlug(service, locale);
 
-  const serviceAbs = buildCanonicalUrl(locale, `/services/${encodeURIComponent(serviceSlug)}`);
+  const serviceAbs = buildCanonicalUrl(
+    locale,
+    `/services/${encodeURIComponent(serviceSlug)}`,
+    countryCode,
+  );
 
   const heroTitle = service.singlePageTitle?.trim() || service.title;
   const heroSubtitle =
@@ -172,8 +182,8 @@ export default async function ServicePage({ params, searchParams }: Props) {
     inLanguage: locale === "ar" ? "ar" : "en",
     areaServed: service.countries,
     breadcrumbs: [
-      { name: tBreadcrumb("home"), url: buildCanonicalUrl(locale, "/") },
-      { name: tBreadcrumb("services"), url: buildCanonicalUrl(locale, "/services") },
+      { name: tBreadcrumb("home"), url: buildCanonicalUrl(locale, "/", countryCode) },
+      { name: tBreadcrumb("services"), url: buildCanonicalUrl(locale, "/services", countryCode) },
       { name: plainTextFromHtml(heroTitle), url: serviceAbs },
     ],
     faqItems: faqItems.length

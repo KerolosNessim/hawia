@@ -33,6 +33,7 @@ import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
 import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import { buildCanonicalUrl, schemaMediaUrl, serializeHomePageSchema } from "@/lib/seo/schema";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
+import { getServerCountryRouteCode } from "@/lib/get-country";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
@@ -45,6 +46,7 @@ type PageProps = {
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const loc = locale as Locale;
+  const countryCode = await getServerCountryRouteCode();
   const sp = searchParams ? await searchParams : undefined;
   const countryOverride = parseHomeCountryOverride(sp);
 
@@ -73,14 +75,14 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
     return buildPageMetadata({
       locale: loc,
-      pathname: localePathname(loc, "/"),
+      pathname: localePathname(loc, "/", countryCode),
       title,
       description,
     });
   } catch {
     return buildStaticPageMetadata({
       locale: loc,
-      pathname: localePathname(loc, "/"),
+      pathname: localePathname(loc, "/", countryCode),
       pageKey: "home",
       title: "Howeyah",
       description: "Howeyah platform for consulting and educational services.",
@@ -126,6 +128,7 @@ export default async function Home({ searchParams }: PageProps) {
   if (!landing) return null;
 
   const locale = (await getLocale()) as Locale;
+  const countryCode = await getServerCountryRouteCode();
   const latestBlogs = (
     await fetchPublicBlogs({ country_id: homeCountryId, per_page: 3 })
   ).slice(0, 3).map((b) => blogToCardPayload(b, locale));
@@ -135,7 +138,7 @@ export default async function Home({ searchParams }: PageProps) {
   const hero = normalizeHero(landing.hero);
 
   const tSeo = await getTranslations({ locale, namespace: "seo" });
-  const homeUrl = buildCanonicalUrl(locale, "/");
+  const homeUrl = buildCanonicalUrl(locale, "/", countryCode);
   let homeTitle = "Howeyah";
   let homeDescription = tSeo("organizationDescription");
   try {
@@ -163,7 +166,11 @@ export default async function Home({ searchParams }: PageProps) {
   ]);
   const serviceItems = (servicesRes?.data ?? []).slice(0, 12).map((service) => ({
     name: plainTextFromHtml(service.title),
-    url: buildCanonicalUrl(locale, `/services/${encodeURIComponent(pickServiceSlug(service, locale))}`),
+    url: buildCanonicalUrl(
+      locale,
+      `/services/${encodeURIComponent(pickServiceSlug(service, locale))}`,
+      countryCode,
+    ),
   }));
 
   const homeSchemaJson = serializeHomePageSchema({

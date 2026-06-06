@@ -12,10 +12,11 @@ import {
 import { localePath } from "@/features/blogs/lib/blog-routes";
 import {
   pickServiceSlug,
-  servicePostHref,
+  servicesCountryHref,
   servicesIndexHref,
-  servicesIndexPath,
 } from "@/features/services/lib/services-routes";
+import { getServerCountryRouteCode } from "@/lib/get-country";
+import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
 import {
   parseCountryId,
   parsePage,
@@ -50,7 +51,10 @@ export async function generateMetadata({
   const countryId = parseCountryId(sp);
 
   const cookieStore = await cookies();
-  const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
+  const countryCode = resolveSupportedCountry(
+    cookieStore.get("user_country")?.value ?? (await getServerCountryRouteCode()),
+  );
+  const userCountryCode = countryCode;
   const preparedCountries = await fetchPublicCountriesPrepared();
   const countries = preparedCountries.countries;
   const defaultCountry = matchCountryByUserCode(countries, userCountryCode);
@@ -58,7 +62,7 @@ export async function generateMetadata({
     resolveSelectedCountryId(countryId, preparedCountries) ?? defaultCountry?.id;
 
   const { meta } = await fetchPublicServicesPaginated({
-    paginationPath: localePath(locale, "/services"),
+    paginationPath: localePath(locale, "/services", countryCode),
     locale,
     page,
     per_page: SERVICES_LIST_PER_PAGE,
@@ -67,14 +71,15 @@ export async function generateMetadata({
 
   return buildStaticPageMetadata({
     locale,
-    pathname: servicesIndexHref(locale, page > 1 ? page : 1),
+    pathname: servicesIndexHref(locale, page > 1 ? page : 1, { countryCode }),
     pageKey: "services",
     title: t("metaTitle"),
     description: t("metaDescription"),
     pagination: {
       currentPage: meta.current_page,
       lastPage: meta.last_page,
-      hrefForPage: (p) => servicesIndexHref(locale, p > 1 ? p : 1),
+      hrefForPage: (p) =>
+        servicesIndexHref(locale, p > 1 ? p : 1, { countryCode }),
     },
   });
 }
@@ -91,7 +96,10 @@ export default async function ServicesPage(props: {
   const locale = (await getLocale()) as Locale;
 
   const cookieStore = await cookies();
-  const userCountryCode = cookieStore.get("user_country")?.value ?? "SA";
+  const countryCode = resolveSupportedCountry(
+    cookieStore.get("user_country")?.value ?? (await getServerCountryRouteCode()),
+  );
+  const userCountryCode = countryCode;
 
   const preparedCountries = await fetchPublicCountriesPrepared();
   const countries = preparedCountries.countries;
@@ -100,7 +108,7 @@ export default async function ServicesPage(props: {
   const selectedCountryId =
     resolveSelectedCountryId(countryIdParam, preparedCountries) ?? defaultCountry?.id;
 
-  const paginationPath = localePath(locale, "/services");
+  const paginationPath = localePath(locale, "/services", countryCode);
 
   const { services, meta } = await fetchPublicServicesPaginated({
     paginationPath,
@@ -111,10 +119,9 @@ export default async function ServicesPage(props: {
   });
 
   const listPath =
-    servicesIndexHref(locale, page, { countryId: selectedCountryId }) ??
-    localePath(locale, "/services");
+    servicesIndexHref(locale, page, { countryCode }) ?? localePath(locale, "/services", countryCode);
   const listAbs = absoluteUrlFromPath(listPath);
-  const indexAbs = buildCanonicalUrl(locale, "/services");
+  const indexAbs = buildCanonicalUrl(locale, "/services", countryCode);
 
   const servicesSchemaJson = jsonLdGraph([
     ...buildCollectionPageSchemaGraph({
@@ -128,13 +135,14 @@ export default async function ServicesPage(props: {
         url: buildCanonicalUrl(
           locale,
           `/services/${encodeURIComponent(pickServiceSlug(service, locale))}`,
+          countryCode,
         ),
       })),
       listIdSuffix: "services",
     }),
     buildBreadcrumbList(
       [
-        { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/") },
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(locale, "/", countryCode) },
         { name: t("breadcrumbServices"), url: indexAbs },
       ],
       listAbs,
@@ -161,7 +169,7 @@ export default async function ServicesPage(props: {
           <ServicesCountryFilter
             countries={countries}
             selectedCountryId={selectedCountryId}
-            getCountryHref={(id) => servicesIndexPath(1, { countryId: id })}
+            getCountryHref={(id) => servicesCountryHref(countries, id)}
           />
         ) : null}
 

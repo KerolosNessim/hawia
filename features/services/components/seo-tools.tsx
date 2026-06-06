@@ -1,5 +1,6 @@
 import { RichHtml } from "@/features/shared/components/rich-html";
-import type { SectionTone } from "../lib/section-tone";
+import { cn } from "@/lib/utils";
+import { sectionItemCardClassName, type SectionTone } from "../lib/section-tone";
 import { Tools } from "../types";
 
 export default function SeoTools({
@@ -16,7 +17,7 @@ export default function SeoTools({
   const panelClass =
     tone === "dark"
       ? "space-y-5 rounded-lg border border-brand/60 bg-white/5 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
-      : "space-y-5 rounded-lg border border-brand/40 bg-brand/5 p-6 shadow-sm";
+      : cn(sectionItemCardClassName(tone), "space-y-5");
 
   return (
     <div className="container grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">

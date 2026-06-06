@@ -107,33 +107,7 @@ export default function TestimonialsSection({ countryId }: { countryId?: number 
   if (countryId != null && testimonials.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden bg-gray-900 py-16">
-      <div
-        className="pointer-events-none absolute inset-0 text-brand opacity-5"
-        aria-hidden
-      >
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern
-              id="testimonials-wavy"
-              x="0"
-              y="0"
-              width="100"
-              height="100"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M0 50 Q25 0 50 50 T100 50"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#testimonials-wavy)" />
-        </svg>
-      </div>
-
+    <section className="background-dark-img relative overflow-hidden bg-opacity-50 py-16">
       <div className="container relative z-10 space-y-8 px-4">
       <SectionHeader
         title={data?.data?.content?.title || t("title")}

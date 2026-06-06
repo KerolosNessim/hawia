@@ -8,14 +8,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PackageImage } from "@/features/packages/components/public-package-cards";
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { SectionLinkShell } from "@/features/services/components/section-link-shell";
 import { sectionSubtitleColor } from "@/features/services/lib/section-tone";
 import type { SectionTone } from "@/features/services/lib/section-tone";
 import type { ServicePackageItem, ServicePackagesSection } from "@/features/services/types";
+import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import * as motion from "framer-motion/client";
-import { CheckCircle2, Gem, Rocket, Target, X } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -24,15 +26,13 @@ type Props = {
   orderPhone?: string | null;
 };
 
-function packageIcon(name: ServicePackageItem["icon"], className: string) {
-  switch (name) {
-    case "gem":
-      return <Gem className={className} />;
-    case "rocket":
-      return <Rocket className={className} />;
-    default:
-      return <Target className={className} />;
-  }
+function packageVisual(pkg: ServicePackageItem) {
+  return {
+    imageUrl: pkg.image,
+    imageAlt: pkg.imageAlt ?? plainTextFromHtml(pkg.title),
+    title: plainTextFromHtml(pkg.title),
+    iconPreset: pkg.icon,
+  };
 }
 
 function whatsappOrderHref(phone: string): string {
@@ -75,8 +75,13 @@ function PackageDetailDialog({
         </button>
 
         <div className="flex flex-col items-center px-8 pb-0 pt-10 text-center">
-          <div className="mb-4 rounded-full border border-brand/20 bg-brand/5 p-4">
-            {packageIcon(pkg.icon, "size-10 text-brand")}
+          <div className="mb-4 flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full border border-brand/20 bg-brand/5 p-2">
+            <PackageImage
+              pkg={packageVisual(pkg)}
+              className="h-full w-full object-contain"
+              iconClassName="size-10 text-brand"
+              wrapperClassName="flex h-full w-full items-center justify-center"
+            />
           </div>
           <DialogHeader className="space-y-0 text-center">
             <DialogTitle className="text-xl font-bold text-foreground [&_p]:mb-0">
@@ -157,8 +162,13 @@ export default function SeoPackages({
                 } ${cardHref ? "cursor-pointer" : ""}`}
               >
                 <CardContent className="flex h-full flex-col items-center p-8 text-center">
-                  <div className="mb-6 rounded-full border border-border/80 bg-muted/40 p-4">
-                    {packageIcon(pkg.icon, "size-10 text-brand")}
+                  <div className="mx-auto mb-6 flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/80 bg-muted/40 p-2">
+                    <PackageImage
+                      pkg={packageVisual(pkg)}
+                      className="h-full w-full object-contain"
+                      iconClassName="size-10 text-brand"
+                      wrapperClassName="flex h-full w-full items-center justify-center"
+                    />
                   </div>
 
                   <RichHtml

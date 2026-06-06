@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/carousel";
 import SectionHeader from "@/features/shared/components/section-header";
 import { Link } from "@/i18n/navigation";
+import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
+import { useCountry } from "@/hooks/use-country";
 import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
@@ -26,6 +28,7 @@ export default function RelatedServicesSection({
   services,
   countryId,
 }: RelatedServicesSectionProps) {
+  const countryCode = resolveSupportedCountry(useCountry());
   const t = useTranslations("servicesSection");
   const tPage = useTranslations("servicesPage");
   const locale = useLocale();
@@ -90,7 +93,7 @@ export default function RelatedServicesSection({
 
       <div className="flex justify-center pt-4">
         <Link
-          href={servicesIndexPath(1, { countryId })}
+          href={servicesIndexPath(1, { countryCode })}
           className="rounded-full border-2 border-brand bg-brand/5 px-8 py-3 text-sm font-bold text-brand transition hover:bg-brand hover:text-white"
         >
           {tPage("viewAll")}

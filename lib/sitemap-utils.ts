@@ -23,6 +23,8 @@ import {
   blogPostPath,
   localePath,
 } from "@/features/blogs/lib/blog-routes";
+import { getJobOpeningsPublicByLocale } from "@/features/careers/api/jobsPublicApi";
+import { jobOpeningPath, pickJobOpeningSlug } from "@/features/careers/lib/job-slug";
 import type { Locale } from "next-intl";
 
 export type SitemapEntry = {
@@ -67,6 +69,8 @@ const STATIC_PAGE_PATHS: { path: string; priority: number; changeFrequency: Site
   { path: "/courses", priority: 0.9, changeFrequency: "daily" },
   { path: "/packages", priority: 0.9, changeFrequency: "daily" },
   { path: "/services", priority: 0.9, changeFrequency: "daily" },
+  { path: "/ai-services", priority: 0.9, changeFrequency: "weekly" },
+  { path: "/careers", priority: 0.8, changeFrequency: "weekly" },
   { path: "/clients", priority: 0.9, changeFrequency: "daily" },
   { path: "/privacy-policy", priority: 0.5, changeFrequency: "yearly" },
   { path: "/refund-policy", priority: 0.5, changeFrequency: "yearly" },
@@ -116,6 +120,13 @@ export async function buildPagesSitemapEntries(locale: Locale): Promise<SitemapE
   addDynamic(slugData.package_categories, "packages/categories", 0.8, "weekly");
   addDynamic(slugData.courses, "courses", 0.8, "weekly");
   addDynamic(slugData.solutions, "clients", 0.8, "weekly");
+
+  const openings = await getJobOpeningsPublicByLocale(locale);
+  for (const opening of openings) {
+    const slug = pickJobOpeningSlug(opening, locale);
+    if (!slug) continue;
+    push(jobOpeningPath(slug), 0.7, "weekly");
+  }
 
   return entries;
 }
