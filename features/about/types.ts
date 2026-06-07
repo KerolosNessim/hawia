@@ -19,6 +19,7 @@ export interface AboutUsData {
   info_sections: InfoSection[];
   contact_sections: ContactSection[];
   why_us_sections: WhyUsSection[];
+  who_we_are_sections?: WhoWeAreSection[];
   created_at: string;
 }
 
@@ -59,4 +60,10 @@ export interface WhyUsSection {
   values_title: string;
   values_description: string;
   image: string;
+}
+
+export interface WhoWeAreSection {
+  id: number;
+  title: string;
+  description: string;
 }

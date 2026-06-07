@@ -155,7 +155,9 @@ export default async function AboutPage() {
       <div className="container rounded-3xl shadow-lg bg-white px-5 py-10">
         <SectionHeader
           title={t("ideal_client_title")}
+          titleHtml={data?.who_we_are_sections?.[0]?.title}
           subtitle={t("ideal_client")}
+          subtitleHtml={data?.who_we_are_sections?.[0]?.description}
           subtitleColor="text-gray-500"
           titleColor="text-gray-900"
         />
