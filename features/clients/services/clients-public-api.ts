@@ -363,6 +363,18 @@ function categoryMatches(client: PublicClientCard, category: PublicSolutionCateg
   );
 }
 
+export function getCategoriesWithClients(
+  categories: PublicSolutionCategory[],
+  clients: PublicClientCard[],
+): Array<{ category: PublicSolutionCategory; count: number }> {
+  return categories
+    .map((category) => ({
+      category,
+      count: clients.filter((client) => categoryMatches(client, category)).length,
+    }))
+    .filter(({ count }) => count > 0);
+}
+
 export function filterClientsByCategorySlug(
   clients: PublicClientCard[],
   categorySlug: string | null | undefined,

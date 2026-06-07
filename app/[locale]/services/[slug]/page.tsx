@@ -2,7 +2,9 @@ import DependenciesSection from "@/features/home/component/depndnces-sction";
 import ServicePageScript from "@/features/services/components/service-page-script";
 
 import RelatedServicesSection from "@/features/services/components/related-services-section";
-import ServiceArticleTags from "@/features/services/components/service-article-tags";
+import ServiceArticleTags, {
+  resolveServiceArticleTags,
+} from "@/features/services/components/service-article-tags";
 import { ServicePageSections } from "@/features/services/components/service-page-sections";
 import { parseCountryId } from "@/features/services/lib/parse-services-search-params";
 import { resolveServiceCountryId } from "@/features/services/lib/resolve-service-country-id";
@@ -26,6 +28,7 @@ import { resolveServicePage } from "@/features/services/services/resolve-service
 export const dynamic = "force-dynamic";
 
 import PageHeader from "@/features/shared/components/page-header";
+import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 
 import { RichHtml } from "@/features/shared/components/rich-html";
 
@@ -211,6 +214,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
   const servicesListRes = await getServices(locale, { country_id: relatedCountryId });
   const relatedServices = (servicesListRes.data ?? []).filter((s) => s.id !== service.id);
+  const articleTags = resolveServiceArticleTags(service);
 
 
 
@@ -263,13 +267,17 @@ export default async function ServicePage({ params, searchParams }: Props) {
         <DependenciesSection accreditation={service.ourClients} />
       ) : null}
 
-      <div className="space-y-16 pb-16">
+      <div className="space-y-16">
         <RelatedServicesSection services={relatedServices} countryId={relatedCountryId} />
-
-        {service.articleTags.length > 0 ? (
-          <ServiceArticleTags tags={service.articleTags} heading={t("articleTagsHeading")} />
-        ) : null}
       </div>
+
+      {articleTags.length > 0 ? (
+        <ServiceArticleTags
+          tags={articleTags}
+          heading={t("tagsHeading")}
+          className="pb-16 pt-8"
+        />
+      ) : null}
 
     </div>
 

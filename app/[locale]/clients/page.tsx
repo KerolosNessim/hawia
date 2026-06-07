@@ -2,10 +2,11 @@ import PageHeader from "@/features/shared/components/page-header";
 import ClientsGrid from "@/features/clients/components/clients-grid";
 import ClientsCategoryFilter from "@/features/clients/components/clients-category-filter";
 import {
-  countClientsByCategorySlug,
   fetchPublicClients,
   fetchPublicClientsPageData,
   fetchPublicSolutionCategories,
+  filterClientsByCategorySlug,
+  getCategoriesWithClients,
 } from "@/features/clients/services/clients-public-api";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { localePathname } from "@/lib/seo/metadata-helpers";
@@ -50,8 +51,11 @@ async function resolveCategorySlug(
 ): Promise<string | null> {
   const fromQuery = parseCategorySlug(sp);
   if (fromQuery) return fromQuery;
-  const categories = await fetchPublicSolutionCategories(locale);
-  return categories[0]?.slug ?? null;
+  const [categories, clients] = await Promise.all([
+    fetchPublicSolutionCategories(locale),
+    fetchPublicClients(locale),
+  ]);
+  return getCategoriesWithClients(categories, clients)[0]?.category.slug ?? null;
 }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -76,25 +80,45 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function ClientsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const sp = searchParams ? await searchParams : {};
-  const categories = await fetchPublicSolutionCategories(locale);
+  const t = await getTranslations("clients");
+  const [categories, allClients, pageMeta] = await Promise.all([
+    fetchPublicSolutionCategories(locale),
+    fetchPublicClients(locale),
+    fetchPublicClientsPageData(locale),
+  ]);
+  const categoriesWithClients = getCategoriesWithClients(categories, allClients);
   const parsedCategory = parseCategorySlug(sp);
+  const validCategorySlug =
+    parsedCategory && categoriesWithClients.some(({ category }) => category.slug === parsedCategory)
+      ? parsedCategory
+      : null;
 
-  if (!parsedCategory && categories[0]?.slug) {
+  if (parsedCategory && !validCategorySlug) {
     redirect({
-      href: clientsIndexPath({ categorySlug: categories[0].slug }),
+      href: categoriesWithClients[0]
+        ? clientsIndexPath({ categorySlug: categoriesWithClients[0].category.slug })
+        : clientsIndexPath(),
       locale,
     });
   }
 
-  const categorySlug = parsedCategory ?? categories[0]?.slug ?? null;
-  const t = await getTranslations("clients");
-  const [pageData, allClients] = await Promise.all([
-    fetchPublicClientsPageData(locale, { categorySlug: categorySlug ?? undefined }),
-    fetchPublicClients(locale),
-  ]);
-  const countByCategorySlug = countClientsByCategorySlug(allClients);
-  const title = pageData.title || t("title");
-  const description = pageData.description || t("description");
+  if (!parsedCategory && categoriesWithClients[0]?.category.slug) {
+    redirect({
+      href: clientsIndexPath({ categorySlug: categoriesWithClients[0].category.slug }),
+      locale,
+    });
+  }
+
+  const categorySlug = validCategorySlug ?? categoriesWithClients[0]?.category.slug ?? null;
+  const clients = categorySlug
+    ? filterClientsByCategorySlug(
+        allClients,
+        categorySlug,
+        categoriesWithClients.map(({ category }) => category),
+      )
+    : allClients;
+  const title = pageMeta.title || t("title");
+  const description = pageMeta.description || t("description");
   const loc = locale as Locale;
   const pageUrl = buildCanonicalUrl(loc, "/clients");
   const clientsSchemaJson = jsonLdGraph([
@@ -104,7 +128,7 @@ export default async function ClientsPage({ params, searchParams }: Props) {
       description: metaDescription(description, t("metaDescription")),
       inLanguage: loc === "ar" ? "ar" : "en",
       breadcrumbs: [],
-      items: pageData.clients.map((client) => ({
+      items: clients.map((client) => ({
         name: client.title,
         url: buildCanonicalUrl(loc, `/clients/${encodeURIComponent(client.slug)}`),
       })),
@@ -124,16 +148,15 @@ export default async function ClientsPage({ params, searchParams }: Props) {
       <PageSchemaScript json={clientsSchemaJson} />
       <PageHeader title={title} description={description} image="/hero-bg.webp" />
       <div className="container mx-auto space-y-10 px-4">
-        {categories.length > 0 && categorySlug ? (
+        {categoriesWithClients.length > 0 && categorySlug ? (
           <ClientsCategoryFilter
-            categories={categories}
+            items={categoriesWithClients}
             activeCategorySlug={categorySlug}
-            countByCategorySlug={countByCategorySlug}
           />
         ) : null}
 
-        {pageData.clients.length ? (
-          <ClientsGrid clients={pageData.clients} />
+        {clients.length ? (
+          <ClientsGrid clients={clients} />
         ) : (
           <p className="rounded-3xl border border-dashed border-gray-200 bg-white p-10 text-center text-muted-foreground">
             {t("emptyFiltered")}

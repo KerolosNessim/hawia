@@ -1,5 +1,7 @@
 import { AI_TOOLS_URL } from "@/features/ai-services/constants";
-import ServiceArticleTags from "@/features/services/components/service-article-tags";
+import ServiceArticleTags, {
+  resolveServiceArticleTags,
+} from "@/features/services/components/service-article-tags";
 import { ServicePageSections } from "@/features/services/components/service-page-sections";
 import ServicePageScript from "@/features/services/components/service-page-script";
 import type { SingleService } from "@/features/services/types";
@@ -32,6 +34,8 @@ export default async function AiServiceDetailView({
   const heroSubtitle =
     service.subtitle?.trim() || service.description?.trim() || "";
   const heroImage = service.image || "/whySeo.webp";
+
+  const articleTags = resolveServiceArticleTags(service);
 
   return (
     <div id={`ai-service-${service.id}`} className="scroll-mt-24">
@@ -78,9 +82,9 @@ export default async function AiServiceDetailView({
         startIndex={sectionStartIndex}
       />
 
-      {service.articleTags.length > 0 ? (
-        <div className="space-y-16 pb-16">
-          <ServiceArticleTags tags={service.articleTags} heading={t("articleTagsHeading")} />
+      {articleTags.length > 0 ? (
+        <div className="pb-16 pt-8">
+          <ServiceArticleTags tags={articleTags} heading={t("tagsHeading")} />
         </div>
       ) : null}
     </div>

@@ -3,22 +3,24 @@ import type { PublicSolutionCategory } from "@/features/clients/services/clients
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
+type CategoryWithCount = {
+  category: PublicSolutionCategory;
+  count: number;
+};
+
 type Props = {
-  categories: PublicSolutionCategory[];
+  items: CategoryWithCount[];
   activeCategorySlug: string;
-  countByCategorySlug: ReadonlyMap<string, number>;
 };
 
 export default function ClientsCategoryFilter({
-  categories,
+  items,
   activeCategorySlug,
-  countByCategorySlug,
 }: Props) {
   return (
     <div className="flex flex-wrap justify-center gap-2">
-      {categories.map((c) => {
+      {items.map(({ category: c, count }) => {
         const isActive = activeCategorySlug === c.slug;
-        const badgeCount = countByCategorySlug.get(c.slug) ?? 0;
         return (
           <Link
             key={c.id}
@@ -32,7 +34,7 @@ export default function ClientsCategoryFilter({
           >
             {c.name}
             <span className="ms-1.5 rounded-md bg-black/10 px-1.5 py-px text-[11px] font-bold tabular-nums">
-              {badgeCount}
+              {count}
             </span>
           </Link>
         );

@@ -450,7 +450,13 @@ export function normalizeSingleService(
   const packagesList = parsePackagesList(raw.packages, locale);
   const ctasList = parseCtasList(raw.ctas, locale);
   const articleTags = parseArticleTags(
-    raw.tags ?? raw.blog_tags ?? raw.article_tags,
+    raw.tags ??
+      raw.blog_tags ??
+      raw.article_tags ??
+      (raw.content && typeof raw.content === "object" && !Array.isArray(raw.content)
+        ? (raw.content as Record<string, unknown>).tags
+        : undefined) ??
+      raw.labels,
   );
 
   const clientPortfolio = parseClientPortfolio(raw.client_portfolio, locale);
