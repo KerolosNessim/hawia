@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, BriefcaseBusiness } from "lucide-react";
+import { FaLinkedin } from "react-icons/fa";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ApplyJobModal from "@/features/careers/components/apply-job-modal";
@@ -54,12 +55,31 @@ export default function JobOpeningDetailPage({ opening }: Props) {
             className="text-base leading-relaxed text-muted-foreground"
           />
 
-          <Button
-            className="bg-brand text-white hover:bg-brand/90"
-            onClick={() => setApplyOpen(true)}
-          >
-            {isAr ? "قدّم الآن" : "Apply now"}
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              className="bg-brand text-white hover:bg-brand/90"
+              onClick={() => setApplyOpen(true)}
+            >
+              {isAr ? "قدّم الآن" : "Apply now"}
+            </Button>
+
+            {opening.linkedin_url ? (
+              <Button
+                asChild
+                variant="outline"
+                className="gap-2 border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/10"
+              >
+                <a
+                  href={opening.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FaLinkedin className="size-4" aria-hidden />
+                  LinkedIn
+                </a>
+              </Button>
+            ) : null}
+          </div>
         </div>
       </article>
 

@@ -221,7 +221,7 @@ export default function PageHeader({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-6 flex w-full justify-center md:mt-8"
+            className="mt-2 flex w-full justify-center "
           >
             <Button
               asChild

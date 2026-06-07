@@ -156,6 +156,7 @@ function normalizeOpening(rowValue: unknown, locale: JobSlugLocale): JobOpening 
     title,
     description: asText(row.description),
     job_type: asText(row.job_type) || null,
+    linkedin_url: asText(row.linkedin_url).trim() || null,
     media: {
       image: asText(media.image) || null,
       image_alt: asText(media.image_alt) || null,

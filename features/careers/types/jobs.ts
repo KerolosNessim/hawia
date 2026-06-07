@@ -47,6 +47,7 @@ export type JobOpening = {
   title: string;
   description: string;
   job_type: string | null;
+  linkedin_url: string | null;
   media: {
     image: string | null;
     image_alt: string | null;
