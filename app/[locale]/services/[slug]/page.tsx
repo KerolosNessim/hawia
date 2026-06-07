@@ -2,6 +2,7 @@ import DependenciesSection from "@/features/home/component/depndnces-sction";
 import ServicePageScript from "@/features/services/components/service-page-script";
 
 import RelatedServicesSection from "@/features/services/components/related-services-section";
+import ServiceApplicationSeoSection from "@/features/services/components/service-application-seo-section";
 import ServiceArticleTags, {
   resolveServiceArticleTags,
 } from "@/features/services/components/service-article-tags";
@@ -259,6 +260,14 @@ export default async function ServicePage({ params, searchParams }: Props) {
       ) : null}
 
       <ServicePageSections  service={service} excludeKeys={["articleTags"]} />
+
+      {service.application_seo ? (
+        <ServiceApplicationSeoSection
+          serviceId={service.id}
+          locale={locale}
+          enabled={service.application_seo}
+        />
+      ) : null}
 
       {service.ourAccreditations ? (
         <DependenciesSection accreditation={service.ourAccreditations} />

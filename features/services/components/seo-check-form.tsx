@@ -1,56 +1,137 @@
-"use client"
-import { useTranslations } from 'next-intl';
-import { motion } from 'framer-motion';
-export default function SeoCheckForm() {
-  const t = useTranslations("singleService.seoCheckForm");
-  
+"use client";
+
+import type { ApplicationSeoFormCopy } from "@/features/services/types/application-seo";
+import {
+  ApplicationSeoApiError,
+  submitApplicationSeo,
+} from "@/features/services/services/application-seo-api";
+import { useLocale } from "next-intl";
+import { motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+type Props = {
+  serviceId: number;
+  copy: ApplicationSeoFormCopy;
+};
+
+export default function SeoCheckForm({ serviceId, copy }: Props) {
+  const locale = useLocale();
+  const isAr = locale.startsWith("ar");
+  const [submitting, setSubmitting] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const consentId = `application-seo-consent-${serviceId}`;
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!consent) {
+      toast.error(isAr ? "يجب الموافقة قبل الإرسال" : "Consent is required");
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const website_url = String(formData.get("website_url") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+
+    try {
+      setSubmitting(true);
+      const message = await submitApplicationSeo({
+        service_id: serviceId,
+        website_url,
+        email,
+        consent: true,
+      });
+      toast.success(message || (isAr ? "تم إرسال الطلب بنجاح" : "Submitted successfully"));
+      form.reset();
+      setConsent(false);
+    } catch (error) {
+      if (error instanceof ApplicationSeoApiError && error.validationErrors) {
+        const first = Object.values(error.validationErrors).flat()[0];
+        toast.error(typeof first === "string" ? first : error.message);
+      } else {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : isAr
+              ? "تعذر إرسال الطلب"
+              : "Could not submit the form",
+        );
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
-      className="container bg-[#F8FDF1] py-10 px-4 relative overflow-hidden my-16 rounded-3xl mx-4 ">
-        <h2 className="text-2xl md:text-3xl text-center font-bold text-gray-800 mb-8  mx-auto leading-normal">
-          {t('title')}
-        </h2>
-      <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
-        
-        <form className="max-w-2xl mx-auto flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
-          <input 
-            type="url" 
-            placeholder={t('websitePlaceholder')}
-            className="w-full px-6 py-4 rounded-xl border border-transparent focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 shadow-sm text-gray-800 bg-white"
+      className="finger-print-background container relative my-16 overflow-hidden rounded-3xl bg-[#F8FDF1] px-4 py-10"
+    >
+      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
+        {copy.heading ? (
+          <h2 className="mx-auto mb-8 max-w-3xl text-2xl font-bold leading-normal text-gray-800 md:text-3xl">
+            {copy.heading}
+          </h2>
+        ) : null}
+
+        <form className="mx-auto flex max-w-2xl flex-col gap-4" onSubmit={onSubmit}>
+          <input type="hidden" name="service_id" value={serviceId} />
+
+          <input
+            type="url"
+            name="website_url"
+            placeholder={copy.website_placeholder}
+            className="w-full rounded-xl border border-transparent bg-white px-6 py-4 text-gray-800 shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             required
           />
-          
-          <input 
-            type="email" 
-            placeholder={t('emailPlaceholder')}
-            className="w-full px-6 py-4 rounded-xl border border-transparent focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 shadow-sm text-gray-800 bg-white"
+
+          <input
+            type="email"
+            name="email"
+            placeholder={copy.email_placeholder}
+            className="w-full rounded-xl border border-transparent bg-white px-6 py-4 text-gray-800 shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             required
           />
-          
-          <div className="flex items-start gap-3 text-start px-2">
-            <input 
-              type="checkbox" 
-              id="agreement" 
-              className="mt-1 w-4 h-4 accent-brand shrink-0"
+
+          <div className="flex items-start gap-3 px-2 text-start">
+            <input
+              type="checkbox"
+              id={consentId}
+              name="consent"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-1 size-4 shrink-0 accent-brand"
               required
             />
-            <label htmlFor="agreement" className="text-sm text-gray-600 font-medium leading-relaxed cursor-pointer select-none">
-              {t('agreement')}
+            <label
+              htmlFor={consentId}
+              className="cursor-pointer select-none text-sm font-medium leading-relaxed text-gray-600"
+            >
+              {copy.consent_text}
             </label>
           </div>
-          
-          <button 
-            type="submit" 
-            className="w-full mt-2 bg-brand text-white font-bold text-lg py-4 rounded-xl hover:bg-brand/90 transition-colors shadow-md border-b-4 border-black/10 active:border-b-0 active:translate-y-1"
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="mt-2 w-full rounded-xl border-b-4 border-black/10 bg-brand py-4 text-lg font-bold text-white shadow-md transition-colors hover:bg-brand/90 active:translate-y-1 active:border-b-0 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {t('submit')}
+            {submitting ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Loader2 className="size-5 animate-spin" aria-hidden />
+                {isAr ? "جاري الإرسال..." : "Submitting..."}
+              </span>
+            ) : (
+              copy.submit_button_text
+            )}
           </button>
         </form>
       </div>
     </motion.div>
-  )
+  );
 }

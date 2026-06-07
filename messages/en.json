@@ -307,7 +307,15 @@
     "viewAll": "View all AI services",
     "bookFreeConsultation": "Book your free consultation now",
     "contactDirect": "Contact us directly",
-    "aiToolsCta": "AI tools"
+    "aiToolsCta": "AI tools",
+    "toolsLeadForm": {
+      "title": "Enter your field below to generate a customized list of the best AI tools to boost productivity and multiply your profits.",
+      "challengePlaceholder": "What is your biggest business challenge right now? (e.g. content writing, sales, design...)",
+      "emailPlaceholder": "Email address where your personalized tools guide will be sent",
+      "agreement": "I agree to receive periodic updates on the latest AI tools and innovative automation solutions.",
+      "submit": "Submit",
+      "aiToolsButton": "AI tools"
+    }
   },
   "aiServicesContentPage": {
     "metaTitle": "AI Content Studio | Howeyah",

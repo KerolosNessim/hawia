@@ -293,6 +293,9 @@ export type SingleService = {
   /** Article tags — each links to `/blogs/tag/{label}`. */
   articleTags: ServiceArticleTag[];
 
+  /** When true, show SEO application lead form (`GET /v1/application-seo`). */
+  application_seo: boolean;
+
   countries: ServiceCountry[];
 
   /** Per-service accreditations block from API `our_accreditations`. */

@@ -1,4 +1,3 @@
-import { AI_TOOLS_URL } from "@/features/ai-services/constants";
 import ServiceArticleTags, {
   resolveServiceArticleTags,
 } from "@/features/services/components/service-article-tags";
@@ -14,8 +13,6 @@ type Props = {
   service: SingleService;
   /** When several services stack on `/ai-services`, only the first gets the top hero. */
   showHero?: boolean;
-  /** AI tools CTA in the hero (first service on `/ai-services` only). */
-  showHeaderAction?: boolean;
   /** Continue section tone alternation when multiple services stack on one page. */
   sectionStartIndex?: number;
 };
@@ -23,11 +20,9 @@ type Props = {
 export default async function AiServiceDetailView({
   service,
   showHero = true,
-  showHeaderAction = false,
   sectionStartIndex = 0,
 }: Props) {
   const t = await getTranslations("singleService");
-  const tAi = await getTranslations("aiServicesPage");
   const heroTitleHtml = service.singlePageTitle?.trim() || service.title;
   const heroTitle =
     plainTextFromHtml(heroTitleHtml).trim() || t("title");
@@ -47,15 +42,6 @@ export default async function AiServiceDetailView({
           descriptionHtml={heroSubtitle || undefined}
           image={heroImage}
           imageAlt={service.image_alt || ""}
-          action={
-            showHeaderAction
-              ? {
-                  label: tAi("aiToolsCta"),
-                  href: AI_TOOLS_URL,
-                  external: true,
-                }
-              : undefined
-          }
         />
       ) : (
         <div className="container max-w-6xl border-t border-border pt-12">

@@ -1,4 +1,5 @@
 import AiServicesApiContentSection from "@/features/ai-services/components/ai-services-api-content-section";
+import AiToolsLeadForm from "@/features/ai-services/components/ai-tools-lead-form";
 import AiServiceDetailView from "@/features/ai-services/components/ai-service-detail-view";
 import { countVisibleServicePageSections } from "@/features/services/lib/collect-page-sections";
 import { sectionShellClassName } from "@/features/services/lib/section-tone";
@@ -74,7 +75,6 @@ export default async function AiServicesPage() {
             key={service.id}
             service={service}
             showHero={index === 0}
-            showHeaderAction={index === 0}
             sectionStartIndex={sectionStartIndex}
           />
         );
@@ -87,6 +87,9 @@ export default async function AiServicesPage() {
         <div className="relative z-10">
           <AiServicesApiContentSection embedded tone="light" />
         </div>
+      </div>
+      <div className="container px-4">
+        <AiToolsLeadForm />
       </div>
     </div>
   );

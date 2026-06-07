@@ -435,6 +435,11 @@ function parseLinkedMediaBlock(raw: unknown, locale: string): Accreditation | nu
 
 const parseOurAccreditations = parseLinkedMediaBlock;
 
+function parseApplicationSeo(raw: Record<string, unknown>): boolean {
+  const value = raw.application_seo ?? raw.applicationSeo;
+  return value === true || value === 1 || value === "1" || value === "true";
+}
+
 /** Maps raw `/v1/services/{slug}` payload to `SingleService`. */
 export function normalizeSingleService(
   raw: Record<string, unknown>,
@@ -520,6 +525,7 @@ export function normalizeSingleService(
     countries: Array.isArray(raw.countries)
       ? (raw.countries as SingleService["countries"])
       : [],
+    application_seo: parseApplicationSeo(raw),
     ourAccreditations: parseOurAccreditations(raw.our_accreditations, locale),
     ourClients:
       parseLinkedMediaBlock(raw.our_clients, locale) ??
