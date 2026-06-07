@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,15 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
 import * as motion from "framer-motion/client";
 import { Link } from "@/i18n/navigation";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import type { CountryRouteCode } from "@/features/shared/lib/country-routes";
 import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
-import { useCountry } from "@/hooks/use-country";
-import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
 import { useLocale } from "next-intl";
+import { SERVICE_CARD_ICONS } from "../lib/service-icons";
 import { pickServiceSlug, servicePostPath } from "../lib/services-routes";
 import { Service } from "../types";
 import { cn } from "@/lib/utils";
@@ -23,22 +24,22 @@ const serviceCardTitleClassName =
 
 export default function ServicesCard({
   item,
-  icon: Icon,
+  iconIndex,
   index,
-  countryId,
+  countryCode,
   titleAsPlainH3 = false,
   titleDark = false,
 }: {
   item: Service;
-  icon: LucideIcon;
+  iconIndex: number;
   index: number;
-  countryId?: number;
+  countryCode: CountryRouteCode;
   /** Related-services carousel only: plain `<h3>` with HTML stripped from title. */
-    titleAsPlainH3?: boolean;
+  titleAsPlainH3?: boolean;
   titleDark?: boolean;
 }) {
   const locale = useLocale();
-  const countryCode = resolveSupportedCountry(useCountry());
+  const Icon = SERVICE_CARD_ICONS[iconIndex % SERVICE_CARD_ICONS.length]!;
   const href = servicePostPath(pickServiceSlug(item, locale), { countryCode });
   const title = plainTextFromHtml(item?.title);
   const description = stripLeadingDuplicateHeading(item?.description, item?.title);

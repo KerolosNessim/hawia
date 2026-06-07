@@ -1,14 +1,16 @@
-import { SERVICE_CARD_ICONS } from "../lib/service-icons";
+"use client";
+
+import type { CountryRouteCode } from "@/features/shared/lib/country-routes";
 import type { Service } from "../types";
 import ServicesCard from "./services-card";
 
 type ServicesGridProps = {
   services: Service[];
-  countryId?: number;
+  countryCode: CountryRouteCode;
   titleDark?: boolean;
 };
 
-export function ServicesGrid({ services, countryId, titleDark = false }: ServicesGridProps) {
+export function ServicesGrid({ services, countryCode, titleDark = false }: ServicesGridProps) {
   if (!services.length) return null;
 
   return (
@@ -16,10 +18,10 @@ export function ServicesGrid({ services, countryId, titleDark = false }: Service
       {services.map((item, index) => (
         <ServicesCard
           key={item.id}
-          icon={SERVICE_CARD_ICONS[index % SERVICE_CARD_ICONS.length]}
+          iconIndex={index}
           item={item}
           index={index}
-          countryId={countryId}
+          countryCode={countryCode}
           titleDark={titleDark}
         />
       ))}

@@ -1,4 +1,3 @@
-import { ServicesCountryFilter } from "@/features/services/components/services-country-filter";
 import { ServicesGrid } from "@/features/services/components/services-grid";
 import { ServicesListPagination } from "@/features/services/components/services-list-pagination";
 import { matchCountryByUserCode } from "@/features/services/lib/country-match";
@@ -10,18 +9,9 @@ import {
   jsonLdGraph,
 } from "@/lib/seo/schema";
 import { localePath } from "@/features/blogs/lib/blog-routes";
-import {
-  pickServiceSlug,
-  servicesCountryHref,
-  servicesIndexHref,
-} from "@/features/services/lib/services-routes";
-import { getServerCountryRouteCode } from "@/lib/get-country";
-import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
-import {
-  parseCountryId,
-  parsePage,
-} from "@/features/services/lib/parse-services-search-params";
-import { resolveSelectedCountryId } from "@/features/services/lib/prepare-countries-list";
+import { pickServiceSlug, servicesIndexHref } from "@/features/services/lib/services-routes";
+import { getServerCountry, getServerCountryRouteCode } from "@/lib/get-country";
+import { parsePage } from "@/features/services/lib/parse-services-search-params";
 import {
   fetchPublicCountriesPrepared,
   fetchPublicServicesPaginated,
@@ -32,11 +22,17 @@ import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { cookies } from "next/headers";
 
 const SERVICES_LIST_PER_PAGE = 12;
 
 type SearchParamsType = Record<string, string | string[] | undefined>;
+
+async function resolveCountryIdFromIp() {
+  const geoCountry = await getServerCountry();
+  const preparedCountries = await fetchPublicCountriesPrepared();
+  const country = matchCountryByUserCode(preparedCountries.countries, geoCountry);
+  return country?.id;
+}
 
 export async function generateMetadata({
   searchParams,
@@ -48,25 +44,15 @@ export async function generateMetadata({
   const locale = (await getLocale()) as Locale;
   const sp = searchParams ? await searchParams : {};
   const page = parsePage(sp);
-  const countryId = parseCountryId(sp);
-
-  const cookieStore = await cookies();
-  const countryCode = resolveSupportedCountry(
-    cookieStore.get("user_country")?.value ?? (await getServerCountryRouteCode()),
-  );
-  const userCountryCode = countryCode;
-  const preparedCountries = await fetchPublicCountriesPrepared();
-  const countries = preparedCountries.countries;
-  const defaultCountry = matchCountryByUserCode(countries, userCountryCode);
-  const selectedCountryId =
-    resolveSelectedCountryId(countryId, preparedCountries) ?? defaultCountry?.id;
+  const countryCode = await getServerCountryRouteCode();
+  const countryId = await resolveCountryIdFromIp();
 
   const { meta } = await fetchPublicServicesPaginated({
     paginationPath: localePath(locale, "/services", countryCode),
     locale,
     page,
     per_page: SERVICES_LIST_PER_PAGE,
-    country_id: selectedCountryId,
+    country_id: countryId,
   });
 
   return buildStaticPageMetadata({
@@ -94,19 +80,8 @@ export default async function ServicesPage(props: {
   const sp = props.searchParams ? await props.searchParams : {};
   const page = parsePage(sp);
   const locale = (await getLocale()) as Locale;
-
-  const cookieStore = await cookies();
-  const countryCode = resolveSupportedCountry(
-    cookieStore.get("user_country")?.value ?? (await getServerCountryRouteCode()),
-  );
-  const userCountryCode = countryCode;
-
-  const preparedCountries = await fetchPublicCountriesPrepared();
-  const countries = preparedCountries.countries;
-  const countryIdParam = parseCountryId(sp);
-  const defaultCountry = matchCountryByUserCode(countries, userCountryCode);
-  const selectedCountryId =
-    resolveSelectedCountryId(countryIdParam, preparedCountries) ?? defaultCountry?.id;
+  const countryCode = await getServerCountryRouteCode();
+  const countryId = await resolveCountryIdFromIp();
 
   const paginationPath = localePath(locale, "/services", countryCode);
 
@@ -115,7 +90,7 @@ export default async function ServicesPage(props: {
     locale,
     page,
     per_page: SERVICES_LIST_PER_PAGE,
-    country_id: selectedCountryId,
+    country_id: countryId,
   });
 
   const listPath =
@@ -165,30 +140,20 @@ export default async function ServicesPage(props: {
           <p className="mx-auto max-w-3xl text-muted-foreground">{sectionT("subtitle")}</p>
         </section>
 
-        {countries.length > 0 && selectedCountryId != null ? (
-          <ServicesCountryFilter
-            countries={countries}
-            selectedCountryId={selectedCountryId}
-            getCountryHref={(id) => servicesCountryHref(countries, id)}
-          />
-        ) : null}
-
         <section className="space-y-6">
           {services.length === 0 ? (
             <p className="py-16 text-center text-lg text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ServicesGrid titleDark={true} services={services} countryId={selectedCountryId} />
+            <ServicesGrid titleDark={true} services={services} countryCode={countryCode} />
           )}
         </section>
 
-        {selectedCountryId != null ? (
-          <ServicesListPagination
-            meta={meta}
-            countryId={selectedCountryId}
-            previousLabel={t("paginationPrevious")}
-            nextLabel={t("paginationNext")}
-          />
-        ) : null}
+        <ServicesListPagination
+          meta={meta}
+          countryCode={countryCode}
+          previousLabel={t("paginationPrevious")}
+          nextLabel={t("paginationNext")}
+        />
       </div>
     </div>
   );

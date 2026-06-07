@@ -14,7 +14,6 @@ import { useCountry } from "@/hooks/use-country";
 import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
-import { SERVICE_CARD_ICONS } from "../lib/service-icons";
 import { servicesIndexPath } from "../lib/services-routes";
 import type { Service } from "../types";
 import ServicesCard from "./services-card";
@@ -70,9 +69,9 @@ export default function RelatedServicesSection({
               >
                 <ServicesCard
                   item={item}
-                  icon={SERVICE_CARD_ICONS[index % SERVICE_CARD_ICONS.length]}
+                  iconIndex={index}
                   index={index}
-                  countryId={countryId}
+                  countryCode={countryCode}
                   titleAsPlainH3
                   titleDark={true}
                 />

@@ -2,6 +2,7 @@
 
 import SectionHeader from "@/features/shared/components/section-header";
 import { Link } from "@/i18n/navigation";
+import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
 import { useCountry } from "@/hooks/use-country";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -28,6 +29,7 @@ export default function ServicesSection({ countryId ,lightBg = false}: { country
   const services = Array.isArray(data?.data) ? data?.data : [];
 
   const userCountryCode = useCountry();
+  const countryCode = resolveSupportedCountry(userCountryCode);
   const [autoSelectedCountry, setAutoSelectedCountry] = useState<number | null>(null);
   const hasAutoSelected = useRef(false);
   const selectedCountry = countryId ?? autoSelectedCountry;
@@ -86,7 +88,7 @@ export default function ServicesSection({ countryId ,lightBg = false}: { country
           />
         ) : null}
 
-        <ServicesGrid services={filteredServices} titleDark={lightBg} />
+        <ServicesGrid services={filteredServices} countryCode={countryCode} titleDark={lightBg} />
 
         <div className="flex justify-center pt-4">
           <Link
