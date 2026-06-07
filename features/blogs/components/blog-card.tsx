@@ -67,7 +67,7 @@ export default function BlogCard({
         <Card
           data-blog-card-theme={cardTheme}
           className={`flex h-full flex-col overflow-hidden border border-brand p-0 transition-all duration-300 group-hover/card:border-brand/50 group-hover/card:shadow-xl ${
-            isDark ? "bg-black/50 backdrop-blur-lg" : "bg-white"
+            isDark ? "bg-black/10 backdrop-blur-lg" : "bg-white"
           }`}
         >
           <CardHeader className="border-b-2 border-brand p-0">
@@ -111,7 +111,7 @@ export default function BlogCard({
           </CardContent>
 
           <CardFooter
-            className={`border-t border-brand p-4 ${isDark ? "bg-black/50 backdrop-blur-lg" : "bg-brand text-white"}`}
+            className={`border-t border-brand p-4 ${isDark ? "bg-black/40 backdrop-blur-lg" : "bg-brand text-white"}`}
           >
             <span
               className={`w-full text-xs font-medium ${isDark ? "text-brand" : "text-white"}`}

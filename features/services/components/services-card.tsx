@@ -64,7 +64,7 @@ export default function ServicesCard({
                   {title}
                 </h3>
               ) : (
-                <h2 className={cn(serviceCardTitleClassName, titleDark && "text-gray-900")}>{title}</h2>
+                <h3 className={cn(serviceCardTitleClassName, titleDark && "text-gray-900")}>{title}</h3>
               )}
               {subtitle.trim() ? (
                 <RichHtml

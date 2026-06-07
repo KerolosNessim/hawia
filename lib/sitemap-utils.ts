@@ -61,6 +61,29 @@ export async function fetchAllSlugs(): Promise<AllSlugsResponse["data"]> {
   return {};
 }
 
+async function fetchAuthorSlugs(): Promise<string[]> {
+  try {
+    const res = await fetch(`${getApiUrl()}/v1/authors`, {
+      cache: "no-store",
+      next: { revalidate: 0 },
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as { data?: unknown };
+    if (!Array.isArray(json.data)) return [];
+    return json.data
+      .map((item) => {
+        if (!item || typeof item !== "object") return "";
+        const slug = (item as { slug?: unknown }).slug;
+        return typeof slug === "string" ? slug.trim() : "";
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.error("Failed to fetch authors for sitemap:", error);
+    return [];
+  }
+}
+
 const STATIC_PAGE_PATHS: { path: string; priority: number; changeFrequency: SitemapEntry["changeFrequency"] }[] = [
   { path: "/", priority: 1.0, changeFrequency: "daily" },
   { path: "/about", priority: 0.8, changeFrequency: "monthly" },
@@ -127,6 +150,8 @@ export async function buildPagesSitemapEntries(locale: Locale): Promise<SitemapE
     if (!slug) continue;
     push(jobOpeningPath(slug), 0.7, "weekly");
   }
+
+  addDynamic(await fetchAuthorSlugs(), "authors", 0.6, "monthly");
 
   return entries;
 }
