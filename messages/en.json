@@ -989,6 +989,13 @@
     "back":"Back to clients",
     "not_found":"This client work could not be found."
   },
+  "authorsPage": {
+    "metaTitle": "Authors | Howeyah",
+    "metaDescription": "Meet the writers and experts behind Howeyah's articles and insights.",
+    "title": "Our Authors",
+    "description": "Discover the team behind our blog and digital marketing content.",
+    "empty": "No authors are available at the moment."
+  },
   "courses":{
     "title":"Training Courses",
     "description":"We are always here to achieve your brand's success",

@@ -12,6 +12,8 @@ const PAGE_KEY_LOOKUP: Record<string, string[]> = {
   courses: ["courses", "dorat-hoy"],
   faq: ["faq"],
   blog: ["blog", "blogs", "almdonat"],
+  author: ["author", "authors"],
+  authors: ["author", "authors"],
   "contact-us": ["contact-us", "contact"],
   contact: ["contact", "contact-us"],
 };

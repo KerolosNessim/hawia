@@ -15,7 +15,7 @@ type PublicAuthorRelatedBlog = {
   published_at: string | null;
 };
 
-export type PublicAuthor = {
+export type PublicAuthorProfile = {
   id: number;
   slug: string;
   name: string;
@@ -25,6 +25,9 @@ export type PublicAuthor = {
   image_alt: string | null;
   meta_title: string | null;
   meta_description: string | null;
+};
+
+export type PublicAuthor = PublicAuthorProfile & {
   related_blogs: PublicAuthorRelatedBlog[];
   related_blogs_meta: LaravelPaginationMeta;
 };
@@ -49,16 +52,33 @@ function normalizeAuthorBlog(raw: Record<string, unknown>): PublicAuthorRelatedB
   };
 }
 
-function normalizeAuthor(
-  raw: Record<string, unknown>,
-  relatedMetaRaw: Record<string, unknown>,
-  paginationPath: string,
-): PublicAuthor | null {
+function normalizeAuthorProfile(raw: Record<string, unknown>): PublicAuthorProfile | null {
   const idRaw = raw.id;
   const slug = typeof raw.slug === "string" ? raw.slug : "";
   if ((typeof idRaw !== "number" && typeof idRaw !== "string") || !slug) return null;
   const id = typeof idRaw === "number" ? idRaw : Number(idRaw);
   if (!Number.isFinite(id)) return null;
+
+  return {
+    id,
+    slug,
+    name: typeof raw.name === "string" ? raw.name : "",
+    job_title: typeof raw.job_title === "string" ? raw.job_title : null,
+    bio: typeof raw.bio === "string" ? raw.bio : "",
+    image: typeof raw.image === "string" ? raw.image : null,
+    image_alt: typeof raw.image_alt === "string" ? raw.image_alt : null,
+    meta_title: typeof raw.meta_title === "string" ? raw.meta_title : null,
+    meta_description: typeof raw.meta_description === "string" ? raw.meta_description : null,
+  };
+}
+
+function normalizeAuthor(
+  raw: Record<string, unknown>,
+  relatedMetaRaw: Record<string, unknown>,
+  paginationPath: string,
+): PublicAuthor | null {
+  const profile = normalizeAuthorProfile(raw);
+  if (!profile) return null;
   const relatedRaw = Array.isArray(raw.related_blogs) ? raw.related_blogs : [];
   const related_blogs_meta =
     completeLaravelPaginationMeta(relatedMetaRaw, paginationPath) ??
@@ -73,20 +93,30 @@ function normalizeAuthor(
     )!;
 
   return {
-    id,
-    slug,
-    name: typeof raw.name === "string" ? raw.name : "",
-    job_title: typeof raw.job_title === "string" ? raw.job_title : null,
-    bio: typeof raw.bio === "string" ? raw.bio : "",
-    image: typeof raw.image === "string" ? raw.image : null,
-    image_alt: typeof raw.image_alt === "string" ? raw.image_alt : null,
-    meta_title: typeof raw.meta_title === "string" ? raw.meta_title : null,
-    meta_description: typeof raw.meta_description === "string" ? raw.meta_description : null,
+    ...profile,
     related_blogs: relatedRaw
       .map((row) => normalizeAuthorBlog(asRecord(row) ?? {}))
       .filter((b): b is PublicAuthorRelatedBlog => b != null),
     related_blogs_meta,
   };
+}
+
+export function authorPath(slug: string): string {
+  return `/authors/${encodeURIComponent(slug)}`;
+}
+
+export async function fetchAllPublicAuthors(): Promise<PublicAuthorProfile[]> {
+  try {
+    const raw = await apiClient.get<unknown>("/v1/all-authors");
+    const rec = asRecord(raw);
+    if (!rec) return [];
+    const rows = Array.isArray(rec.data) ? rec.data : [];
+    return rows
+      .map((row) => normalizeAuthorProfile(asRecord(row) ?? {}))
+      .filter((author): author is PublicAuthorProfile => author != null);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPublicAuthorBySlug(
