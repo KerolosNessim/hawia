@@ -77,7 +77,7 @@ export function HeroStats({ stats }: { stats?: HeroStat[] }) {
   if (displayStats.length === 0) return null;
 
   return (
-    <div className="grid min-w-0 grid-cols-2 gap-3 max-sm:grid-cols-1 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+    <div className="grid min-w-0 grid-cols-2 gap-3 max-sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-5">
       {displayStats.map((stat, index) => (
         <StatItem key={index} {...stat} index={index} />
       ))}

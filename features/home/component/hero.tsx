@@ -26,7 +26,7 @@ export default function HeroSection({heroData}:{heroData:Hero}) {
   );
   return (
     <div
-      className="max-xl:pt-20 relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden   bg-cover bg-center bg-no-repeat "
+      className="max-xl:pt-20 relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden   bg-cover bg-right lg:bg-center bg-no-repeat "
       style={{
         backgroundImage: `url(${heroData?.media?.image})`,
       }}

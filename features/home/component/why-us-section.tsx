@@ -167,7 +167,7 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
                       );
                       requestAnimationFrame(() => getLenisInstance()?.resize());
                     }}
-                    className="h-12 rounded-full bg-brand px-6 py-2.5 text-sm font-medium text-white hover:border-brand hover:bg-brand/90 hover:text-white"
+                    className="h-12 rounded-full bg-black/70 px-6 py-2.5 text-sm font-medium text-white hover:border-brand hover:bg-brand/90 hover:text-white"
                   >
                     {t("showMore")}
                   </Button>
@@ -191,7 +191,7 @@ export default function WhyUsSection({ countryId }: { countryId?: number }) {
                 <div className="flex flex-col items-center justify-center gap-6 px-2 sm:px-4">
                   <div className="relative aspect-square w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[380px] xl:max-w-[420px]">
                     <div
-                      className="absolute inset-[8%] rounded-full bg-gray-800 shadow-[0_0_80px_rgba(163,205,57,0.12)]"
+                      
                       aria-hidden
                     />
                     <Image

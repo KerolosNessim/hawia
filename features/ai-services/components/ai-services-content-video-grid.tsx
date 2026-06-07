@@ -2,6 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
   Dialog,
   DialogContent,
   DialogTitle,
@@ -10,6 +17,7 @@ import { youtubeEmbedUrl } from "@/lib/youtube-embed";
 import type { ServiceAiContentItem } from "@/features/ai-services/types/service-ai-content";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { ExternalLink, Play, X } from "lucide-react";
+import { useLocale } from "next-intl";
 import Image from "next/image";
 import { useCallback, useState } from "react";
 
@@ -111,6 +119,8 @@ export default function AiServicesContentVideoGrid({
   fallbackPoster = FALLBACK_POSTER,
   watchLabel,
 }: Props) {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
   const [modalItem, setModalItem] = useState<ServiceAiContentItem | null>(null);
   const embedUrl = modalItem ? youtubeEmbedUrl(modalItem.video) : null;
 
@@ -127,22 +137,51 @@ export default function AiServicesContentVideoGrid({
 
   return (
     <>
-      <ul className="grid grid-cols-1 place-items-center gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
-        {items.map((item, index) => (
-          <li
-            key={`${item.sort_order}-${item.video}-${index}`}
-            className="flex w-full justify-center"
-          >
-            <AiContentVideoCard
-              item={item}
-              index={index}
-              fallbackPoster={fallbackPoster}
-              watchLabel={watchLabel}
-              onPlay={handlePlay}
-            />
-          </li>
-        ))}
-      </ul>
+      <div
+        className="relative w-full px-10 sm:px-12 md:px-14"
+        dir={isRtl ? "rtl" : "ltr"}
+      >
+        <Carousel
+          opts={{
+            align: "start",
+            loop: items.length > 1,
+            direction: isRtl ? "rtl" : "ltr",
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ms-4 py-4 md:py-5">
+            {items.map((item, index) => (
+              <CarouselItem
+                key={`${item.sort_order}-${item.video}-${index}`}
+                className="ps-4 basis-full sm:basis-1/2 lg:basis-1/3"
+              >
+                <div className="flex justify-center">
+                  <AiContentVideoCard
+                    item={item}
+                    index={index}
+                    fallbackPoster={fallbackPoster}
+                    watchLabel={watchLabel}
+                    onPlay={handlePlay}
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+          {items.length > 1 ? (
+            <>
+              <CarouselPrevious
+                isRtl={isRtl}
+                className="size-10 bg-brand text-white hover:bg-gray-900 hover:text-brand disabled:opacity-30"
+              />
+              <CarouselNext
+                isRtl={isRtl}
+                className="size-10 bg-brand text-white hover:bg-gray-900 hover:text-brand disabled:opacity-30"
+              />
+            </>
+          ) : null}
+        </Carousel>
+      </div>
 
       <Dialog open={Boolean(modalItem && embedUrl)} onOpenChange={(open) => !open && setModalItem(null)}>
         <DialogContent
