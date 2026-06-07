@@ -31,7 +31,7 @@ function TestimonialCard({
 }) {
   return (
     <div className="h-full p-2">
-      <Card className="flex h-full flex-col justify-between overflow-hidden border border-white/10 bg-gray-800/90 shadow-lg ring-1 ring-brand/40 backdrop-blur-sm transition-all duration-300 hover:border-brand/50 hover:ring-brand/60">
+      <Card className="flex h-full flex-col justify-between overflow-hidden border border-white/10 bg-black/10 backdrop-blur-lg shadow-lg ring-1 ring-brand/40  transition-all duration-300 hover:border-brand/50 hover:ring-brand/60">
         <CardContent className="pt-6">
           <div className="mb-4 flex items-center justify-between">
             <Quote className="h-8 w-8 text-brand opacity-90" />
@@ -50,7 +50,7 @@ function TestimonialCard({
           <p className="text-sm leading-relaxed text-gray-100 md:text-base">{quote}</p>
         </CardContent>
 
-        <CardFooter className="mt-4 flex items-center gap-4 border-t border-brand/30 bg-gray-900/40 pt-4 pb-4">
+        <CardFooter className="mt-4 flex items-center gap-4 border-t border-brand/30 bg-black/40 backdrop-blur-lg pt-4 pb-4">
           <Avatar className="size-12 ring-2 ring-brand ring-offset-2 ring-offset-gray-900">
             <AvatarImage
               src={image || "/user.webp"}
