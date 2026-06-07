@@ -1,5 +1,6 @@
 "use client";
 
+import { useGetBlogs } from "@/features/blogs/hooks/useGetBlogs";
 import { useJobOpeningsBilingual } from "@/features/careers/hooks/useJobOpeningsBilingual";
 import { useGetServices } from "@/features/services/hooks/useGetServices";
 import { resolveLocalizedPathname } from "@/features/shared/lib/resolve-localized-pathname";
@@ -39,6 +40,8 @@ export default function LocaleSwitcher({ triggerClassName }: LocaleSwitcherProps
   const [isPending, startTransition] = useTransition();
   const { data: servicesResponse } = useGetServices();
   const services = Array.isArray(servicesResponse?.data) ? servicesResponse.data : [];
+  const { data: blogsResponse } = useGetBlogs();
+  const blogs = Array.isArray(blogsResponse?.data) ? blogsResponse.data : [];
   const { data: jobOpeningsBilingual } = useJobOpeningsBilingual();
 
   const handleChange = (newLocale: string) => {
@@ -46,6 +49,7 @@ export default function LocaleSwitcher({ triggerClassName }: LocaleSwitcherProps
 
     const nextPath = resolveLocalizedPathname(pathname, newLocale, {
       services,
+      blogs,
       jobOpenings: jobOpeningsBilingual ?? [],
     });
 

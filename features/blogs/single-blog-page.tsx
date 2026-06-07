@@ -10,13 +10,14 @@ import {
   blogPostAbsoluteUrl,
   blogTagPath,
   localePath,
+  pickBlogSlug,
 } from "@/features/blogs/lib/blog-routes";
 import { pickPrimaryBlogCategory } from "@/features/blogs/lib/pick-blog-category";
 import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
 import type { PublicBlogTag } from "@/features/blogs/lib/blog-tag";
 import { parseFaqPairsFromRichHtml } from "@/features/shared/lib/faq-json-ld";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
-import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
+import { buildPageMetadata, localePathsForSlug } from "@/lib/seo/metadata-helpers";
 import { buildCanonicalUrl, schemaMediaUrl, serializeBlogPostSchema } from "@/lib/seo/schema";
 import { Link } from "@/i18n/navigation";
 import { blogExcerptPlain } from "@/features/blogs/lib/json-ld";
@@ -83,6 +84,7 @@ export async function generateSingleBlogMetadata(
   }
 
   const blog = resolved.blog;
+  const canonicalSlug = pickBlogSlug(blog, locale);
 
   const title =
     typeof blog.meta_title === "string" && blog.meta_title.trim()
@@ -107,8 +109,9 @@ export async function generateSingleBlogMetadata(
 
   const metadata = await buildPageMetadata({
     locale,
-    pathname: blogPostHref(locale, slug),
-    logicalPath: blogPostPath(slug),
+    pathname: blogPostHref(locale, canonicalSlug),
+    logicalPath: blogPostPath(canonicalSlug),
+    localePaths: localePathsForSlug("/blogs", blog.slug_local, blog.slug),
     title,
     description,
     robots,
@@ -146,6 +149,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   }
 
   const blog = resolved.blog;
+  const canonicalSlug = pickBlogSlug(blog, locale);
 
   if (process.env.NODE_ENV === "development") {
     console.log("[SingleBlogPage]", {
@@ -178,7 +182,9 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   }
 
   const pageUrl =
-    blog.canonical_url?.trim() || (await absoluteBlogUrl(locale, slug)) || undefined;
+    blog.canonical_url?.trim() ||
+    (await absoluteBlogUrl(locale, canonicalSlug)) ||
+    undefined;
 
   const visibleLocale = (await getLocale()) as Locale;
   const articleLang = visibleLocale === "ar" ? "ar" : "en";
@@ -199,7 +205,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   const related =
     categoryId != null
       ? (await fetchPublicBlogs({ blog_category_id: categoryId }))
-          .filter((b) => b.slug !== blog.slug)
+          .filter((b) => b.id !== blog.id)
           .slice(0, 6)
           .map((b) => blogToCardPayload(b, visibleLocale))
       : [];
@@ -273,7 +279,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
 
   const blogIndexAbs = buildCanonicalUrl(locale, "/blogs");
   const blogPostingAbs =
-    pageUrl?.trim() || buildCanonicalUrl(locale, blogPostPath(slug));
+    pageUrl?.trim() || buildCanonicalUrl(locale, blogPostPath(canonicalSlug));
   const heroAbs = schemaMediaUrl(heroImage);
   const homeAbs = buildCanonicalUrl(locale, "/");
   const breadcrumbTrail: BreadcrumbTrailItem[] = [
@@ -288,7 +294,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     });
   }
   breadcrumbTrail.push({
-    href: blogPostPath(slug),
+    href: blogPostPath(canonicalSlug),
     label: localizedTitle,
   });
 

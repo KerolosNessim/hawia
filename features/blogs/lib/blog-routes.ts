@@ -2,8 +2,39 @@ import {
   type CountryRouteCode,
   withCountryPrefix,
 } from "@/features/shared/lib/country-routes";
+import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "next-intl";
+
+export type BlogSlugFields = {
+  slug: string;
+  slug_local?: { ar?: string; en?: string };
+};
+
+export function pickBlogSlug(blog: BlogSlugFields, locale: string): string {
+  const key = locale === "ar" ? "ar" : "en";
+  const local = blog.slug_local?.[key] ?? blog.slug_local?.ar ?? blog.slug_local?.en;
+  return (local ?? blog.slug ?? "").trim();
+}
+
+export function blogSlugVariants(blog: BlogSlugFields): string[] {
+  return [blog.slug, blog.slug_local?.ar, blog.slug_local?.en]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => decodePathSegment(value.trim()));
+}
+
+/** Whether a URL segment matches a blog's canonical or localized slugs. */
+export function blogMatchesSlugSegment(blog: BlogSlugFields, segment: string): boolean {
+  const decoded = decodePathSegment(segment);
+  return blogSlugVariants(blog).some((variant) => {
+    if (variant === decoded) return true;
+    try {
+      return variant.normalize("NFKC") === decoded.normalize("NFKC");
+    } catch {
+      return false;
+    }
+  });
+}
 
 /** Single-segment slugs under `/blogs/{slug}` handled by other routes (e.g. `/blogs/tag/...`). */
 export const RESERVED_BLOG_SLUGS = new Set(["tag"]);

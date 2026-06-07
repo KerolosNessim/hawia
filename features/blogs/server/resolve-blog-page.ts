@@ -6,6 +6,7 @@ import {
 import type { PublicBlog } from "@/features/blogs/server/public-blogs";
 import {
   fetchBlogShowRow,
+  findBlogShowRowBySlugVariant,
   isPublicBlogVisible,
   normalizeBlog,
 } from "@/features/blogs/server/public-blogs";
@@ -23,7 +24,10 @@ export async function resolveBlogPage(
   locale: string,
 ): Promise<BlogPageResolveResult | null> {
   const decoded = decodePathSegment(slug);
-  const row = await fetchBlogShowRow(decoded);
+  let row = await fetchBlogShowRow(decoded);
+  if (!row) {
+    row = await findBlogShowRowBySlugVariant(decoded, locale);
+  }
   if (!row) return null;
 
   const redirect = parseSlugRedirect(row, decoded, locale);

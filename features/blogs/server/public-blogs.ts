@@ -5,9 +5,10 @@ import {
   type PublicBlogTagMeta,
 } from "@/features/blogs/lib/blog-tag";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import { blogPostPath } from "@/features/blogs/lib/blog-routes";
+import { blogMatchesSlugSegment, blogPostPath, pickBlogSlug } from "@/features/blogs/lib/blog-routes";
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
+import { pickSlugLocal } from "@/features/services/lib/pick-localized-field";
 import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { apiClient } from "@/lib/api";
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
@@ -38,6 +39,7 @@ export type PublicBlogCategory = {
 export type PublicBlog = {
   id: number;
   slug: string;
+  slug_local?: { ar?: string; en?: string };
   title: string;
   subtitle: string;
   /** Raw API `title` when bilingual `{ ar, en }`. */
@@ -356,6 +358,7 @@ export function normalizeBlog(raw: Record<string, unknown>): PublicBlog | null {
   return {
     id: typeof id === "number" ? id : Number(id),
     slug,
+    slug_local: pickSlugLocal(raw),
     title,
     subtitle,
     description,
@@ -746,6 +749,48 @@ export async function fetchBlogShowRow(slugParam: string): Promise<Record<string
   }
 }
 
+/** Resolves show payload when the URL slug is a localized variant not accepted by the show API. */
+export async function findBlogShowRowBySlugVariant(
+  slugParam: string,
+  locale: string,
+): Promise<Record<string, unknown> | null> {
+  const decoded = normalizeBlogSlugFromRoute(slugParam);
+  let page = 1;
+  let lastPage = 1;
+
+  try {
+    do {
+      const { blogs, meta } = await fetchPublicBlogsPaginated({
+        paginationPath: "/v1/blogs",
+        page,
+        per_page: 100,
+      });
+      lastPage = Math.max(1, meta.last_page);
+      const match = blogs.find((b) => blogMatchesSlugSegment(b, decoded));
+      if (match) {
+        const slugsToTry = [
+          decoded,
+          pickBlogSlug(match, locale),
+          pickBlogSlug(match, locale === "ar" ? "en" : "ar"),
+          match.slug,
+          match.slug_local?.ar,
+          match.slug_local?.en,
+        ].filter((s, i, arr): s is string => typeof s === "string" && !!s.trim() && arr.indexOf(s) === i);
+
+        for (const trySlug of slugsToTry) {
+          const full = await fetchBlogShowRow(trySlug);
+          if (full) return full;
+        }
+      }
+      page++;
+    } while (page <= lastPage);
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBlog | null> {
   const slug = normalizeBlogSlugFromRoute(slugParam);
 
@@ -780,7 +825,7 @@ export async function fetchPublicBlogBySlug(slugParam: string): Promise<PublicBl
         per_page: 100,
       });
       lastPage = Math.max(1, meta.last_page);
-      const found = blogs.find((b) => blogSlugsMatch(b.slug, slug));
+      const found = blogs.find((b) => blogMatchesSlugSegment(b, slug));
       if (found) {
         if (process.env.NODE_ENV === "development") {
           console.log("[fetchPublicBlogBySlug] list fallback hit", { slug, found });
@@ -827,6 +872,6 @@ export function blogToCardPayload(blog: PublicBlog, locale: Locale): BlogCardPay
     description: descHtml || blog.description || blog.subtitle,
     date: dateLabel,
     image: resolveMediaUrl(blog.image),
-    link: blogPostPath(blog.slug),
+    link: blogPostPath(pickBlogSlug(blog, locale)),
   };
 }

@@ -6,6 +6,7 @@ import {
   blogCategoryPath,
   blogPostHref,
   localePath,
+  pickBlogSlug,
   RESERVED_BLOG_SLUGS,
 } from "@/features/blogs/lib/blog-routes";
 import {
@@ -150,7 +151,7 @@ export default async function BlogSlugPage(props: {
     if (resolved.kind === "redirect") {
       applyBlogSlugRedirect(locale, resolved.toSlug, resolved.status, resolved.toPath);
     }
-    return <SingleBlogPage locale={locale} slug={resolved.blog.slug} />;
+    return <SingleBlogPage locale={locale} slug={pickBlogSlug(resolved.blog, locale)} />;
   }
 
   const t = await getTranslations("blogsPage");
@@ -179,7 +180,7 @@ export default async function BlogSlugPage(props: {
 
   const blogItems = blogs.map((b) => ({
     name: blogToCardPayload(b, visibleLocale).title,
-    url: absoluteUrlFromPath(blogPostHref(locale, b.slug)),
+    url: absoluteUrlFromPath(blogPostHref(locale, pickBlogSlug(b, locale))),
     datePublished: b.published_at ?? undefined,
   }));
 
