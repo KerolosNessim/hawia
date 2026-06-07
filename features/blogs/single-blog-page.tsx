@@ -16,6 +16,11 @@ import { pickPrimaryBlogCategory } from "@/features/blogs/lib/pick-blog-category
 import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
 import type { PublicBlogTag } from "@/features/blogs/lib/blog-tag";
 import { parseFaqPairsFromRichHtml } from "@/features/shared/lib/faq-json-ld";
+import {
+  dedupeFaqItems,
+  normalizeFaqItem,
+  stripTrailingFaqFromArticleHtml,
+} from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { buildPageMetadata, localePathsForSlug } from "@/lib/seo/metadata-helpers";
 import { buildCanonicalUrl, schemaMediaUrl, serializeBlogPostSchema } from "@/lib/seo/schema";
@@ -33,7 +38,7 @@ import {
 import { resolveBlogPage } from "@/features/blogs/server/resolve-blog-page";
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
-import FaqAccordion from "@/features/shared/components/faq-accordion";
+import FaqDetailsList from "@/features/shared/components/faq-details-list";
 import { Calendar, Clock, HelpCircle } from "lucide-react";
 import type { Locale } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -241,7 +246,7 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     blog.descriptionRichSource ?? blog.description,
     articleLang,
   ).trim();
-  const contentRich = pickLocalizedRichText(
+  const contentRichRaw = pickLocalizedRichText(
     blog.contentRichSource ?? blog.content,
     articleLang,
   ).trim();
@@ -249,6 +254,20 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   // FAQ rich HTML for the current locale
   const localizedFaq = pickLocalizedRichText(blog.faqRichSource, articleLang).trim();
   const faqRich = (localizedFaq || blog.faq || "").trim();
+
+  const faqHeading = t("faqHeading");
+  const faqAccordionItems = dedupeFaqItems(
+    (blog.faq_items?.length
+      ? blog.faq_items
+      : faqRich
+        ? parseFaqPairsFromRichHtml(faqRich)
+        : []
+    ).map(({ question, answer }) => normalizeFaqItem(question, answer)),
+  );
+
+  const contentRich = faqAccordionItems.length
+    ? stripTrailingFaqFromArticleHtml(contentRichRaw, faqAccordionItems, faqRich)
+    : contentRichRaw;
 
   const tocRich = pickLocalizedRichText(
     blog.tableOfContentsRichSource ?? blog.table_of_contents,
@@ -311,18 +330,6 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
   }
   breadcrumbLdItems.push({ name: localizedTitle, url: blogPostingAbs });
 
-  const faqHeading = t("faqHeading");
-  const faqAccordionItems =
-    blog.faq_items?.length
-      ? blog.faq_items
-      : faqRich
-        ? parseFaqPairsFromRichHtml(faqRich).map((f) => ({
-            question: f.question,
-            answer: f.answer,
-          }))
-        : [];
-  const faqPairs = faqAccordionItems;
-
   const pageSchemaJson = serializeBlogPostSchema({
     pageUrl: blogPostingAbs,
     headline: localizedTitle,
@@ -337,8 +344,6 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
     contentHtml: articleCombinedHtml,
     tagNames: blog.tags.map((tag) => tag.label),
     breadcrumbs: breadcrumbLdItems,
-    faqItems: faqPairs.length ? faqPairs : undefined,
-    faqName: faqPairs.length ? faqHeading : undefined,
   });
 
   return (
@@ -457,13 +462,11 @@ export async function SingleBlogPage({ locale, slug }: { locale: Locale; slug: s
             </h2>
           </div>
 
-          <FaqAccordion
-            items={faqAccordionItems.map((item, index) => ({
-              id: index,
-              question: item.question,
-              answer: item.answer,
-            }))}
+          <FaqDetailsList
+            locale={visibleLocale}
+            items={faqAccordionItems}
             columns={faqAccordionItems.length > 1 ? 2 : 1}
+            pageName={faqHeading}
           />
         </section>
       ) : null}

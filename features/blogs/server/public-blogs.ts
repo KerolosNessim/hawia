@@ -9,7 +9,7 @@ import { blogMatchesSlugSegment, blogPostPath, pickBlogSlug } from "@/features/b
 import type { BlogCardPayload } from "@/features/blogs/lib/blog-card-payload";
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 import { pickSlugLocal } from "@/features/services/lib/pick-localized-field";
-import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
+import { dedupeFaqItems, normalizeFaqItem } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { apiClient } from "@/lib/api";
 import { completeLaravelPaginationMeta, type LaravelPaginationMeta } from "@/lib/laravel-pagination";
 import { BLOG_LIST_PER_PAGE } from "@/lib/seo/pagination-metadata";
@@ -249,7 +249,7 @@ function faqArrayToHtml(field: unknown): string {
     if (!row) continue;
     const question = typeof row.question === "string" ? row.question.trim() : "";
     const rawAnswer = typeof row.answer === "string" ? row.answer.trim() : "";
-    const answer = stripLeadingDuplicateHeading(rawAnswer, question);
+    const { answer } = normalizeFaqItem(question, rawAnswer);
     if (!question && !answer) continue;
     if (question) chunks.push(question);
     if (answer) chunks.push(answer);
@@ -259,17 +259,19 @@ function faqArrayToHtml(field: unknown): string {
 
 function normalizeFaqItems(field: unknown): { question: string; answer: string }[] {
   if (!Array.isArray(field)) return [];
-  return field
-    .map((item) => {
-      const row = asRecord(item);
-      if (!row) return null;
-      const question = typeof row.question === "string" ? row.question.trim() : "";
-      const rawAnswer = typeof row.answer === "string" ? row.answer.trim() : "";
-      const answer = stripLeadingDuplicateHeading(rawAnswer, question);
-      if (!question && !answer) return null;
-      return { question, answer };
-    })
-    .filter((x): x is { question: string; answer: string } => x != null);
+  return dedupeFaqItems(
+    field
+      .map((item) => {
+        const row = asRecord(item);
+        if (!row) return null;
+        const question = typeof row.question === "string" ? row.question.trim() : "";
+        const rawAnswer = typeof row.answer === "string" ? row.answer.trim() : "";
+        const normalized = normalizeFaqItem(question, rawAnswer);
+        if (!normalized.question && !normalized.answer) return null;
+        return normalized;
+      })
+      .filter((x): x is { question: string; answer: string } => x != null),
+  );
 }
 
 function normalizeCategory(raw: Record<string, unknown>, locale: Locale): PublicBlogCategory | null {

@@ -2,8 +2,8 @@ import { pageFaqId, pageWebPageId, websiteId } from "../ids";
 import { buildBreadcrumbList, jsonLdGraph } from "../graph";
 import type { BreadcrumbItem, JsonLd } from "../types";
 import { schemaOrigin } from "../ids";
-import type { FaqJsonLdInputItem } from "@/features/shared/lib/faq-json-ld";
-import { plainTextFromHtml } from "@/lib/plain-text-from-html";
+import { faqItemToSchemaEntity, type FaqJsonLdInputItem } from "@/features/shared/lib/faq-json-ld";
+import { dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
 
 export type FaqPageSchemaInput = {
   pageUrl: string;
@@ -18,17 +18,8 @@ export type FaqPageSchemaInput = {
 export function buildFaqPageSchemaGraph(input: FaqPageSchemaInput): JsonLd[] {
   const origin = schemaOrigin(input.origin);
 
-  const mainEntity = input.faqItems
-    .map((item) => {
-      const name = plainTextFromHtml(item.question);
-      const text = plainTextFromHtml(item.answer);
-      if (!name || !text) return null;
-      return {
-        "@type": "Question",
-        name,
-        acceptedAnswer: { "@type": "Answer", text },
-      };
-    })
+  const mainEntity = dedupeFaqItems(input.faqItems)
+    .map(faqItemToSchemaEntity)
     .filter((x): x is JsonLd => x != null);
 
   const webPage: JsonLd = {

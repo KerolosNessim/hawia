@@ -1,6 +1,6 @@
 import { normalizePublicBlogTags } from "@/features/blogs/lib/blog-tag";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
+import { normalizeFaqItem, stripLeadingDuplicateHeading, dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { pickImageAlt } from "@/lib/image-alt";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { pickLocalizedField, pickSlugLocal } from "./pick-localized-field";
@@ -80,10 +80,14 @@ function parseSection(raw: unknown, locale: string): Section | null {
         )
     : null;
   const blockSort = Number(o.sort_order);
+  const title = pickLocalizedField(o.title, locale);
   return {
     id: Number(o.id ?? 0),
-    title: pickLocalizedField(o.title, locale),
-    description: pickLocalizedField(o.description, locale),
+    title,
+    description: stripLeadingDuplicateHeading(
+      pickLocalizedField(o.description, locale),
+      title,
+    ),
     image: sectionImageUrl(o, locale),
     image_alt: pickImageAlt(o.image_alt, locale) || null,
     items,
@@ -303,14 +307,14 @@ function parseFaqsBlock(o: Record<string, unknown>, locale: string): Faqs {
         .map((item) => {
           const row = item as Record<string, unknown>;
           const question = pickLocalizedField(row.question, locale).trim();
-          const answer = stripLeadingDuplicateHeading(
-            pickLocalizedField(row.answer, locale),
+          const { question: normalizedQuestion, answer } = normalizeFaqItem(
             question,
-          ).trim();
-          if (!question) return null;
+            pickLocalizedField(row.answer, locale),
+          );
+          if (!normalizedQuestion) return null;
           const sortOrder = Number.parseInt(String(row.sort_order ?? "0"), 10);
           return {
-            question,
+            question: normalizedQuestion,
             answer,
             sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
             link: pickSectionLink(row),
@@ -330,11 +334,15 @@ function parseFaqsBlock(o: Record<string, unknown>, locale: string): Faqs {
         .map(({ question, answer, link }) => ({ question, answer, link }))
     : [];
   const faqsSort = Number(o.sort_order);
+  const title = pickLocalizedField(o.title, locale);
   return {
     id: Number(o.id ?? 0),
-    title: pickLocalizedField(o.title, locale),
-    description: pickLocalizedField(o.description, locale),
-    items,
+    title,
+    description: stripLeadingDuplicateHeading(
+      pickLocalizedField(o.description, locale),
+      title,
+    ),
+    items: dedupeFaqItems(items),
     sort_order: Number.isFinite(faqsSort) && faqsSort > 0 ? faqsSort : undefined,
     link: pickSectionLink(o),
   };

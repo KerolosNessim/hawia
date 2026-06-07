@@ -4,7 +4,8 @@ import { organizationId, pageFaqId, pageServiceId, pageWebPageId, websiteId } fr
 import { buildBreadcrumbList, jsonLdGraph } from "../graph";
 import type { BreadcrumbItem, JsonLd } from "../types";
 import { schemaOrigin } from "../ids";
-import type { FaqJsonLdInputItem } from "@/features/shared/lib/faq-json-ld";
+import { faqItemToSchemaEntity, type FaqJsonLdInputItem } from "@/features/shared/lib/faq-json-ld";
+import { dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
 
 function countriesToAreaServed(countries: ServiceCountry[]): JsonLd[] {
   return countries
@@ -71,17 +72,8 @@ export function buildServicePageSchemaGraph(input: ServicePageSchemaInput): Json
   ];
 
   if (input.faqItems?.length) {
-    const mainEntity = input.faqItems
-      .map((item) => {
-        const name = plainTextFromHtml(item.question);
-        const text = plainTextFromHtml(item.answer);
-        if (!name || !text) return null;
-        return {
-          "@type": "Question",
-          name,
-          acceptedAnswer: { "@type": "Answer", text },
-        };
-      })
+    const mainEntity = dedupeFaqItems(input.faqItems)
+      .map(faqItemToSchemaEntity)
       .filter((x): x is JsonLd => x != null);
 
     if (mainEntity.length) {

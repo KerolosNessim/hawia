@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { RichHtml } from "@/features/shared/components/rich-html";
+import { normalizeFaqItem } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { cn } from "@/lib/utils";
 
 export type FaqAccordionItem = {
@@ -35,28 +36,21 @@ function FaqAccordionColumn({
       {items.map((item, index) => {
         const value =
           item.id != null ? `${valuePrefix}-${item.id}` : `${valuePrefix}-${index}`;
+        const normalized = normalizeFaqItem(item.question, item.answer);
 
         return (
           <AccordionItem key={value} value={value}>
             <AccordionTrigger>
-              {allowHtml ? (
-                <RichHtml
-                  html={item.question}
-                  as="span"
-                  className="[&_h2]:text-lg [&_h3]:text-base [&_p]:mb-0 [&_strong]:font-bold"
-                />
-              ) : (
-                item.question
-              )}
+              {normalized.question}
             </AccordionTrigger>
             <AccordionContent className={contentClassName}>
               {allowHtml ? (
                 <RichHtml
-                  html={item.answer}
+                  html={normalized.answer}
                   className="cms-rich-html [&_ol]:list-decimal [&_ol]:ps-6 [&_ul]:list-disc [&_ul]:ps-6"
                 />
               ) : (
-                item.answer
+                normalized.answer
               )}
             </AccordionContent>
           </AccordionItem>

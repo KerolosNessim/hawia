@@ -1,3 +1,7 @@
+import {
+  dedupeFaqItems,
+  normalizeFaqItem,
+} from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 
 type JsonLd = Record<string, unknown>;
@@ -31,18 +35,23 @@ export function parseFaqPairsFromRichHtml(faqHtml: string): FaqJsonLdInputItem[]
 
   if (!headings.length) return [];
 
-  return headings.map((heading, i) => ({
-    question: heading.questionHtml,
-    answer: trimmed.slice(
-      heading.end,
-      i + 1 < headings.length ? headings[i + 1].start : trimmed.length,
+  return dedupeFaqItems(
+    headings.map((heading, i) =>
+      normalizeFaqItem(
+        heading.questionHtml,
+        trimmed.slice(
+          heading.end,
+          i + 1 < headings.length ? headings[i + 1].start : trimmed.length,
+        ),
+      ),
     ),
-  }));
+  );
 }
 
-function toQuestionEntity(item: FaqJsonLdInputItem): JsonLd | null {
-  const name = plainTextFromHtml(item.question);
-  const text = plainTextFromHtml(item.answer);
+export function faqItemToSchemaEntity(item: FaqJsonLdInputItem): JsonLd | null {
+  const { question, answer } = normalizeFaqItem(item.question, item.answer);
+  const name = plainTextFromHtml(question);
+  const text = plainTextFromHtml(answer);
   if (!name || !text) return null;
 
   return {
@@ -65,7 +74,7 @@ export function buildFaqPageJsonLd(opts: {
   name?: string;
 }): JsonLd | null {
   const mainEntity = opts.items
-    .map(toQuestionEntity)
+    .map(faqItemToSchemaEntity)
     .filter((entry): entry is JsonLd => entry != null);
 
   if (!mainEntity.length) return null;

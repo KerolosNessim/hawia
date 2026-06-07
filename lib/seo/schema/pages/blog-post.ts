@@ -4,8 +4,8 @@ import { toSchemaDate, countWordsFromHtml } from "../format";
 import type { BreadcrumbItem, JsonLd } from "../types";
 import { schemaOrigin } from "../ids";
 import { absoluteUrlFromPath } from "../urls";
-import type { FaqJsonLdInputItem } from "@/features/shared/lib/faq-json-ld";
-import { plainTextFromHtml } from "@/lib/plain-text-from-html";
+import { faqItemToSchemaEntity, type FaqJsonLdInputItem } from "@/features/shared/lib/faq-json-ld";
+import { dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
 
 export type BlogPostSchemaInput = {
   pageUrl: string;
@@ -95,17 +95,8 @@ export function buildBlogPostSchemaGraph(input: BlogPostSchemaInput): JsonLd[] {
   ];
 
   if (input.faqItems?.length) {
-    const mainEntity = input.faqItems
-      .map((item) => {
-        const name = plainTextFromHtml(item.question);
-        const text = plainTextFromHtml(item.answer);
-        if (!name || !text) return null;
-        return {
-          "@type": "Question",
-          name,
-          acceptedAnswer: { "@type": "Answer", text },
-        };
-      })
+    const mainEntity = dedupeFaqItems(input.faqItems)
+      .map(faqItemToSchemaEntity)
       .filter((x): x is JsonLd => x != null);
 
     if (mainEntity.length) {

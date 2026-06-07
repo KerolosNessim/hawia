@@ -1,7 +1,7 @@
 import FaqAccordion from "@/features/shared/components/faq-accordion";
 import PageHeader from "@/features/shared/components/page-header";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
-import { stripLeadingDuplicateHeading } from "@/features/shared/lib/strip-leading-duplicate-heading";
+import { dedupeFaqItems, normalizeFaqItem } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { buildCanonicalUrl, serializeFaqPageSchema } from "@/lib/seo/schema";
 import { getFaqData } from "@/features/home/services/faq";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
@@ -55,10 +55,12 @@ export default async function FaqPage() {
     return null;
   }
 
-  const items = (data.items || []).map((item) => ({
-    ...item,
-    answer: stripLeadingDuplicateHeading(item.answer, item.question),
-  }));
+  const items = dedupeFaqItems(
+    (data.items || []).map((item) => ({
+      id: item.id,
+      ...normalizeFaqItem(item.question, item.answer),
+    })),
+  );
   const pageTitle = data.title || t("title");
   const pageAbs = buildCanonicalUrl(locale, "/faq");
   const faqSchemaJson = serializeFaqPageSchema({

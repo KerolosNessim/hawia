@@ -29,7 +29,7 @@ import PageHeader from "@/features/shared/components/page-header";
 
 import { RichHtml } from "@/features/shared/components/rich-html";
 
-import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { buildCanonicalUrl, serializeServicePageSchema } from "@/lib/seo/schema";
 
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
@@ -161,11 +161,14 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
   const tBreadcrumb = await getTranslations({ locale, namespace: "seo.breadcrumb" });
 
-  const faqItems = service.pageSections
-
-    .filter((section) => section.key === "faqs")
-
-    .flatMap((section) => (section.data as { items?: { question: string; answer: string }[] }).items ?? []);
+  const faqItems = dedupeFaqItems(
+    service.pageSections
+      .filter((section) => section.key === "faqs")
+      .flatMap(
+        (section) =>
+          (section.data as { items?: { question: string; answer: string }[] }).items ?? [],
+      ),
+  );
 
   const serviceDescription = plainTextFromHtml(
     service.meta_description?.trim() ||
