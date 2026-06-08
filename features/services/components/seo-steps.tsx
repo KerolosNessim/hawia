@@ -162,7 +162,7 @@ export default function SeoSteps({
 
   return (
     <div className="container space-y-8 flex flex-col md:flex-row items-start gap-8">
-      <div className="flex-1">
+      <div className="flex-1 space-y-8">
       <SectionHeader
         titleHtml={steps?.title || undefined}
         title={t("title")}
