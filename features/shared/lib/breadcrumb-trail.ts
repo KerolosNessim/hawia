@@ -44,7 +44,15 @@ export type BreadcrumbTrailItem = {
   label: string;
 };
 
-type BreadcrumbTranslate = (key: "home" | BreadcrumbSegment) => string;
+type BreadcrumbTranslate = (key: "home" | "om" | BreadcrumbSegment) => string;
+
+const COUNTRY_ROUTE_LABEL_KEYS = {
+  om: "om",
+} as const;
+
+function isCountryRouteSegment(segment: string): segment is keyof typeof COUNTRY_ROUTE_LABEL_KEYS {
+  return segment in COUNTRY_ROUTE_LABEL_KEYS;
+}
 
 /** Single resolver for UI breadcrumbs and layout JSON-LD. */
 export function resolveBreadcrumbSegmentLabel(
@@ -53,6 +61,9 @@ export function resolveBreadcrumbSegmentLabel(
 ): string {
   if (segment === "home") return translate("home");
   const normalized = segment.toLowerCase();
+  if (isCountryRouteSegment(normalized)) {
+    return translate(COUNTRY_ROUTE_LABEL_KEYS[normalized]);
+  }
   if (isBreadcrumbSegment(normalized)) return translate(normalized);
   return humanizeSegment(segment);
 }

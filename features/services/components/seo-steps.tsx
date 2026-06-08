@@ -182,7 +182,11 @@ export default function SeoSteps({
               icon={item.icon}
               className={sectionItemCardClassName(tone)}
             >
-              <RichHtml html={item.title} as="p" className="font-bold" />
+              <RichHtml
+                html={item.title}
+                as="h3"
+                className="font-bold [&_p]:mb-0"
+              />
               <RichHtml
                 html={item.description}
                 className={cn(

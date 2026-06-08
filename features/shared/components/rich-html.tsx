@@ -5,6 +5,7 @@ import {
   CMS_RICH_HTML_LAYOUT_CLASSES,
   CMS_RICH_HTML_SCROLL_CLASSES,
 } from "@/features/shared/lib/cms-rich-html-classes";
+import { unwrapOuterHeadingBlock } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { cn } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { useMemo } from "react";
@@ -37,8 +38,12 @@ export function RichHtml({
   const content = useMemo(() => {
     const raw = html?.trim();
     if (!raw) return "";
-    return enhanceCmsHtml(raw, locale);
-  }, [html, locale]);
+    const prepared =
+      Tag === "h2" || Tag === "h3" || Tag === "h4"
+        ? unwrapOuterHeadingBlock(raw)
+        : raw;
+    return enhanceCmsHtml(prepared, locale);
+  }, [html, locale, Tag]);
 
   if (!content && !allowEmpty) return null;
 

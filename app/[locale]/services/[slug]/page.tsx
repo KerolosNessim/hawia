@@ -16,7 +16,13 @@ import { fetchPublicCountriesPrepared } from "@/features/services/services/publi
 
 import { buildServiceMetadata } from "@/features/services/lib/service-metadata";
 
-import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
+import {
+  pickServiceSlug,
+  servicePostPath,
+  servicesIndexPath,
+} from "@/features/services/lib/services-routes";
+import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
+import { withCountryPrefix } from "@/features/shared/lib/country-routes";
 
 import {
 
@@ -167,6 +173,26 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
   const tBreadcrumb = await getTranslations({ locale, namespace: "seo.breadcrumb" });
 
+  const breadcrumbItems: BreadcrumbTrailItem[] = [
+    {
+      href: withCountryPrefix(countryCode, "/"),
+      label: tBreadcrumb("home"),
+    },
+  ];
+  if (countryCode === "OM") {
+    breadcrumbItems.push({ href: "/om", label: tBreadcrumb("om") });
+  }
+  breadcrumbItems.push(
+    {
+      href: servicesIndexPath(1, { countryCode }),
+      label: tBreadcrumb("services"),
+    },
+    {
+      href: servicePostPath(serviceSlug, { countryCode }),
+      label: plainTextFromHtml(heroTitle),
+    },
+  );
+
   const faqItems = dedupeFaqItems(
     service.pageSections
       .filter((section) => section.key === "faqs")
@@ -192,6 +218,9 @@ export default async function ServicePage({ params, searchParams }: Props) {
     areaServed: service.countries,
     breadcrumbs: [
       { name: tBreadcrumb("home"), url: buildCanonicalUrl(locale, "/", countryCode) },
+      ...(countryCode === "OM"
+        ? [{ name: tBreadcrumb("om"), url: buildCanonicalUrl(locale, "/", countryCode) }]
+        : []),
       { name: tBreadcrumb("services"), url: buildCanonicalUrl(locale, "/services", countryCode) },
       { name: plainTextFromHtml(heroTitle), url: serviceAbs },
     ],
@@ -238,6 +267,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
         descriptionHtml={heroSubtitle || undefined}
         image={service.image || "/whySeo.webp"}
         imageAlt={service.image_alt || ""}
+        breadcrumbItems={breadcrumbItems}
       />
 
       {service.description?.trim() && service.pageSections.length === 0 ? (

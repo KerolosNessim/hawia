@@ -42,9 +42,9 @@ export function getApiUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL || "https://howeyah.subcodeco.com/api";
 }
 
-export async function fetchAllSlugs(): Promise<AllSlugsResponse["data"]> {
+export async function fetchAllSlugs(locale: Locale): Promise<AllSlugsResponse["data"]> {
   try {
-    const res = await fetch(`${getApiUrl()}/v1/all-slugs`, {
+    const res = await fetch(`${getApiUrl()}/v1/all-slugs?locale=${encodeURIComponent(locale)}`, {
       cache: "no-store",
       next: { revalidate: 0 },
       headers: { Accept: "application/json" },
@@ -106,7 +106,7 @@ const STATIC_PAGE_PATHS: { path: string; priority: number; changeFrequency: Site
 export async function buildPagesSitemapEntries(locale: Locale): Promise<SitemapEntry[]> {
   const baseUrl = getBaseUrl();
   const now = new Date();
-  const slugData = await fetchAllSlugs();
+  const slugData = await fetchAllSlugs(locale);
   const seen = new Set<string>();
   const entries: SitemapEntry[] = [];
 
@@ -160,7 +160,7 @@ export async function buildPagesSitemapEntries(locale: Locale): Promise<SitemapE
 export async function buildPostsSitemapEntries(locale: Locale): Promise<SitemapEntry[]> {
   const baseUrl = getBaseUrl();
   const now = new Date();
-  const slugData = await fetchAllSlugs();
+  const slugData = await fetchAllSlugs(locale);
   const seen = new Set<string>();
   const entries: SitemapEntry[] = [];
 
