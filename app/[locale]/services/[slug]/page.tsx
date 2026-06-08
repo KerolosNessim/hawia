@@ -1,8 +1,10 @@
 import DependenciesSection from "@/features/home/component/depndnces-sction";
+import ServiceOurPartnersSection from "@/features/services/components/service-our-partners-section";
 import ServicePageScript from "@/features/services/components/service-page-script";
 
 import RelatedServicesSection from "@/features/services/components/related-services-section";
 import ServiceApplicationSeoSection from "@/features/services/components/service-application-seo-section";
+import { shouldShowApplicationSeoForm } from "@/features/services/services/application-seo-api";
 import ServiceArticleTags, {
   resolveServiceArticleTags,
 } from "@/features/services/components/service-article-tags";
@@ -217,7 +219,11 @@ export default async function ServicePage({ params, searchParams }: Props) {
   const relatedServices = (servicesListRes.data ?? []).filter((s) => s.id !== service.id);
   const articleTags = resolveServiceArticleTags(service);
 
-
+  const applicationSeoVisible = await shouldShowApplicationSeoForm(
+    service.id,
+    locale,
+    service.application_seo,
+  );
 
   return (
 
@@ -259,19 +265,26 @@ export default async function ServicePage({ params, searchParams }: Props) {
         </motion.div>
       ) : null}
 
-      <ServicePageSections  service={service} excludeKeys={["articleTags"]} />
-
-      {service.application_seo ? (
-        <ServiceApplicationSeoSection
-          serviceId={service.id}
-          locale={locale}
-          enabled={service.application_seo}
-        />
-      ) : null}
+      <ServicePageSections
+        service={service}
+        excludeKeys={["articleTags"]}
+        insertAfterIndex={applicationSeoVisible ? 0 : undefined}
+        insertion={
+          applicationSeoVisible ? (
+            <ServiceApplicationSeoSection
+              serviceId={service.id}
+              locale={locale}
+              applicationSeo={service.application_seo}
+              embedded
+            />
+          ) : undefined
+        }
+      />
 
       {service.ourAccreditations ? (
         <DependenciesSection accreditation={service.ourAccreditations} />
       ) : null}
+      <ServiceOurPartnersSection partners={service.ourPartners} />
       {service.ourClients ? (
         <DependenciesSection accreditation={service.ourClients} />
       ) : null}

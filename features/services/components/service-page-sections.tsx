@@ -36,6 +36,7 @@ import * as motion from "framer-motion/client";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 type Props = {
   service: SingleService;
@@ -45,6 +46,9 @@ type Props = {
   startIndex?: number;
   /** Visual shell for special pages (e.g. `/ai-services` matches home white/dark bands). */
   surface?: ServicePageSurface;
+  /** Insert a block after the section at this index (0 = after the first section). */
+  insertAfterIndex?: number;
+  insertion?: ReactNode;
 };
 
 function sectionLinkFromData(data: { link?: string | null }): string | undefined {
@@ -201,36 +205,70 @@ function renderSectionInstance(
   }
 }
 
+function sectionShell(
+  key: string,
+  tone: SectionTone,
+  surface: ServicePageSurface,
+  children: ReactNode,
+) {
+  return (
+    <div
+      key={key}
+      className={sectionShellClassName(tone, surface)}
+      {...(surface === "ai-services"
+        ? { "data-page-surface": "ai-services", "data-section-tone": tone }
+        : {})}
+    >
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
+
 export function ServicePageSections({
   service,
   excludeKeys = [],
   startIndex = 0,
   surface = "default",
+  insertAfterIndex,
+  insertion,
 }: Props) {
   const t = useTranslations("singleService");
   const excluded = new Set(excludeKeys);
   const order = getOrderedServicePageSections(service.pageSections).filter(
     (section) => !excluded.has(section.key),
   );
-  return (
-    <>
-      {order.map((section, index) => {
-        const tone = resolveSectionTone(startIndex + index, surface);
-        const blockKey = sectionBlockKey(section);
-        const inner = renderSectionInstance(section, service, t, tone, surface);
-        if (!inner) return null;
-        return (
-          <div
-            key={blockKey}
-            className={sectionShellClassName(tone, surface)}
-            {...(surface === "ai-services"
-              ? { "data-page-surface": "ai-services", "data-section-tone": tone }
-              : {})}
-          >
-            <div className="relative z-10">{inner}</div>
-          </div>
-        );
-      })}
-    </>
-  );
+
+  const nodes: ReactNode[] = [];
+  let bandIndex = 0;
+
+  const pushInsertion = (key: string) => {
+    if (insertion == null || insertAfterIndex == null) return;
+    nodes.push(
+      <div key={key} className="w-full py-16 md:py-20">
+        {insertion}
+      </div>,
+    );
+    bandIndex += 1;
+  };
+
+  if (order.length === 0 && insertion != null && insertAfterIndex === 0) {
+    pushInsertion("section-insertion");
+    return <>{nodes}</>;
+  }
+
+  order.forEach((section, index) => {
+    const tone = resolveSectionTone(startIndex + bandIndex, surface);
+    const blockKey = sectionBlockKey(section);
+    const inner = renderSectionInstance(section, service, t, tone, surface);
+    if (inner) {
+      nodes.push(sectionShell(blockKey, tone, surface, inner));
+      bandIndex += 1;
+    }
+
+    if (insertion != null && insertAfterIndex === index) {
+      pushInsertion(`section-insertion-after-${blockKey}`);
+    }
+  });
+
+  return <>{nodes}</>;
 }

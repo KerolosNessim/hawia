@@ -6,7 +6,7 @@ export type ApplicationSeoFormCopy = {
   submit_button_text: string;
 };
 
-export type ApplicationSeoConfig = {
+export type ApplicationSeoSettings = {
   copy: ApplicationSeoFormCopy;
   serviceIds: number[];
 };

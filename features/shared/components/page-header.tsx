@@ -148,7 +148,7 @@ export default function PageHeader({
       {/* pt: clear fixed navbar; pb: clear breadcrumb bar */}
       <div
         className={cn(
-          "relative z-10 container flex flex-1 flex-col justify-center",
+          "relative z-10 container flex flex-1 flex-col justify-center ",
           "pt-14 pb-11 sm:pt-16 sm:pb-12",
           "md:h-full md:pb-14 md:pt-0",
         )}
@@ -167,7 +167,7 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className={cn("max-w-6xl", titlePlainClass, align === "center" ? "mx-auto" : "")}
+              className={cn( titlePlainClass, align === "center" ? "mx-auto" : "")}
             >
               {headerPlain}
             </motion.h1>

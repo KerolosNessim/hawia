@@ -1,3 +1,4 @@
+import AiToolsLeadFormSection from "@/features/ai-services/components/ai-tools-lead-form-section";
 import ServiceArticleTags, {
   resolveServiceArticleTags,
 } from "@/features/services/components/service-article-tags";
@@ -7,7 +8,8 @@ import type { SingleService } from "@/features/services/types";
 import PageHeader from "@/features/shared/components/page-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
-import { getTranslations } from "next-intl/server";
+import type { Locale } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 
 type Props = {
   service: SingleService;
@@ -15,13 +17,17 @@ type Props = {
   showHero?: boolean;
   /** Continue section tone alternation when multiple services stack on one page. */
   sectionStartIndex?: number;
+  /** Place the AI tools lead form as section 2 (after the first CMS block). */
+  toolsLeadFormAfterFirstSection?: boolean;
 };
 
 export default async function AiServiceDetailView({
   service,
   showHero = true,
   sectionStartIndex = 0,
+  toolsLeadFormAfterFirstSection = false,
 }: Props) {
+  const locale = (await getLocale()) as Locale;
   const t = await getTranslations("singleService");
   const heroTitleHtml = service.singlePageTitle?.trim() || service.title;
   const heroTitle =
@@ -66,6 +72,16 @@ export default async function AiServiceDetailView({
         excludeKeys={["articleTags"]}
         surface="ai-services"
         startIndex={sectionStartIndex}
+        insertAfterIndex={toolsLeadFormAfterFirstSection ? 0 : undefined}
+        insertion={
+          toolsLeadFormAfterFirstSection ? (
+            <AiToolsLeadFormSection
+              locale={locale}
+              serviceId={service.id}
+              embedded={true}
+            />
+          ) : undefined
+        }
       />
 
       {articleTags.length > 0 ? (

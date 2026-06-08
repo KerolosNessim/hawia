@@ -304,6 +304,9 @@ export type SingleService = {
   /** Per-service client logos block from API `our_clients` / `partners`. */
   ourClients?: Accreditation | null;
 
+  /** Per-service partners block from API `our_partners`. */
+  ourPartners?: Accreditation | null;
+
   /** @deprecated Use `pageSections` */
   clientPortfolio?: ServiceClientPortfolio | null;
 

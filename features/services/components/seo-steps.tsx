@@ -161,19 +161,14 @@ export default function SeoSteps({
   }
 
   return (
-    <div className="container space-y-8">
+    <div className="container space-y-8 flex flex-col md:flex-row items-start gap-8">
+      <div className="flex-1">
       <SectionHeader
         titleHtml={steps?.title || undefined}
         title={t("title")}
         subtitleHtml={steps?.description || t("subtitle")}
         subtitleColor={sectionSubtitleColor(tone)}
       />
-      <div
-        className={cn(
-          "flex items-center gap-8",
-          !hasImage && "justify-center",
-        )}
-      >
         <div
           className={cn(
             "grid grid-cols-1 gap-4",
@@ -198,19 +193,21 @@ export default function SeoSteps({
             </ServiceSectionItemCard>
           ))}
         </div>
+      </div>
+
+
         {hasImage && steps.image ? (
-          <div className="shrink-0 max-lg:mx-auto max-lg:w-full max-lg:max-w-md">
+          <div className=" max-lg:mx-auto max-lg:w-full max-lg:max-w-1/2 flex-1">
             <Image
               src={steps.image}
               alt={steps.image_alt ?? ""}
               width={500}
               height={500}
-              className="mask-blob h-auto w-auto max-w-full"
+              className="mask-blob h-auto  max-w-full"
               unoptimized={isRemoteMediaUrl(steps.image)}
             />
           </div>
         ) : null}
       </div>
-    </div>
   );
 }

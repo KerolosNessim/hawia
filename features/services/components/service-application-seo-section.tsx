@@ -1,54 +1,39 @@
 import SeoCheckForm from "@/features/services/components/seo-check-form";
 import {
-  getApplicationSeoConfig,
+  getApplicationSeoSettings,
   isServiceInApplicationSeoScope,
 } from "@/features/services/services/application-seo-api";
-import type { ApplicationSeoFormCopy } from "@/features/services/types/application-seo";
 import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
 
 type Props = {
   serviceId: number;
   locale: Locale;
-  enabled: boolean;
+  /** From `GET /v1/services/{slug}` → `application_seo`. */
+  applicationSeo: boolean;
+  /** When nested inside `ServicePageSections` as section 2. */
+  embedded?: boolean;
 };
 
-function mergeCopyWithFallback(
-  apiCopy: ApplicationSeoFormCopy,
-  fallback: ApplicationSeoFormCopy,
-): ApplicationSeoFormCopy {
-  return {
-    heading: apiCopy.heading || fallback.heading,
-    website_placeholder: apiCopy.website_placeholder || fallback.website_placeholder,
-    email_placeholder: apiCopy.email_placeholder || fallback.email_placeholder,
-    consent_text: apiCopy.consent_text || fallback.consent_text,
-    submit_button_text: apiCopy.submit_button_text || fallback.submit_button_text,
-  };
-}
-
+/**
+ * Shows the SEO form when:
+ * 1. Service has `application_seo: true`
+ * 2. Service `id` is listed in `data.service_ids` from `GET /v1/application-seo`
+ * 3. All form copy fields in `data` are non-null / non-empty for the active locale
+ */
 export default async function ServiceApplicationSeoSection({
   serviceId,
   locale,
-  enabled,
+  applicationSeo,
+  embedded = false,
 }: Props) {
-  if (!enabled) return null;
+  if (!applicationSeo) return null;
 
-  const [config, t] = await Promise.all([
-    getApplicationSeoConfig(locale),
-    getTranslations({ locale, namespace: "singleService.seoCheckForm" }),
-  ]);
-
-  if (!config || !isServiceInApplicationSeoScope(serviceId, config.serviceIds)) {
+  const settings = await getApplicationSeoSettings(locale);
+  if (!settings || !isServiceInApplicationSeoScope(serviceId, settings.serviceIds)) {
     return null;
   }
 
-  const copy = mergeCopyWithFallback(config.copy, {
-    heading: t("title"),
-    website_placeholder: t("websitePlaceholder"),
-    email_placeholder: t("emailPlaceholder"),
-    consent_text: t("agreement"),
-    submit_button_text: t("submit"),
-  });
-
-  return <SeoCheckForm serviceId={serviceId} copy={copy} />;
+  return (
+    <SeoCheckForm serviceId={serviceId} copy={settings.copy} embedded={embedded} />
+  );
 }

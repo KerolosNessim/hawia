@@ -531,6 +531,7 @@ export function normalizeSingleService(
       parseLinkedMediaBlock(raw.our_clients, locale) ??
       parseLinkedMediaBlock(raw.partners, locale) ??
       parseLinkedMediaBlock(raw.clients, locale),
+    ourPartners: parseLinkedMediaBlock(raw.our_partners, locale),
     clientPortfolio:
       firstPageSectionData<ServiceClientPortfolio>(pageSections, "clientPortfolio") ??
       clientPortfolio,
