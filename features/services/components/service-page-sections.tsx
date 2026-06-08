@@ -73,7 +73,7 @@ function renderBenefitsBlock(
         "container",
         hasImage
           ? "flex flex-col items-center gap-10 lg:flex-row lg:items-center"
-          : "flex flex-col items-center text-center",
+          : "flex flex-col items-center",
       )}
     >
       <motion.div
@@ -85,9 +85,15 @@ function renderBenefitsBlock(
       >
         <RichHtml
           html={benefits.title || fallbackTitle}
-          className="mb-5 text-3xl font-bold text-brand [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h2]:text-3xl [&_h3]:!text-brand [&_h3]:text-2xl [&_p]:mb-0 [&_strong]:font-bold"
+          className={cn(
+            "mb-5 text-3xl font-bold text-brand [&_*]:!text-inherit [&_h1]:!text-brand [&_h2]:!text-brand [&_h2]:text-3xl [&_h3]:!text-brand [&_h3]:text-2xl [&_p]:mb-0 [&_strong]:font-bold",
+            !hasImage && "text-center",
+          )}
         />
-        <RichHtml html={benefits.description} className={bodyTextClass} />
+        <RichHtml
+          html={benefits.description}
+          className={cn(bodyTextClass, !hasImage && "text-start")}
+        />
       </motion.div>
       {hasImage ? (
         <motion.div
