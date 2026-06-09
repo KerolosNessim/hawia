@@ -2,6 +2,7 @@ export type AllSlugsResponse = {
   status: string | boolean;
   message: string;
   data: {
+    meta?: { locale?: string; format?: string };
     blogs?: string[];
     blog_categories?: string[];
     services?: string[];
@@ -15,6 +16,8 @@ export type AllSlugsResponse = {
     generic_categories?: string[];
     why_choose_us?: string[];
     accreditations?: string[];
+    job_openings?: string[];
+    authors?: string[];
   };
 };
 
@@ -23,8 +26,8 @@ import {
   blogPostPath,
   localePath,
 } from "@/features/blogs/lib/blog-routes";
-import { getJobOpeningsPublicByLocale } from "@/features/careers/api/jobsPublicApi";
-import { jobOpeningPath, pickJobOpeningSlug } from "@/features/careers/lib/job-slug";
+import { clientsIndexPath } from "@/features/clients/lib/clients-routes";
+import { jobOpeningPath } from "@/features/careers/lib/job-slug";
 import type { Locale } from "next-intl";
 
 export type SitemapEntry = {
@@ -44,14 +47,14 @@ export function getApiUrl(): string {
 
 export async function fetchAllSlugs(locale: Locale): Promise<AllSlugsResponse["data"]> {
   try {
-    const res = await fetch(`${getApiUrl()}/v1/all-slugs?locale=${encodeURIComponent(locale)}`, {
+    const res = await fetch(`${getApiUrl()}/v1/all-slugs?lang=${encodeURIComponent(locale)}`, {
       cache: "no-store",
       next: { revalidate: 0 },
       headers: { Accept: "application/json" },
     });
     if (res.ok) {
       const json = (await res.json()) as AllSlugsResponse;
-      if (json && json.data) {
+      if (json?.data) {
         return json.data;
       }
     }
@@ -59,29 +62,6 @@ export async function fetchAllSlugs(locale: Locale): Promise<AllSlugsResponse["d
     console.error("Failed to fetch all-slugs for sitemap:", error);
   }
   return {};
-}
-
-async function fetchAuthorSlugs(): Promise<string[]> {
-  try {
-    const res = await fetch(`${getApiUrl()}/v1/authors`, {
-      cache: "no-store",
-      next: { revalidate: 0 },
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return [];
-    const json = (await res.json()) as { data?: unknown };
-    if (!Array.isArray(json.data)) return [];
-    return json.data
-      .map((item) => {
-        if (!item || typeof item !== "object") return "";
-        const slug = (item as { slug?: unknown }).slug;
-        return typeof slug === "string" ? slug.trim() : "";
-      })
-      .filter(Boolean);
-  } catch (error) {
-    console.error("Failed to fetch authors for sitemap:", error);
-    return [];
-  }
 }
 
 const STATIC_PAGE_PATHS: { path: string; priority: number; changeFrequency: SitemapEntry["changeFrequency"] }[] = [
@@ -144,14 +124,17 @@ export async function buildPagesSitemapEntries(locale: Locale): Promise<SitemapE
   addDynamic(slugData.courses, "courses", 0.8, "weekly");
   addDynamic(slugData.solutions, "clients", 0.8, "weekly");
 
-  const openings = await getJobOpeningsPublicByLocale(locale);
-  for (const opening of openings) {
-    const slug = pickJobOpeningSlug(opening, locale);
+  for (const slug of slugData.solution_categories ?? []) {
+    if (!slug) continue;
+    push(clientsIndexPath({ categorySlug: slug }), 0.8, "weekly");
+  }
+
+  for (const slug of slugData.job_openings ?? []) {
     if (!slug) continue;
     push(jobOpeningPath(slug), 0.7, "weekly");
   }
 
-  addDynamic(await fetchAuthorSlugs(), "authors", 0.6, "monthly");
+  addDynamic(slugData.authors, "authors", 0.6, "monthly");
 
   return entries;
 }
