@@ -79,7 +79,15 @@ export function getBreadcrumbTrailItems(
   resolveLabel: (segment: string) => string,
 ): BreadcrumbTrailItem[] | null {
   const { countryCode, pathname: routePath } = parseCountryPath(pathname);
-  const segments = splitPathname(routePath);
+  const isEnglishOman =
+    countryCode === "OM" && (routePath === "/en" || routePath.startsWith("/en/"));
+  const pathForSegments =
+    isEnglishOman && routePath !== "/en"
+      ? routePath.slice(3) || "/"
+      : isEnglishOman
+        ? "/"
+        : routePath;
+  const segments = splitPathname(pathForSegments);
 
   if (segments.length === 0 && countryCode === "SA") {
     return null;
@@ -87,7 +95,10 @@ export function getBreadcrumbTrailItems(
 
   const items: BreadcrumbTrailItem[] = [{ href: "/", label: resolveLabel("home") }];
   if (countryCode === "OM") {
-    items.push({ href: "/om", label: resolveLabel("om") });
+    items.push({
+      href: isEnglishOman ? "/en/om" : "/om",
+      label: resolveLabel("om"),
+    });
   }
 
   let acc = "";

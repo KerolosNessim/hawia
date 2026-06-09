@@ -1,4 +1,5 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
+import type { CountryRouteCode } from "@/features/shared/lib/country-routes";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
 import {
@@ -14,6 +15,7 @@ import { pickServiceSlug } from "./services-routes";
 export async function buildServiceMetadata(
   service: SingleService,
   locale: Locale,
+  countryCode: CountryRouteCode = "SA",
 ): Promise<Metadata> {
   const og = service.social?.open_graph;
   const tw = service.social?.twitter;
@@ -29,12 +31,22 @@ export async function buildServiceMetadata(
   const description = plainTextFromHtml(descriptionRaw).slice(0, 160);
 
   const slug = pickServiceSlug(service, locale);
-  const canonicalPath = localePath(locale, `/services/${encodeURIComponent(slug)}`);
+  const canonicalPath = localePath(
+    locale,
+    `/services/${encodeURIComponent(slug)}`,
+    countryCode,
+  );
   const canonical = await getAbsoluteUrl(canonicalPath);
-  const localePaths = localePathsForSlug("/services", service.slug_local, service.slug);
+  const localePaths = localePathsForSlug(
+    "/services",
+    service.slug_local,
+    service.slug,
+    countryCode,
+  );
   const languages = await buildHreflangLanguages({
     logicalPath: `/services/${encodeURIComponent(slug)}`,
     localePaths,
+    countryCode,
   });
 
   const image = og?.image || tw?.image || service.image;

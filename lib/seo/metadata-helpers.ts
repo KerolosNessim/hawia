@@ -1,5 +1,9 @@
 import { localePath } from "@/features/blogs/lib/blog-routes";
-import type { CountryRouteCode } from "@/features/shared/lib/country-routes";
+import {
+  parseCountryPath,
+  stripLocalePrefixFromPath,
+  type CountryRouteCode,
+} from "@/features/shared/lib/country-routes";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
@@ -22,6 +26,8 @@ export type HreflangInput = {
   localePaths?: LocalePathsMap;
   /** Query string (`?page=2`) appended to every alternate URL. */
   query?: string;
+  /** Route country (`/om/...` when `OM`). */
+  countryCode?: CountryRouteCode;
 };
 
 /** Resolves an absolute URL for the current request (canonical, Open Graph, etc.). */
@@ -43,16 +49,7 @@ export function splitPathAndQuery(path: string): { pathname: string; query: stri
 
 /** Strips `/en` prefix for `localePrefix: 'as-needed'` (default locale has no prefix). */
 export function stripLocalePrefix(pathname: string): string {
-  const normalized = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  for (const loc of routing.locales) {
-    if (loc === routing.defaultLocale) continue;
-    const prefix = `/${loc}`;
-    if (normalized === prefix) return "/";
-    if (normalized.startsWith(`${prefix}/`)) {
-      return normalized.slice(prefix.length) || "/";
-    }
-  }
-  return normalized;
+  return stripLocalePrefixFromPath(pathname);
 }
 
 /** Builds locale-specific paths when AR/EN slugs differ. */
@@ -60,6 +57,7 @@ export function localePathsForSlug(
   baseSegment: string,
   slugLocal?: { ar?: string; en?: string } | null,
   fallbackSlug?: string,
+  countryCode: CountryRouteCode = "SA",
 ): LocalePathsMap | undefined {
   const base = baseSegment.replace(/\/$/, "");
   const ar = slugLocal?.ar?.trim();
@@ -70,7 +68,9 @@ export function localePathsForSlug(
   const paths: LocalePathsMap = {};
   for (const loc of routing.locales) {
     const slug = (loc === "ar" ? ar : en) || ar || en || fb;
-    if (slug) paths[loc] = localePath(loc, `${base}/${encodeURIComponent(slug)}`);
+    if (slug) {
+      paths[loc] = localePath(loc, `${base}/${encodeURIComponent(slug)}`, countryCode);
+    }
   }
   return Object.keys(paths).length ? paths : undefined;
 }
@@ -87,14 +87,18 @@ export async function buildHreflangLanguages(
 
   const languages: Record<string, string> = {};
 
+  const countryCode = input.countryCode ?? "SA";
+
   for (const loc of routing.locales) {
-    const path = input.localePaths?.[loc] ?? localePath(loc, logical);
+    const path =
+      input.localePaths?.[loc] ?? localePath(loc, logical, countryCode);
     languages[loc] = await getAbsoluteUrl(`${path}${query}`);
   }
 
   const defaultLocale = routing.defaultLocale as Locale;
   const defaultPath =
-    input.localePaths?.[defaultLocale] ?? localePath(defaultLocale, logical);
+    input.localePaths?.[defaultLocale] ??
+    localePath(defaultLocale, logical, countryCode);
   languages["x-default"] = await getAbsoluteUrl(`${defaultPath}${query}`);
 
   return languages;
@@ -110,6 +114,7 @@ export async function withHreflangAlternates(
     logicalPath: input.logicalPath,
     localePaths: input.localePaths,
     query: input.query ?? (pathQuery || undefined),
+    countryCode: input.countryCode,
   };
   const languages = await buildHreflangLanguages(hreflangInput);
 
@@ -144,6 +149,8 @@ export type BuildPageMetadataInput = {
   pathname: string;
   /** Locale-neutral path when it cannot be derived from `pathname`. */
   logicalPath?: string;
+  /** Route country when `pathname` includes `/om`. */
+  countryCode?: CountryRouteCode;
   localePaths?: LocalePathsMap;
   title: string;
   description?: string | null;
@@ -162,11 +169,16 @@ export async function buildPageMetadata(
 ): Promise<Metadata> {
   const canonical = await getAbsoluteUrl(input.pathname);
   const { pathname: pathOnly, query } = splitPathAndQuery(input.pathname);
-  const logical = input.logicalPath ?? stripLocalePrefix(pathOnly);
+  const { countryCode: routeCountry, pathname: withoutCountry } =
+    parseCountryPath(pathOnly);
+  const countryCode = input.countryCode ?? routeCountry;
+  const logical =
+    input.logicalPath ?? stripLocalePrefixFromPath(withoutCountry);
   const languages = await buildHreflangLanguages({
     logicalPath: logical,
     localePaths: input.localePaths,
     query: query || undefined,
+    countryCode,
   });
 
   const title = input.title.trim() || "Howeyah";

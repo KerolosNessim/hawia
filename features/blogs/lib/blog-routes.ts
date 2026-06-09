@@ -64,7 +64,7 @@ export function blogTagHref(locale: Locale, tag: string, page: number): string {
   return q ? `${base}?${q}` : base;
 }
 
-/** Prefixes pathname with locale and optional Oman route segment (`/om`, `/om/en`, …). */
+/** Prefixes pathname with locale and optional Oman route segment (`/om`, `/en/om`, …). */
 export function localePath(
   locale: Locale,
   pathname: string,
@@ -72,7 +72,9 @@ export function localePath(
 ): string {
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
   const localized =
-    locale === routing.defaultLocale ? path : `/${locale}${path}`;
+    locale === routing.defaultLocale
+      ? path
+      : `/${locale}${path === "/" ? "" : path}`;
   return withCountryPrefix(countryCode, localized);
 }
 

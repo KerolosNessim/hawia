@@ -4,10 +4,15 @@ import { useGetBlogs } from "@/features/blogs/hooks/useGetBlogs";
 import { useJobOpeningsBilingual } from "@/features/careers/hooks/useJobOpeningsBilingual";
 import { useGetServices } from "@/features/services/hooks/useGetServices";
 import { localePath } from "@/features/blogs/lib/blog-routes";
-import { stripCountryFromPathname } from "@/features/shared/lib/country-routes";
+import { resolveCountryIdForRoute } from "@/features/shared/lib/resolve-country-id-for-route";
+import {
+  logicalRoutePathFromUrl,
+  parseCountryPath,
+} from "@/features/shared/lib/country-routes";
 import { resolveLocalizedPathname } from "@/features/shared/lib/resolve-localized-pathname";
 import { useCountryRouteCode } from "@/hooks/use-country";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { useMemo } from "react";
+import { useRouter } from "@/i18n/navigation";
 import type { Locale } from "next-intl";
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
@@ -33,46 +38,65 @@ function syncLocaleCookie(newLocale: string): void {
   document.cookie = `NEXT_LOCALE=${newLocale};path=/;SameSite=Lax`;
 }
 
+function syncCountryCookie(countryCode: "SA" | "OM"): void {
+  document.cookie = `user_country=${countryCode};path=/;SameSite=Lax`;
+}
+
 type LocaleSwitcherProps = {
   triggerClassName?: string;
 };
 
 export default function LocaleSwitcher({ triggerClassName }: LocaleSwitcherProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
-  const { data: servicesResponse } = useGetServices();
-  const services = Array.isArray(servicesResponse?.data) ? servicesResponse.data : [];
+  const countryCode = useCountryRouteCode();
+  const { data: servicesResponse, countriesData } = useGetServices();
+  const omanCountryId = useMemo(
+    () => resolveCountryIdForRoute(countriesData, "OM"),
+    [countriesData],
+  );
+  const { data: omanServicesResponse } = useGetServices(omanCountryId);
+  const services = useMemo(() => {
+    const list =
+      countryCode === "OM"
+        ? omanServicesResponse?.data
+        : servicesResponse?.data;
+    return Array.isArray(list) ? list : [];
+  }, [countryCode, omanServicesResponse?.data, servicesResponse?.data]);
   const { data: blogsResponse } = useGetBlogs();
   const blogs = Array.isArray(blogsResponse?.data) ? blogsResponse.data : [];
   const { data: jobOpeningsBilingual } = useJobOpeningsBilingual();
-  const countryCode = useCountryRouteCode();
-  const logicalPathname = stripCountryFromPathname(pathname);
 
   const handleChange = (newLocale: string) => {
     if (newLocale === locale) return;
 
-    const nextPath = resolveLocalizedPathname(logicalPathname, newLocale, {
-      services,
-      blogs,
-      jobOpenings: jobOpeningsBilingual ?? [],
-    });
+    const browserPath = window.location.pathname;
+    const routeCountry = parseCountryPath(browserPath).countryCode;
+    const logicalPath = logicalRoutePathFromUrl(browserPath);
+
+    const nextPath =
+      resolveLocalizedPathname(logicalPath, newLocale, {
+        services,
+        blogs,
+        jobOpenings: jobOpeningsBilingual ?? [],
+      }) || "/";
+
+    if (routeCountry === "OM") {
+      syncLocaleCookie(newLocale);
+      syncCountryCookie("OM");
+      window.location.href = localePath(newLocale as Locale, nextPath, "OM");
+      return;
+    }
 
     // Service/blog detail pages expose localized slugs via hreflang when list lookup misses.
-    if (nextPath === logicalPathname) {
+    if (nextPath === logicalPath) {
       const alternateUrl = hreflangTarget(newLocale);
       if (alternateUrl) {
         syncLocaleCookie(newLocale);
         window.location.href = alternateUrl;
         return;
       }
-    }
-
-    if (countryCode === "OM") {
-      syncLocaleCookie(newLocale);
-      window.location.href = localePath(newLocale as Locale, nextPath, "OM");
-      return;
     }
 
     startTransition(() => {

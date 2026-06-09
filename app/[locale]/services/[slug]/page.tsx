@@ -75,6 +75,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { locale, slug } = await params;
+  const countryCode = await getServerCountryRouteCode();
 
   const resolved = await resolveServicePage(slug, locale);
 
@@ -86,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Service", robots: { index: false, follow: false } };
   }
 
-  return buildServiceMetadata(resolved.data, locale);
+  return buildServiceMetadata(resolved.data, locale, countryCode);
 
 }
 
