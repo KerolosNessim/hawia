@@ -11,17 +11,42 @@ function normalizeComparableHeading(html: string): string {
 const LEADING_BLOCK_RE =
   /^\s*<(h[1-6]|p|div|strong|span)[^>]*>([\s\S]*?)<\/\1>\s*/i;
 
-/** CMS FAQ questions are often wrapped in h2–h4; unwrap for accordion labels. */
+const TRAILING_EMPTY_PARAGRAPHS_RE =
+  /(?:\s*<p[^>]*>\s*(?:<br\s*\/?>)?\s*<\/p>)+\s*$/i;
+
+/** Heading followed only by empty Lexical `<p>` blocks (common in CMS exports). */
+const HEADING_WITH_TRAILING_EMPTY_RE =
+  /^<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>(?:\s*<p[^>]*>\s*(?:<br\s*\/?>)?\s*<\/p>)*\s*$/i;
+
+/**
+ * CMS titles/questions are often already wrapped in h2–h4 (sometimes with trailing empty `<p>`).
+ * Unwrap before rendering with `RichHtml as="h2|h3|h4"` to avoid nested headings.
+ */
 export function unwrapOuterHeadingBlock(html: string): string {
-  let current = html.trim();
+  let current = stripEmptyFaqMarkup(html.trim());
   if (!current) return current;
 
   let changed = true;
   while (changed) {
     changed = false;
-    const match = current.match(/^<(h[1-6]|p|strong)[^>]*>([\s\S]*?)<\/\1>\s*$/i);
-    if (match) {
-      current = (match[2] ?? "").trim();
+
+    const trailingOnly = current.match(TRAILING_EMPTY_PARAGRAPHS_RE);
+    if (trailingOnly) {
+      current = current.slice(0, trailingOnly.index).trimEnd();
+      changed = true;
+      continue;
+    }
+
+    const headingWithTrailingEmpty = current.match(HEADING_WITH_TRAILING_EMPTY_RE);
+    if (headingWithTrailingEmpty) {
+      current = stripEmptyFaqMarkup((headingWithTrailingEmpty[1] ?? "").trim());
+      changed = true;
+      continue;
+    }
+
+    const fullWrap = current.match(/^<(h[1-6]|p|strong)[^>]*>([\s\S]*?)<\/\1>\s*$/i);
+    if (fullWrap) {
+      current = (fullWrap[2] ?? "").trim();
       changed = true;
     }
   }
@@ -29,15 +54,24 @@ export function unwrapOuterHeadingBlock(html: string): string {
   return current;
 }
 
+/** Removes empty Lexical / CMS blocks that break inline FAQ question text. */
+function stripEmptyFaqMarkup(html: string): string {
+  return html
+    .replace(/<p[^>]*>\s*(?:&nbsp;|\u00a0|<br\s*\/?>)?\s*<\/p>/gi, " ")
+    .replace(/<(span|strong)(?:\s[^>]*)?>\s*(?:&nbsp;|\u00a0)?\s*<\/\1>/gi, " ")
+    .replace(/<span[^>]*>\s*<strong>\s*<span>\s*<span>\s*<\/strong>\s*<\/span>/gi, " ")
+    .replace(/(?:&nbsp;|\u00a0)+$/gi, "");
+}
+
 /**
  * Cleans FAQ question HTML from CMS: drops repeated title blocks, fixes broken tags,
- * and returns plain text for simple one-line questions (accordion labels).
+ * and returns plain text for accordion labels.
  */
 export function sanitizeFaqQuestion(html: string): string {
   const original = html.trim();
   if (!original) return original;
 
-  let q = original;
+  let q = stripEmptyFaqMarkup(original);
   let changed = true;
   while (changed) {
     changed = false;
@@ -52,16 +86,9 @@ export function sanitizeFaqQuestion(html: string): string {
     }
   }
 
-  q = unwrapOuterHeadingBlock(q);
+  q = unwrapOuterHeadingBlock(stripEmptyFaqMarkup(q));
 
-  const plain = plainTextFromHtml(q || original).replace(/\s+/g, " ").trim();
-  if (!plain) return original;
-
-  const hasRichContent =
-    /<(ul|ol|table|h[1-6]|img|iframe|video|blockquote|div)\b/i.test(q);
-  if (!hasRichContent) return plain;
-
-  return q.trim() || plain;
+  return plainTextFromHtml(q || original).replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -163,15 +190,93 @@ export function stripTrailingFaqFromArticleHtml(
   return result;
 }
 
+/** Removes leading h1–h6 blocks whose text matches the FAQ question. */
+export function stripLeadingMatchingHeadings(
+  html: string,
+  question: string,
+): string {
+  const expected = normalizeComparableHeading(question);
+  if (!expected) return html.trim();
+
+  let source = html.trim();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    const match = source.match(/^<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>\s*/i);
+    if (!match) break;
+    const actual = normalizeComparableHeading(match[1] ?? "");
+    if (actual === expected) {
+      source = source.slice(match[0].length).trim();
+      changed = true;
+    }
+  }
+
+  return source;
+}
+
+/** Drops a repeated plain-text question prefix from schema / excerpt text. */
+export function stripQuestionPrefixFromPlainText(
+  text: string,
+  question: string,
+): string {
+  const body = text.trim();
+  const q = question.trim();
+  if (!body || !q) return body;
+
+  if (normalizeComparableHeading(body) === normalizeComparableHeading(q)) {
+    return "";
+  }
+
+  if (body.startsWith(q)) {
+    return body.slice(q.length).replace(/^[\s:،\-–—]+/u, "").trim();
+  }
+
+  return body;
+}
+
+/** Removes embedded FAQ Q&A blocks from a section description when items are rendered separately. */
+export function stripEmbeddedFaqFromSectionDescription(
+  html: string,
+  items: FaqLikeItem[],
+): string {
+  if (!html.trim() || !items.length) return html.trim();
+
+  let result = stripTrailingFaqFromArticleHtml(html, items);
+  for (const item of items) {
+    const q = sanitizeFaqQuestion(item.question);
+    result = stripLeadingMatchingHeadings(result, q);
+    result = stripLeadingDuplicateHeading(result, q);
+  }
+
+  return result.trim();
+}
+
+export function faqDescriptionIsRedundant(
+  description: string | null | undefined,
+  items: FaqLikeItem[],
+): boolean {
+  const desc = plainTextFromHtml(description ?? "").trim();
+  if (!desc) return true;
+
+  return items.some((item) => {
+    const q = sanitizeFaqQuestion(item.question);
+    return q.length > 0 && desc.includes(q);
+  });
+}
+
 /** Normalizes a FAQ pair for display and schema (no repeated question in answer). */
 export function normalizeFaqItem(question: string, answer: string): {
   question: string;
   answer: string;
 } {
   const q = sanitizeFaqQuestion(question.trim());
+  let cleanedAnswer = stripLeadingDuplicateHeading(answer, q).trim();
+  cleanedAnswer = stripLeadingMatchingHeadings(cleanedAnswer, q).trim();
+  cleanedAnswer = stripLeadingDuplicateHeading(cleanedAnswer, q).trim();
+
   return {
     question: q,
-    answer: stripLeadingDuplicateHeading(answer, q).trim(),
+    answer: cleanedAnswer,
   };
 }
 

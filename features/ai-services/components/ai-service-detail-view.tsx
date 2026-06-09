@@ -69,6 +69,7 @@ export default async function AiServiceDetailView({
 
       <ServicePageSections
         service={service}
+        locale={locale}
         excludeKeys={["articleTags"]}
         surface="ai-services"
         startIndex={sectionStartIndex}

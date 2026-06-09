@@ -13,7 +13,8 @@ import {
   resolveBreadcrumbSegmentLabel,
   type BreadcrumbTrailItem,
 } from "@/features/shared/lib/breadcrumb-trail";
-import { Link, usePathname } from "@/i18n/navigation";
+import { CountryLink } from "@/features/shared/components/country-link";
+import { usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -85,7 +86,7 @@ export default function SiteBreadcrumb({
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
               ) : (
                 <BreadcrumbLink asChild>
-                  <Link href={item.href}>{item.label}</Link>
+                  <CountryLink href={item.href}>{item.label}</CountryLink>
                 </BreadcrumbLink>
               )}
             </BreadcrumbItem>,

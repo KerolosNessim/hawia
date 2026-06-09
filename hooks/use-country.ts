@@ -1,19 +1,18 @@
 "use client";
 
-import { parseCountryPath } from "@/features/shared/lib/country-routes";
+import {
+  parseCountryPath,
+  type CountryRouteCode,
+} from "@/features/shared/lib/country-routes";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
 
-export function useCountry() {
+/** Active route country from the URL (`/om/...` → `OM`, otherwise `SA`). */
+export function useCountryRouteCode(): CountryRouteCode {
   const pathname = usePathname();
-  const pathCountry = parseCountryPath(pathname).countryCode;
-  const [country, setCountry] = useState<string>(pathCountry);
+  return parseCountryPath(pathname).countryCode;
+}
 
-  useEffect(() => {
-    const match = document.cookie.match(/(?:^|; )user_country=([^;]*)/);
-    const cookieCountry = match?.[1]?.trim().toUpperCase();
-    setCountry(cookieCountry || pathCountry);
-  }, [pathCountry]);
-
-  return country;
+/** @deprecated Prefer {@link useCountryRouteCode}. */
+export function useCountry() {
+  return useCountryRouteCode();
 }

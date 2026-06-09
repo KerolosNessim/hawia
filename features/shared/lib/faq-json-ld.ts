@@ -1,6 +1,7 @@
 import {
   dedupeFaqItems,
   normalizeFaqItem,
+  stripQuestionPrefixFromPlainText,
 } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 
@@ -51,7 +52,7 @@ export function parseFaqPairsFromRichHtml(faqHtml: string): FaqJsonLdInputItem[]
 export function faqItemToSchemaEntity(item: FaqJsonLdInputItem): JsonLd | null {
   const { question, answer } = normalizeFaqItem(item.question, item.answer);
   const name = plainTextFromHtml(question);
-  const text = plainTextFromHtml(answer);
+  const text = stripQuestionPrefixFromPlainText(plainTextFromHtml(answer), name);
   if (!name || !text) return null;
 
   return {

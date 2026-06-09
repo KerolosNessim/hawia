@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import Image from "next/image";
+import { CountryLink } from "@/features/shared/components/country-link";
 import { Link } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { MapPin, Mail, ArrowLeft, ArrowRight, MessageCircle, Phone } from "lucide-react";
@@ -21,7 +22,7 @@ import {
 } from "@/features/trademark/constants";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { pickServiceDisplayTitle } from "@/features/services/lib/service-display-title";
-import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
+import { pickServiceSlug } from "@/features/services/lib/services-routes";
 
 type FooterOffice = { label: string; address: string };
 type FooterPageLink = { href: string; label: string };
@@ -91,7 +92,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {/* Logo Column */}
           <div className="flex flex-col items-center space-y-6 text-center lg:items-start lg:text-start rtl:lg:items-start">
-            <Link href="/" className="inline-block">
+            <CountryLink href="/" className="inline-block">
               <Image
                 src={settings?.general?.logo || "/logo.webp"}
                 alt={settings?.general?.site_name || "Howeyah Logo"}
@@ -100,7 +101,7 @@ export default function Footer() {
                 className="h-auto w-auto max-w-[160px] ltr:mr-auto rtl:ml-auto"
                 style={{ width: "auto", height: "auto" }}
               />
-            </Link>
+            </CountryLink>
             <RichHtml
               html={settings?.general?.site_description || t("brandDescription")}
               className="mx-auto text-lg leading-snug font-bold whitespace-nowrap text-gray-700 lg:mx-0"
@@ -129,9 +130,13 @@ export default function Footer() {
             ? [1, 2].map((i) => <FooterServicesSkeleton key={i} />)
             : footerCountryColumns.map((country) => (
                 <div key={country.code} className="text-start">
-                  <h3 className="mb-4 inline-block border-b-2 border-brand pb-2 text-xl font-bold text-gray-900">
+                  <CountryLink
+                    href="/"
+                    countryCode={country.code}
+                    className="mb-4 inline-block border-b-2 border-brand pb-2 text-xl font-bold text-gray-900 transition-colors hover:text-brand"
+                  >
                     {country.name}
-                  </h3>
+                  </CountryLink>
                   {country.services.length > 0 ? (
                     <ul className="w-full space-y-4">
                       {country.services.map((service) => (
@@ -143,10 +148,9 @@ export default function Footer() {
                               <ArrowRight className="h-4 w-4 rounded-full bg-brand/10 p-0.5" />
                             )}
                           </span>
-                          <Link
-                            href={servicePostPath(pickServiceSlug(service, locale), {
-                              countryCode: country.code,
-                            })}
+                          <CountryLink
+                            href={`/services/${encodeURIComponent(pickServiceSlug(service, locale))}`}
+                            countryCode={country.code}
                             className="text-start text-sm font-medium text-gray-700 transition-colors hover:text-brand"
                           >
                             {pickServiceDisplayTitle(
@@ -157,7 +161,7 @@ export default function Footer() {
                               },
                               locale,
                             )}
-                          </Link>
+                          </CountryLink>
                         </li>
                       ))}
                     </ul>

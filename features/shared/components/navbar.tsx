@@ -1,6 +1,8 @@
 "use client";
 
+import { CountryLink } from "@/features/shared/components/country-link";
 import { Link } from "@/i18n/navigation";
+import { parseCountryPath } from "@/features/shared/lib/country-routes";
 
 import logo from "@/public/logo.png";
 
@@ -58,8 +60,9 @@ export default function Navbar() {
 
   const t = useTranslations("navbar");
 
-  const { path, links, serviceLinks, tServicesPage } =
+  const { path, countryCode, links, serviceLinks, tServicesPage } =
     useNavbarNavigation();
+  const normalizedPath = parseCountryPath(path).pathname;
 
   const { data: settings } = useSettings();
 
@@ -109,8 +112,9 @@ export default function Navbar() {
 
     >
 
-      <Link
+      <CountryLink
         href="/"
+        countryCode={countryCode}
         className={cn(
           "flex h-full shrink-0 items-center justify-center rounded-full bg-white px-2.5 py-1 sm:px-4 sm:py-1.5 md:px-6 md:py-2",
         )}
@@ -123,7 +127,7 @@ export default function Navbar() {
           className="h-8 w-auto object-contain sm:h-9 md:h-10 lg:h-11"
           priority
         />
-      </Link>
+      </CountryLink>
 
 
 
@@ -157,11 +161,13 @@ export default function Navbar() {
 
           {primaryLinks.map((link) => (
 
-            <Link
+            <CountryLink
 
               key={link.href}
 
               href={link.href}
+
+              countryCode={countryCode}
 
               className={navLinkClassName(
 
@@ -177,7 +183,7 @@ export default function Navbar() {
 
               {link.label}
 
-            </Link>
+            </CountryLink>
 
           ))}
 
@@ -190,7 +196,7 @@ export default function Navbar() {
               <Button
                 className={cn(
                   "group/btn shrink-0 bg-transparent px-2 text-sm font-semibold text-primary 2xl:text-base",
-                  path.startsWith("/services") && NAV_ACTIVE_CLASS,
+                  normalizedPath.startsWith("/services") && NAV_ACTIVE_CLASS,
                 )}
               >
                 {t("services")}
@@ -208,11 +214,13 @@ export default function Navbar() {
 
                 {serviceLinks.map((service) => (
 
-                  <Link
+                  <CountryLink
 
                     key={service.id}
 
                     href={service.href}
+
+                    countryCode={countryCode}
 
                     className={navLinkClassName(
 
@@ -228,15 +236,17 @@ export default function Navbar() {
 
                     {service.label}
 
-                  </Link>
+                  </CountryLink>
 
                 ))}
 
 
 
-                <Link
+                <CountryLink
 
                   href="/services"
+
+                  countryCode={countryCode}
 
                   className={navLinkClassName(
 
@@ -252,30 +262,33 @@ export default function Navbar() {
 
                   {tServicesPage("viewAll")}
 
-                </Link>
+                </CountryLink>
 
               </div>
 
             </HoverCardContent>
 
           </HoverCard>
-          <Link
+          <CountryLink
                   href="/ai-services"
+                  countryCode={countryCode}
                   className={navLinkClassName(
                     path,
                     "/ai-services",
                   )}
                   >
                     {t("aiServices")}
-                </Link>
+                </CountryLink>
 
           {secondaryLinks.map((link) => (
 
-            <Link
+            <CountryLink
 
               key={link.href}
 
               href={link.href}
+
+              countryCode={countryCode}
 
               className={navLinkClassName(
 
@@ -291,7 +304,7 @@ export default function Navbar() {
 
               {link.label}
 
-            </Link>
+            </CountryLink>
 
           ))}
 
@@ -339,9 +352,11 @@ export default function Navbar() {
 
             ) : (
 
-              <Link
+              <CountryLink
 
                 href="/login"
+
+                countryCode={countryCode}
 
                 className={cn(
 
@@ -361,7 +376,7 @@ export default function Navbar() {
 
                 </span>
 
-              </Link>
+              </CountryLink>
 
             )}
 

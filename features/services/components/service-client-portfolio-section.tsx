@@ -12,7 +12,7 @@ import type {
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { Link } from "@/i18n/navigation";
-import { sectionSubtitleColor } from "@/features/services/lib/section-tone";
+import { sectionHeaderProps } from "@/features/services/lib/section-tone";
 import type { SectionTone } from "@/features/services/lib/section-tone";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
@@ -231,8 +231,7 @@ export default function ServiceClientPortfolioSection({
         title={t("title")}
         subtitleHtml={portfolio.subtitle || undefined}
         subtitle={t("subtitle")}
-        subtitleColor={sectionSubtitleColor(tone)}
-        align="start"
+        {...sectionHeaderProps(tone)}
       />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">

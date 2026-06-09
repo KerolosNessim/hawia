@@ -1,6 +1,11 @@
 "use client";
 
+import {
+  sectionHeaderRichClass,
+  type SectionHeaderTone,
+} from "@/features/shared/lib/section-header-tone";
 import { enhanceCmsHtml } from "@/lib/inline-image-alt";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useLocale } from "next-intl";
 import { useMemo } from "react";
@@ -17,6 +22,8 @@ type SectionHeaderProps = {
   align?: "center" | "start";
   subtitleColor?: string;
   titleColor?: string;
+  /** When set, CMS inline colors align with dark/light section shells. */
+  tone?: SectionHeaderTone;
 };
 
 export default function SectionHeader({
@@ -28,10 +35,12 @@ export default function SectionHeader({
   align = "center",
   subtitleColor = "text-gray-300",
   titleColor = "text-brand",
+  tone,
 }: SectionHeaderProps) {
   const locale = useLocale();
   const hasRichTitle = Boolean(titleHtml?.trim());
   const hasRichSubtitle = Boolean(subtitleHtml?.trim());
+  const richClass = sectionHeaderRichClass(tone ?? "light", align);
   const enhancedTitleHtml = useMemo(
     () => (titleHtml?.trim() ? enhanceCmsHtml(titleHtml, locale) : ""),
     [titleHtml, locale],
@@ -41,33 +50,35 @@ export default function SectionHeader({
     [subtitleHtml, locale],
   );
   const alignment = {
-    start: " text-start ",
-    center: " text-center flex-col justify-center ",
+    start: "text-start",
+    center: "text-center",
   };
 
   return (
-    <div className={`container min-w-0 max-w-full space-y-4 ${alignment[align]}`}>
-      {/* Badge */}
-      {badge && (
+    <div className={cn("w-full min-w-0 max-w-full space-y-4", alignment[align])}>
+      {badge ? (
         <motion.span
           initial={{ opacity: 0, y: -10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           viewport={{ once: true }}
-          className="text-sm px-3 py-1 rounded-full bg-primary/10 text-primary font-bold"
+          className="rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary"
         >
           {badge}
         </motion.span>
-      )}
+      ) : null}
 
-      {/* Title */}
       {hasRichTitle ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className={`cms-rich-html text-3xl md:text-4xl ${titleColor} font-bold tracking-tight [&_p]:mb-0 [&_h2]:text-3xl [&_h3]:text-2xl [&_strong]:font-bold`}
+          className={cn(
+            "cms-rich-html text-3xl font-bold tracking-tight md:text-4xl",
+            titleColor,
+            richClass,
+          )}
           dangerouslySetInnerHTML={{ __html: enhancedTitleHtml }}
         />
       ) : title ? (
@@ -76,29 +87,38 @@ export default function SectionHeader({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className={`text-3xl md:text-4xl ${titleColor} font-bold tracking-tight`}
+          className={cn(
+            "text-3xl font-bold tracking-tight md:text-4xl",
+            titleColor,
+          )}
         >
           {title}
         </motion.h2>
       ) : null}
 
-      {/* Animated Line */}
       <motion.div
         initial={{ width: 0 }}
         whileInView={{ width: "80px" }}
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
-        className={`h-[3px] bg-brand rounded-full ${align === "center" ? "mx-auto" : ""}`}
+        className={cn(
+          "h-[3px] rounded-full bg-brand",
+          align === "center" ? "mx-auto" : "ms-0",
+        )}
       />
 
-      {/* Subtitle */}
       {hasRichSubtitle ? (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           viewport={{ once: true }}
-          className={`cms-rich-html max-w-6xl [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:font-semibold [&_a]:text-brand [&_strong]:font-semibold ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
+          className={cn(
+            "cms-rich-html max-w-6xl text-base leading-relaxed md:text-lg",
+            subtitleColor,
+            richClass,
+            align === "center" && "mx-auto",
+          )}
           dangerouslySetInnerHTML={{ __html: enhancedSubtitleHtml }}
         />
       ) : subtitle ? (
@@ -107,7 +127,11 @@ export default function SectionHeader({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
           viewport={{ once: true }}
-          className={`max-w-6xl ${subtitleColor} ${align === "center" ? "mx-auto" : ""}`}
+          className={cn(
+            "max-w-6xl text-base leading-relaxed md:text-lg",
+            subtitleColor,
+            align === "center" && "mx-auto",
+          )}
         >
           {subtitle}
         </motion.p>

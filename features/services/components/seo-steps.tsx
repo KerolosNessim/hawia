@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
-import { sectionItemCardClassName, sectionSubtitleColor } from "../lib/section-tone";
+import { sectionHeaderProps, sectionItemCardClassName } from "../lib/section-tone";
 import type { SectionTone } from "../lib/section-tone";
 import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
 import type { Section, SectionItem } from "../types";
@@ -133,7 +133,7 @@ export default function SeoSteps({
           titleHtml={steps?.title || undefined}
           title={t("title")}
           subtitleHtml={steps?.description || t("subtitle")}
-          subtitleColor={sectionSubtitleColor(tone)}
+          {...sectionHeaderProps(tone)}
         />
         <div className="relative z-10 mt-12 hidden min-h-[400px] items-center justify-between gap-4 lg:flex">
           {displayItems.map((item, index) => (
@@ -161,18 +161,23 @@ export default function SeoSteps({
   }
 
   return (
-    <div className="container space-y-8 flex flex-col md:flex-row items-start gap-8">
-      <div className="flex-1 space-y-8">
+    <div className="container space-y-8">
       <SectionHeader
         titleHtml={steps?.title || undefined}
         title={t("title")}
         subtitleHtml={steps?.description || t("subtitle")}
-        subtitleColor={sectionSubtitleColor(tone)}
+        {...sectionHeaderProps(tone)}
       />
+      <div
+        className={cn(
+          "flex flex-col gap-8",
+          hasImage && "lg:flex-row lg:items-start",
+        )}
+      >
         <div
           className={cn(
-            "grid grid-cols-1 gap-4",
-            hasImage ? "lg:grid-cols-2 flex-1" : "w-full max-w-4xl",
+            "grid w-full grid-cols-1 gap-4",
+            hasImage ? "flex-1 lg:grid-cols-2" : "mx-auto max-w-4xl",
           )}
         >
           {displayItems.map((item: SectionItem, index: number) => (
@@ -197,21 +202,20 @@ export default function SeoSteps({
             </ServiceSectionItemCard>
           ))}
         </div>
-      </div>
-
 
         {hasImage && steps.image ? (
-          <div className=" max-lg:mx-auto max-lg:w-full max-lg:max-w-1/2 flex-1">
+          <div className="mx-auto w-full max-w-md flex-1 lg:max-w-none">
             <Image
               src={steps.image}
               alt={steps.image_alt ?? ""}
               width={500}
               height={500}
-              className="mask-blob h-auto  max-w-full"
+              className="mask-blob h-auto max-w-full"
               unoptimized={isRemoteMediaUrl(steps.image)}
             />
           </div>
         ) : null}
       </div>
+    </div>
   );
 }

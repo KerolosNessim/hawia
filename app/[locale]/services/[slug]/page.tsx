@@ -18,11 +18,9 @@ import { buildServiceMetadata } from "@/features/services/lib/service-metadata";
 
 import {
   pickServiceSlug,
-  servicePostPath,
-  servicesIndexPath,
+  serviceDetailPath,
 } from "@/features/services/lib/services-routes";
 import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
-import { withCountryPrefix } from "@/features/shared/lib/country-routes";
 
 import {
 
@@ -41,14 +39,13 @@ import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-s
 
 import { RichHtml } from "@/features/shared/components/rich-html";
 
-import { dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { buildCanonicalUrl, serializeServicePageSchema } from "@/lib/seo/schema";
 
 import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found";
 
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 
-import { getPathname, redirect } from "@/i18n/navigation";
+import { localePath } from "@/features/blogs/lib/blog-routes";
 
 import * as motion from "framer-motion/client";
 
@@ -102,14 +99,10 @@ function applySlugRedirect(
   countryCode: ReturnType<typeof resolveSupportedCountry>,
   toPath?: string,
 ): never {
-  const href = servicePostPath(toSlug, { countryCode });
-
-  const pathname = getPathname({ locale, href });
+  const targetPath = localePath(locale, serviceDetailPath(toSlug), countryCode);
 
   if (isGoneStatus(status)) {
-
     redirectToNotFound(locale);
-
   }
 
   if (toPath) {
@@ -120,13 +113,10 @@ function applySlugRedirect(
   }
 
   if (isPermanentRedirectStatus(status)) {
-
-    permanentRedirect(pathname);
-
+    permanentRedirect(targetPath);
   }
 
-  redirect({ href, locale });
-
+  nextRedirect(targetPath);
 }
 
 
@@ -137,9 +127,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
   const sp = searchParams ? await searchParams : {};
 
   const locale = (await getLocale()) as Locale;
-  const countryCode = resolveSupportedCountry(
-    (await cookies()).get("user_country")?.value ?? (await getServerCountryRouteCode()),
-  );
+  const countryCode = await getServerCountryRouteCode();
 
   const t = await getTranslations("singleService");
 
@@ -174,33 +162,13 @@ export default async function ServicePage({ params, searchParams }: Props) {
   const tBreadcrumb = await getTranslations({ locale, namespace: "seo.breadcrumb" });
 
   const breadcrumbItems: BreadcrumbTrailItem[] = [
+    { href: "/", label: tBreadcrumb("home") },
+    { href: "/services", label: tBreadcrumb("services") },
     {
-      href: withCountryPrefix(countryCode, "/"),
-      label: tBreadcrumb("home"),
-    },
-  ];
-  if (countryCode === "OM") {
-    breadcrumbItems.push({ href: "/om", label: tBreadcrumb("om") });
-  }
-  breadcrumbItems.push(
-    {
-      href: servicesIndexPath(1, { countryCode }),
-      label: tBreadcrumb("services"),
-    },
-    {
-      href: servicePostPath(serviceSlug, { countryCode }),
+      href: serviceDetailPath(serviceSlug),
       label: plainTextFromHtml(heroTitle),
     },
-  );
-
-  const faqItems = dedupeFaqItems(
-    service.pageSections
-      .filter((section) => section.key === "faqs")
-      .flatMap(
-        (section) =>
-          (section.data as { items?: { question: string; answer: string }[] }).items ?? [],
-      ),
-  );
+  ];
 
   const serviceDescription = plainTextFromHtml(
     service.meta_description?.trim() ||
@@ -224,13 +192,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
       { name: tBreadcrumb("services"), url: buildCanonicalUrl(locale, "/services", countryCode) },
       { name: plainTextFromHtml(heroTitle), url: serviceAbs },
     ],
-    faqItems: faqItems.length
-      ? faqItems.map((item) => ({ question: item.question, answer: item.answer }))
-      : undefined,
-    faqName:
-      faqItems.length > 0
-        ? plainTextFromHtml(service.faqs?.title ?? "") || plainTextFromHtml(service.title)
-        : undefined,
+    // FAQ structured data: microdata in `SeoFaq` / `FaqDetailsList` (avoid duplicating in JSON-LD).
   });
 
   const cookieStore = await cookies();
@@ -297,6 +259,7 @@ export default async function ServicePage({ params, searchParams }: Props) {
 
       <ServicePageSections
         service={service}
+        locale={locale}
         excludeKeys={["articleTags"]}
         insertAfterIndex={applicationSeoVisible ? 0 : undefined}
         insertion={

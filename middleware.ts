@@ -2,6 +2,7 @@ import createMiddleware from 'next-intl/middleware';
 import { localePath } from '@/features/blogs/lib/blog-routes';
 import { routing } from './i18n/routing';
 import type { Locale } from 'next-intl';
+import { promoteDefaultLocaleRedirectToPermanent } from '@/lib/i18n-locale-redirect';
 import { applySecurityHeaders } from '@/lib/security-headers';
 import {
   parseCountryPath,
@@ -100,15 +101,15 @@ export default async function middleware(req: NextRequest) {
 
   const { countryCode: urlCountry, pathname: pathWithoutCountry } = parseCountryPath(pathname);
 
-  const detectedCountry = resolveSupportedCountry(
-    req.headers.get('x-vercel-ip-country') ||
-    req.headers.get('cf-ipcountry') ||
-    req.cookies.get('user_country')?.value,
+  const geoCountry = resolveSupportedCountry(
+    req.headers.get('x-vercel-ip-country') ??
+    req.headers.get('cf-ipcountry') ??
+    undefined,
   );
   const effectiveCountry = urlCountry;
 
-  // Oman visitors use `/om` URLs (e.g. `/om`, `/om/services`, `/om/en`).
-  if (detectedCountry === "OM" && urlCountry === "SA") {
+  // First-time Oman geo visitors only — never trap users who chose SA URLs via cookie.
+  if (geoCountry === "OM" && urlCountry === "SA" && !req.cookies.get('user_country')) {
     const omanPath = withCountryPrefix("OM", pathname);
     if (omanPath !== pathname) {
       const redirectUrl = new URL(omanPath, req.url);
@@ -119,7 +120,7 @@ export default async function middleware(req: NextRequest) {
 
   const pathParts = pathWithoutCountry.split('/');
   const localeSegment = pathParts[1];
-  const hasLocalePrefix = routing.locales.includes(localeSegment as Locale);
+  const hasLocalePrefix = (routing.locales as readonly string[]).includes(localeSegment);
   const currentLocale = (hasLocalePrefix ? localeSegment : routing.defaultLocale) as Locale;
   const actualPath = hasLocalePrefix
     ? `/${pathParts.slice(2).join('/')}` || '/'
@@ -148,12 +149,19 @@ export default async function middleware(req: NextRequest) {
     return applySecurityHeaders(NextResponse.redirect(homeUrl));
   }
 
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-country-route', effectiveCountry);
+
   const intlRequest =
     urlCountry === "OM"
-      ? new NextRequest(new URL(pathWithoutCountry + req.nextUrl.search, req.url), req)
-      : req;
+      ? new NextRequest(new URL(pathWithoutCountry + req.nextUrl.search, req.url), {
+          headers: requestHeaders,
+        })
+      : new NextRequest(req.url, { headers: requestHeaders });
 
-  const response = applySecurityHeaders(intlMiddleware(intlRequest));
+  let response = intlMiddleware(intlRequest);
+  response = promoteDefaultLocaleRedirectToPermanent(intlRequest, response);
+  response = applySecurityHeaders(response);
 
   response.cookies.set('user_country', effectiveCountry, {
     path: '/',

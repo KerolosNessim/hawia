@@ -69,6 +69,15 @@ function countryMatchesAliases(country: Country, aliases: string[]): boolean {
   return aliases.some((alias) => text.includes(normalizeText(alias)));
 }
 
+/** Maps a single API country record to `SA` or `OM` without geo fallbacks. */
+export function resolveCountryRouteCodeFromCountry(
+  country: Country,
+): "SA" | "OM" | null {
+  if (countryMatchesAliases(country, COUNTRY_CODE_ALIASES.OM)) return "OM";
+  if (countryMatchesAliases(country, COUNTRY_CODE_ALIASES.SA)) return "SA";
+  return null;
+}
+
 /** Picks a default country tab from geo cookie code and API country names. */
 export function matchCountryByUserCode(
   countries: Country[],

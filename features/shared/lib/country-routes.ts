@@ -1,4 +1,4 @@
-import { matchCountryByUserCode } from "@/features/services/lib/country-match";
+import { resolveCountryRouteCodeFromCountry } from "@/features/services/lib/country-match";
 import type { Country } from "@/features/services/types";
 
 export type CountryRouteCode = "SA" | "OM";
@@ -28,6 +28,11 @@ export function parseCountryPath(pathname: string): {
   return { countryCode: "SA", pathname: normalized };
 }
 
+/** Locale-neutral path for next-intl (`/services`, not `/om/services`). */
+export function stripCountryFromPathname(pathname: string): string {
+  return parseCountryPath(pathname).pathname;
+}
+
 /** Prepends `/om` when the route targets Oman (`/om`, `/om/en`, `/om/services`, …). */
 export function withCountryPrefix(
   countryCode: CountryRouteCode,
@@ -44,9 +49,7 @@ export function withCountryPrefix(
 export function countryRouteCodeFromApiCountry(
   country: Country,
 ): CountryRouteCode | null {
-  if (matchCountryByUserCode([country], "OM")?.id === country.id) return "OM";
-  if (matchCountryByUserCode([country], "SA")?.id === country.id) return "SA";
-  return null;
+  return resolveCountryRouteCodeFromCountry(country);
 }
 
 export function countryRouteCodeFromId(

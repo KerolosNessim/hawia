@@ -8,13 +8,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import SectionHeader from "@/features/shared/components/section-header";
-import { Link } from "@/i18n/navigation";
+import { CountryLink } from "@/features/shared/components/country-link";
 import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
 import { useCountry } from "@/hooks/use-country";
 import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
-import { servicesIndexPath } from "../lib/services-routes";
 import type { Service } from "../types";
 import ServicesCard from "./services-card";
 
@@ -91,12 +90,13 @@ export default function RelatedServicesSection({
       </motion.div>
 
       <div className="flex justify-center pt-4">
-        <Link
-          href={servicesIndexPath(1, { countryCode })}
+        <CountryLink
+          href="/services"
+          countryCode={countryCode}
           className="rounded-full border-2 border-brand bg-brand/5 px-8 py-3 text-sm font-bold text-brand transition hover:bg-brand hover:text-white"
         >
           {tPage("viewAll")}
-        </Link>
+        </CountryLink>
       </div>
     </section>
   );

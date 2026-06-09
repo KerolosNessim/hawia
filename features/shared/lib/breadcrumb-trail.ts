@@ -1,4 +1,5 @@
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
+import { parseCountryPath } from "@/features/shared/lib/country-routes";
 
 export const BREADCRUMB_SEGMENTS = [
   "about",
@@ -77,13 +78,17 @@ export function getBreadcrumbTrailItems(
   pathname: string,
   resolveLabel: (segment: string) => string,
 ): BreadcrumbTrailItem[] | null {
-  const segments = splitPathname(pathname);
+  const { countryCode, pathname: routePath } = parseCountryPath(pathname);
+  const segments = splitPathname(routePath);
 
-  if (segments.length === 0) {
+  if (segments.length === 0 && countryCode === "SA") {
     return null;
   }
 
   const items: BreadcrumbTrailItem[] = [{ href: "/", label: resolveLabel("home") }];
+  if (countryCode === "OM") {
+    items.push({ href: "/om", label: resolveLabel("om") });
+  }
 
   let acc = "";
   for (const segment of segments) {

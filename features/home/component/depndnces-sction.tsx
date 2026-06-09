@@ -5,9 +5,9 @@ import Marquee from "react-fast-marquee";
 import Image from "next/image";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { pickImageAlt } from "@/lib/image-alt";
-import { Link } from "@/i18n/navigation";
+import { CountryLink } from "@/features/shared/components/country-link";
 import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
-import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
+import { pickServiceSlug, serviceDetailPath } from "@/features/services/lib/services-routes";
 import { useCountry } from "@/hooks/use-country";
 import { pickLocalizedField } from "@/features/services/lib/pick-localized-field";
 
@@ -65,14 +65,15 @@ export default function DependenciesSection({ accreditation }: { accreditation?:
     );
 
     return serviceSlug ? (
-      <Link
+      <CountryLink
         key={index}
-        href={servicePostPath(serviceSlug, { countryCode })}
+        href={serviceDetailPath(serviceSlug)}
+        countryCode={countryCode}
         aria-label={serviceTitle}
         className="block"
       >
         {inner}
-      </Link>
+      </CountryLink>
     ) : (
       inner
     );

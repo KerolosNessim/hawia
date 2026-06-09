@@ -21,7 +21,10 @@ export async function getServerCountry(): Promise<string> {
   return cookieCountry?.trim().toUpperCase() || "SA";
 }
 
-/** Supported route country (`SA` or `OM`) from middleware cookie / geo headers. */
+/** Supported route country (`SA` or `OM`) from the request URL (set by middleware). */
 export async function getServerCountryRouteCode(): Promise<CountryRouteCode> {
+  const headersList = await headers();
+  const fromUrl = headersList.get("x-country-route");
+  if (fromUrl?.trim()) return resolveSupportedCountry(fromUrl);
   return resolveSupportedCountry(await getServerCountry());
 }

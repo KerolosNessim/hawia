@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { CareerCardImage } from "@/features/careers/components/career-card-image";
 import { cn } from "@/lib/utils";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import type { JobSection } from "@/features/careers/types/jobs";
@@ -42,14 +43,14 @@ export default function JobsSectionRenderer({ sections }: Props) {
                     <Card
                       key={`${section.id}-${index}-${item.title}`}
                       className={cn(
-                        "overflow-hidden border-border/70",
+                        "gap-0 overflow-hidden border-border/70 py-0",
                         isBenefits
                           ? "shadow-md transition hover:shadow-lg"
                           : "shadow-sm"
                       )}
                     >
                       {image ? (
-                        <img src={image} alt={alt} className="h-40 w-full object-cover" />
+                        <CareerCardImage src={image} alt={alt} />
                       ) : null}
                       <CardContent className="space-y-2 p-5">
                         <h3 className="text-lg font-bold text-foreground">

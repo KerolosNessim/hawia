@@ -5,17 +5,10 @@ function sortOrderValue(item: SectionItem): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/**
- * Offerings / steps cards: show oldest entries first.
- * API + admin often assign `sort_order` 1 to the newest card, so ascending
- * alone puts 8 before 3; reversing fixes public display without re-saving CMS data.
- */
+/** Offerings / steps cards: ascending `sort_order` (1, 2, 3…). */
 export function orderSectionItemsForDisplay(
   items: SectionItem[] | null | undefined,
 ): SectionItem[] {
   if (!items?.length) return [];
-  const bySortOrder = [...items].sort(
-    (a, b) => sortOrderValue(a) - sortOrderValue(b),
-  );
-  return bySortOrder.reverse();
+  return [...items].sort((a, b) => sortOrderValue(a) - sortOrderValue(b));
 }

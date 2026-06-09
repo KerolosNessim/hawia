@@ -1,3 +1,4 @@
+import { dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
 import type {
   Benefits,
   Cta,
@@ -29,6 +30,31 @@ function resolveSortOrder(
   fallback: number,
 ): number {
   return sortOrder != null && sortOrder > 0 ? sortOrder : fallback;
+}
+
+/** CMS may return multiple `faqs` blocks with the same items — render once. */
+function mergeFaqBlocks(faqs: Faqs[]): Faqs[] {
+  if (faqs.length <= 1) return faqs;
+
+  const items = dedupeFaqItems(faqs.flatMap((block) => block.items ?? []));
+  if (!items.length) return faqs.slice(0, 1);
+
+  const primary =
+    faqs.find((block) => block.title?.trim()) ??
+    faqs.find((block) => block.description?.trim()) ??
+    faqs[0];
+  const sortOrders = faqs
+    .map((block) => block.sort_order)
+    .filter((value): value is number => value != null && value > 0);
+
+  return [
+    {
+      ...primary,
+      items,
+      sort_order:
+        sortOrders.length > 0 ? Math.min(...sortOrders) : primary.sort_order,
+    },
+  ];
 }
 
 export function buildPageSections(input: {
@@ -92,7 +118,7 @@ export function buildPageSections(input: {
     });
   }
 
-  input.faqs.forEach((data, index) => {
+  mergeFaqBlocks(input.faqs).forEach((data, index) => {
     blocks.push({
       key: "faqs",
       index,

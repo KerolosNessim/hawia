@@ -11,7 +11,7 @@ import {
   pickJobOpeningSlug,
 } from "@/features/careers/lib/job-slug";
 import type { JobOpening } from "@/features/careers/types/jobs";
-import { pickServiceSlug, servicePostPath } from "@/features/services/lib/services-routes";
+import { pickServiceSlug, serviceDetailPath } from "@/features/services/lib/services-routes";
 import type { Service } from "@/features/services/types";
 import { decodePathSegment } from "@/features/shared/lib/decode-path-segment";
 
@@ -52,7 +52,7 @@ export function resolveLocalizedPathname(
     const service = findServiceBySlug(options.services, servicesMatch[1]);
     if (service) {
       const nextSlug = pickServiceSlug(service, nextLocale);
-      if (nextSlug) return servicePostPath(nextSlug);
+      if (nextSlug) return serviceDetailPath(nextSlug);
     }
   }
 

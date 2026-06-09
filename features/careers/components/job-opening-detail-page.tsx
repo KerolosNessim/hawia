@@ -23,7 +23,7 @@ export default function JobOpeningDetailPage({ opening }: Props) {
   const title = plainTextFromHtml(opening.title);
 
   return (
-    <div className="container space-y-8 py-12">
+    <div className="container space-y-8 py-12 lg:pt-30 pt-20">
       <Button variant="ghost" asChild className="gap-2 rounded-full">
         <Link href="/careers">
           {isAr ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}

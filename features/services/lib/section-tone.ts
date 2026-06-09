@@ -47,6 +47,8 @@ export function sectionSubtitleColor(tone: SectionTone): string {
   return tone === "dark" ? "text-gray-300" : "text-muted-foreground";
 }
 
+export { sectionHeaderProps } from "@/features/shared/lib/section-header-tone";
+
 export function sectionItemCardClassName(tone: SectionTone): string {
   return tone === "dark"
     ? "rounded-xl border border-brand bg-gray-800/80 p-4 text-white"

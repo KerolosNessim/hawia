@@ -4,8 +4,9 @@ import { useGetServices } from "@/features/services/hooks/useGetServices";
 import { filterServicesByCountryCode } from "@/features/services/lib/filter-services-by-country";
 import { pickServiceDisplayTitle } from "@/features/services/lib/service-display-title";
 import { pickServiceSlug } from "@/features/services/lib/services-routes";
+import { parseCountryPath } from "@/features/shared/lib/country-routes";
 import { usePathname } from "@/i18n/navigation";
-import { useCountry } from "@/hooks/use-country";
+import { useCountryRouteCode } from "@/hooks/use-country";
 import { useLocale, useTranslations } from "next-intl";
 
 export const NAV_ACTIVE_CLASS = "bg-brand text-white rounded-full";
@@ -17,7 +18,10 @@ export function navLinkClassName(
   href: string,
   extra?: string,
 ): string {
-  const isActive = path === href;
+  const normalizedPath = parseCountryPath(path).pathname;
+  const isActive =
+    normalizedPath === href ||
+    (href !== "/" && normalizedPath.startsWith(`${href}/`));
   return [
     isActive ? NAV_ACTIVE_CLASS : "",
     "rounded-full p-2 font-semibold",
@@ -34,7 +38,8 @@ export function useNavbarNavigation() {
   const tServicesPage = useTranslations("servicesPage");
   const path = usePathname();
   const { data } = useGetServices();
-  const userCountryCode = useCountry();
+  const countryCode = useCountryRouteCode();
+  const userCountryCode = countryCode;
   const allServices = Array.isArray(data?.data) ? data.data : [];
   const services = filterServicesByCountryCode(allServices, userCountryCode);
 
@@ -67,6 +72,7 @@ export function useNavbarNavigation() {
     t,
     tServicesPage,
     path,
+    countryCode,
     links,
     services,
     serviceLinks,

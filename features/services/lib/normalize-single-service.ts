@@ -1,6 +1,11 @@
 import { normalizePublicBlogTags } from "@/features/blogs/lib/blog-tag";
 import { resolveMediaUrl } from "@/features/blogs/lib/resolve-media-url";
-import { normalizeFaqItem, stripLeadingDuplicateHeading, dedupeFaqItems } from "@/features/shared/lib/strip-leading-duplicate-heading";
+import {
+  dedupeFaqItems,
+  normalizeFaqItem,
+  stripEmbeddedFaqFromSectionDescription,
+  stripLeadingDuplicateHeading,
+} from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { pickImageAlt } from "@/lib/image-alt";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 import { pickLocalizedField, pickSlugLocal } from "./pick-localized-field";
@@ -335,13 +340,16 @@ function parseFaqsBlock(o: Record<string, unknown>, locale: string): Faqs {
     : [];
   const faqsSort = Number(o.sort_order);
   const title = pickLocalizedField(o.title, locale);
+  const descriptionWithoutTitle = stripLeadingDuplicateHeading(
+    pickLocalizedField(o.description, locale),
+    title,
+  );
   return {
     id: Number(o.id ?? 0),
     title,
-    description: stripLeadingDuplicateHeading(
-      pickLocalizedField(o.description, locale),
-      title,
-    ),
+    description: items.length
+      ? stripEmbeddedFaqFromSectionDescription(descriptionWithoutTitle, items)
+      : descriptionWithoutTitle,
     items: dedupeFaqItems(items),
     sort_order: Number.isFinite(faqsSort) && faqsSort > 0 ? faqsSort : undefined,
     link: pickSectionLink(o),

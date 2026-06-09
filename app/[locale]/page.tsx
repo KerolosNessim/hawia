@@ -26,7 +26,10 @@ import type { Accreditation, Hero } from "@/features/home/types";
 import { getServices } from "@/features/services/services/get-services";
 import { pickServiceSlug } from "@/features/services/lib/services-routes";
 import { getSettings } from "@/features/settings/services/settings-service";
-import { resolveSettingsPageSeo } from "@/features/settings/lib/resolve-settings-seo";
+import {
+  resolveHomePageMeta,
+  resolveSettingsPageSeo,
+} from "@/features/settings/lib/resolve-settings-seo";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
 import { localePathname } from "@/lib/seo/metadata-helpers";
 import { buildPageMetadata } from "@/lib/seo/metadata-helpers";
@@ -59,19 +62,13 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     ]);
     const settings = settingsRes.data;
     const landing = normalizeLandingResponse(landingRes ?? undefined);
-    const settingsSeo = await resolveSettingsPageSeo("home");
-    const title =
-      landing?.hero?.seo?.meta_title?.trim() ||
-      settingsSeo?.title?.trim() ||
-      settings.general.home_meta_title?.trim() ||
-      settings.general.site_name ||
-      "Howeyah";
-    const description =
-      landing?.hero?.seo?.meta_description?.trim() ||
-      settingsSeo?.description?.trim() ||
-      settings.general.home_meta_description?.trim() ||
-      settings.general.site_description?.trim() ||
-      undefined;
+    const settingsSeo = await resolveSettingsPageSeo("home", { countryRouteCode: countryCode });
+    const { title, description } = resolveHomePageMeta({
+      countryRouteCode: countryCode,
+      settingsSeo,
+      landingHeroSeo: landing?.hero?.seo,
+      general: settings.general,
+    });
 
     return buildPageMetadata({
       locale: loc,
@@ -143,19 +140,15 @@ export default async function Home({ searchParams }: PageProps) {
   let homeDescription = tSeo("organizationDescription");
   try {
     const settingsRes = await getSettings();
-    const homeSeo = await resolveSettingsPageSeo("home");
-    homeTitle =
-      hero?.seo?.meta_title?.trim() ||
-      homeSeo?.title?.trim() ||
-      settingsRes.data.general.home_meta_title?.trim() ||
-      settingsRes.data.general.site_name ||
-      homeTitle;
-    homeDescription =
-      hero?.seo?.meta_description?.trim() ||
-      homeSeo?.description?.trim() ||
-      settingsRes.data.general.home_meta_description?.trim() ||
-      settingsRes.data.general.site_description?.trim() ||
-      homeDescription;
+    const homeSeo = await resolveSettingsPageSeo("home", { countryRouteCode: countryCode });
+    const homeMeta = resolveHomePageMeta({
+      countryRouteCode: countryCode,
+      settingsSeo: homeSeo,
+      landingHeroSeo: hero?.seo,
+      general: settingsRes.data.general,
+    });
+    homeTitle = homeMeta.title;
+    homeDescription = homeMeta.description || homeDescription;
   } catch {
     // use defaults
   }
@@ -206,7 +199,7 @@ export default async function Home({ searchParams }: PageProps) {
       <PackagesSection countryId={homeCountryId} />
       <ArticlesSection items={latestBlogs} />
       {promoBanners ? <PromoBannersSlider {...promoBanners} /> : null}
-      <ContactSection />
+      <ContactSection countryId={homeCountryId} />
     </main>
   );
 }

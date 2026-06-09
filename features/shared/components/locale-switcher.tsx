@@ -3,8 +3,12 @@
 import { useGetBlogs } from "@/features/blogs/hooks/useGetBlogs";
 import { useJobOpeningsBilingual } from "@/features/careers/hooks/useJobOpeningsBilingual";
 import { useGetServices } from "@/features/services/hooks/useGetServices";
+import { localePath } from "@/features/blogs/lib/blog-routes";
+import { stripCountryFromPathname } from "@/features/shared/lib/country-routes";
 import { resolveLocalizedPathname } from "@/features/shared/lib/resolve-localized-pathname";
+import { useCountryRouteCode } from "@/hooks/use-country";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import type { Locale } from "next-intl";
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
 import ReactCountryFlag from "react-country-flag";
@@ -43,24 +47,32 @@ export default function LocaleSwitcher({ triggerClassName }: LocaleSwitcherProps
   const { data: blogsResponse } = useGetBlogs();
   const blogs = Array.isArray(blogsResponse?.data) ? blogsResponse.data : [];
   const { data: jobOpeningsBilingual } = useJobOpeningsBilingual();
+  const countryCode = useCountryRouteCode();
+  const logicalPathname = stripCountryFromPathname(pathname);
 
   const handleChange = (newLocale: string) => {
     if (newLocale === locale) return;
 
-    const nextPath = resolveLocalizedPathname(pathname, newLocale, {
+    const nextPath = resolveLocalizedPathname(logicalPathname, newLocale, {
       services,
       blogs,
       jobOpenings: jobOpeningsBilingual ?? [],
     });
 
     // Service/blog detail pages expose localized slugs via hreflang when list lookup misses.
-    if (nextPath === pathname) {
+    if (nextPath === logicalPathname) {
       const alternateUrl = hreflangTarget(newLocale);
       if (alternateUrl) {
         syncLocaleCookie(newLocale);
         window.location.href = alternateUrl;
         return;
       }
+    }
+
+    if (countryCode === "OM") {
+      syncLocaleCookie(newLocale);
+      window.location.href = localePath(newLocale as Locale, nextPath, "OM");
+      return;
     }
 
     startTransition(() => {

@@ -1,10 +1,14 @@
 "use client";
 
+import { localePath } from "@/features/blogs/lib/blog-routes";
+import { CountryLink } from "@/features/shared/components/country-link";
 import SectionHeader from "@/features/shared/components/section-header";
-import { Link } from "@/i18n/navigation";
-import { resolveSupportedCountry } from "@/features/shared/lib/country-routes";
+import {
+  countryRouteCodeFromId,
+  resolveSupportedCountry,
+} from "@/features/shared/lib/country-routes";
 import { useCountry } from "@/hooks/use-country";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { matchCountryByUserCode } from "../lib/country-match";
 import { countryIdsMatch } from "../lib/dedupe-countries";
@@ -14,6 +18,7 @@ import { ServicesGrid } from "./services-grid";
 import { cn } from "@/lib/utils";
 
 export default function ServicesSection({ countryId ,lightBg = false}: { countryId?: number,lightBg?: boolean }) {
+  const locale = useLocale();
   const t = useTranslations("servicesSection");
   const tPage = useTranslations("servicesPage");
   const {
@@ -78,25 +83,28 @@ export default function ServicesSection({ countryId ,lightBg = false}: { country
           subtitleColor="text-gray-500"
         />
 
-        {countryId == null &&
-        countriesData.length > 0 &&
-        selectedCountry != null ? (
+        {countriesData.length > 0 && selectedCountry != null ? (
           <ServicesCountryFilter
             countries={countriesData}
             selectedCountryId={selectedCountry}
-            onSelectCountry={setAutoSelectedCountry}
+            onSelectCountry={(id) => {
+              const code = countryRouteCodeFromId(countriesData, id);
+              document.cookie = `user_country=${code};path=/;SameSite=Lax`;
+              window.location.assign(localePath(locale, "/", code));
+            }}
           />
         ) : null}
 
         <ServicesGrid services={filteredServices} countryCode={countryCode} titleDark={lightBg} />
 
         <div className="flex justify-center pt-4">
-          <Link
+          <CountryLink
             href="/services"
+            countryCode={countryCode}
             className="rounded-full border-2 border-brand bg-brand/5 px-8 py-3 text-sm font-bold text-brand transition hover:bg-brand hover:text-white"
           >
             {tPage("viewAll")}
-          </Link>
+          </CountryLink>
         </div>
       </div>
     </section>

@@ -12,7 +12,7 @@ import { PackageImage } from "@/features/packages/components/public-package-card
 import SectionHeader from "@/features/shared/components/section-header";
 import { RichHtml } from "@/features/shared/components/rich-html";
 import { SectionLinkShell } from "@/features/services/components/section-link-shell";
-import { sectionSubtitleColor } from "@/features/services/lib/section-tone";
+import { sectionHeaderProps } from "@/features/services/lib/section-tone";
 import type { SectionTone } from "@/features/services/lib/section-tone";
 import type { ServicePackageItem, ServicePackagesSection } from "@/features/services/types";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
@@ -149,7 +149,7 @@ export default function SeoPackages({
           titleHtml={sectionTitleHtml}
           title={t("title")}
           subtitleHtml={packages.description}
-          subtitleColor={sectionSubtitleColor(tone)}
+          {...sectionHeaderProps(tone)}
         />
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">

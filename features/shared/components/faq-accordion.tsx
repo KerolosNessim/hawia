@@ -7,7 +7,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { RichHtml } from "@/features/shared/components/rich-html";
-import { normalizeFaqItem } from "@/features/shared/lib/strip-leading-duplicate-heading";
+import {
+  normalizeFaqItem,
+  sanitizeFaqQuestion,
+} from "@/features/shared/lib/strip-leading-duplicate-heading";
 import { cn } from "@/lib/utils";
 
 export type FaqAccordionItem = {
@@ -37,11 +40,12 @@ function FaqAccordionColumn({
         const value =
           item.id != null ? `${valuePrefix}-${item.id}` : `${valuePrefix}-${index}`;
         const normalized = normalizeFaqItem(item.question, item.answer);
+        const questionLabel = sanitizeFaqQuestion(normalized.question);
 
         return (
           <AccordionItem key={value} value={value}>
             <AccordionTrigger>
-              {normalized.question}
+              {questionLabel}
             </AccordionTrigger>
             <AccordionContent className={contentClassName}>
               {allowHtml ? (

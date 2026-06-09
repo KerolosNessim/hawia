@@ -1,5 +1,3 @@
-"use client";
-
 import OfferServiceSection from "@/features/services/components/offer-service-section";
 import SeoFaq from "@/features/services/components/seo-faq";
 import SeoPackages from "@/features/services/components/seo-packages";
@@ -32,8 +30,8 @@ import { RichHtml } from "@/features/shared/components/rich-html";
 import { isRemoteMediaUrl } from "@/features/blogs/lib/resolve-media-url";
 import { hasSectionImage } from "@/features/services/lib/has-section-image";
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
-import * as motion from "framer-motion/client";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import type { Locale } from "next-intl";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
@@ -76,13 +74,7 @@ function renderBenefitsBlock(
           : "flex flex-col items-center",
       )}
     >
-      <motion.div
-        className={cn("w-full", hasImage ? "lg:flex-1" : "max-w-4xl")}
-        initial={{ opacity: 0, x: hasImage ? -20 : 0, y: hasImage ? 0 : 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
-      >
+      <div className={cn("w-full", hasImage ? "lg:flex-1" : "max-w-4xl")}>
         <RichHtml
           html={benefits.title || fallbackTitle}
           className={cn(
@@ -92,17 +84,11 @@ function renderBenefitsBlock(
         />
         <RichHtml
           html={benefits.description}
-          className={cn(bodyTextClass, !hasImage && "text-start")}
+          className={cn(bodyTextClass, !hasImage && "text-center")}
         />
-      </motion.div>
+      </div>
       {hasImage ? (
-        <motion.div
-          className="flex w-full flex-1 justify-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-        >
+        <div className="flex w-full flex-1 justify-center">
           <Image
             src={benefits.image}
             alt={benefits.image_alt || plainTextFromHtml(serviceTitle)}
@@ -111,7 +97,7 @@ function renderBenefitsBlock(
             className="mask-blob mx-auto h-auto w-auto drop-shadow-2xl"
             unoptimized={isRemoteMediaUrl(benefits.image)}
           />
-        </motion.div>
+        </div>
       ) : null}
     </div>
   );
@@ -132,7 +118,8 @@ function sectionBlockKey(section: ServicePageSectionInstance): string {
 function renderSectionInstance(
   section: ServicePageSectionInstance,
   service: SingleService,
-  t: ReturnType<typeof useTranslations>,
+  t: Awaited<ReturnType<typeof getTranslations>>,
+  locale: Locale,
   tone: SectionTone,
   surface: ServicePageSurface,
 ) {
@@ -173,7 +160,7 @@ function renderSectionInstance(
     }
     case "faqs": {
       const faq = section.data as Faqs;
-      return <SeoFaq faq={faq} tone={tone} />;
+      return <SeoFaq faq={faq} locale={locale} tone={tone} />;
     }
     case "packages": {
       const packages = section.data as NonNullable<SingleService["packages"]>;
@@ -230,15 +217,16 @@ function sectionShell(
   );
 }
 
-export function ServicePageSections({
+export async function ServicePageSections({
   service,
   excludeKeys = [],
   startIndex = 0,
   surface = "default",
   insertAfterIndex,
   insertion,
-}: Props) {
-  const t = useTranslations("singleService");
+  locale,
+}: Props & { locale: Locale }) {
+  const t = await getTranslations("singleService");
   const excluded = new Set(excludeKeys);
   const order = getOrderedServicePageSections(service.pageSections).filter(
     (section) => !excluded.has(section.key),
@@ -262,10 +250,17 @@ export function ServicePageSections({
     return <>{nodes}</>;
   }
 
+  let faqSectionRendered = false;
+
   order.forEach((section, index) => {
+    if (section.key === "faqs") {
+      if (faqSectionRendered) return;
+      faqSectionRendered = true;
+    }
+
     const tone = resolveSectionTone(startIndex + bandIndex, surface);
     const blockKey = sectionBlockKey(section);
-    const inner = renderSectionInstance(section, service, t, tone, surface);
+    const inner = renderSectionInstance(section, service, t, locale, tone, surface);
     if (inner) {
       nodes.push(sectionShell(blockKey, tone, surface, inner));
       bandIndex += 1;

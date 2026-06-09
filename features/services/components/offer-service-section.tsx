@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import * as motion from "framer-motion/client";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { sectionItemCardClassName, sectionSubtitleColor } from "../lib/section-tone";
+import { sectionHeaderProps, sectionItemCardClassName } from "../lib/section-tone";
 import type { SectionTone } from "../lib/section-tone";
 import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
 import type { Section, SectionItem } from "../types";
@@ -29,7 +29,7 @@ export default function OfferServiceSection({
         titleHtml={offerings?.title || undefined}
         title={t("title")}
         subtitleHtml={offerings?.description || t("subtitle")}
-        subtitleColor={sectionSubtitleColor(tone)}
+        {...sectionHeaderProps(tone)}
       />
       {hasImage && offerings.image ? (
         <div className="flex justify-center">

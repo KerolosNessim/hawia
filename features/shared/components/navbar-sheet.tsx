@@ -22,7 +22,8 @@ import {
   navLinkClassName,
   useNavbarNavigation,
 } from "@/features/shared/hooks/use-navbar-navigation";
-import { Link } from "@/i18n/navigation";
+import { CountryLink } from "@/features/shared/components/country-link";
+import { parseCountryPath } from "@/features/shared/lib/country-routes";
 import logo from "@/public/logo.png";
 import { ChevronDown, LucideUserRound, Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -38,7 +39,9 @@ type NavbarSheetProps = {
 
 export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
   const t = useTranslations("navbar");
-  const { locale, path, links, serviceLinks, tServicesPage } = useNavbarNavigation();
+  const { locale, path, countryCode, links, serviceLinks, tServicesPage } =
+    useNavbarNavigation();
+  const normalizedPath = parseCountryPath(path).pathname;
   const { data: settings } = useSettings();
   const { isAuthenticated } = useAuthStore();
   const { mutate: logout } = useLogoutMutation();
@@ -66,7 +69,7 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
       >
         <SheetHeader className="shrink-0 border-b border-border/40 px-4 py-3">
           <SheetTitle className="sr-only">{t("home")}</SheetTitle>
-          <Link href="/" className="mx-auto block w-fit">
+          <CountryLink href="/" countryCode={countryCode} className="mx-auto block w-fit">
             <Image
               src={settings?.general?.logo || logo}
               alt={settings?.general?.site_name || "logo"}
@@ -75,7 +78,7 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
               className="h-10 w-auto object-contain sm:h-12"
               style={{ width: "auto", height: "auto" }}
             />
-          </Link>
+          </CountryLink>
         </SheetHeader>
 
         <nav
@@ -85,12 +88,13 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
         >
           {links.slice(0, 2).map((link) => (
             <SheetClose asChild key={link.href}>
-              <Link
+              <CountryLink
                 href={link.href}
+                countryCode={countryCode}
                 className={navLinkClassName(path, link.href, "text-center")}
               >
                 {link.label}
-              </Link>
+              </CountryLink>
             </SheetClose>
           ))}
 
@@ -100,7 +104,7 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
                 variant="ghost"
                 className={cn(
                   "group/services h-auto w-full justify-center gap-2 rounded-full py-2 font-semibold",
-                path.startsWith("/services") ? "bg-brand text-white" : "",
+                normalizedPath.startsWith("/services") ? "bg-brand text-white" : "",
                 )}
               >
                 {t("services")}
@@ -110,8 +114,9 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
             <CollapsibleContent className="flex flex-col gap-1 ps-2 pt-1">
               {serviceLinks.map((service) => (
                 <SheetClose asChild key={service.id}>
-                  <Link
+                  <CountryLink
                     href={service.href}
+                    countryCode={countryCode}
                     className={navLinkClassName(
                       path,
                       service.href,
@@ -119,12 +124,13 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
                     )}
                   >
                     {service.label}
-                  </Link>
+                  </CountryLink>
                 </SheetClose>
               ))}
               <SheetClose asChild>
-                <Link
+                <CountryLink
                   href="/services"
+                  countryCode={countryCode}
                   className={navLinkClassName(
                     path,
                     "/services",
@@ -132,28 +138,30 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
                   )}
                 >
                   {tServicesPage("viewAll")}
-                </Link>
+                </CountryLink>
               </SheetClose>
             </CollapsibleContent>
           </Collapsible>
 
           <SheetClose asChild>
-            <Link
+            <CountryLink
               href="/ai-services"
+              countryCode={countryCode}
               className={navLinkClassName(path, "/ai-services", "text-center")}
             >
               {t("aiServices")}
-            </Link>
+            </CountryLink>
           </SheetClose>
 
           {links.slice(2).map((link) => (
             <SheetClose asChild key={link.href}>
-              <Link
+              <CountryLink
                 href={link.href}
+                countryCode={countryCode}
                 className={navLinkClassName(path, link.href, "text-center")}
               >
                 {link.label}
-              </Link>
+              </CountryLink>
             </SheetClose>
           ))}
         </nav>
@@ -176,13 +184,14 @@ export default function NavbarSheet({ actionBtnClass }: NavbarSheetProps) {
             </SheetClose>
           ) : mounted ? (
             <SheetClose asChild>
-              <Link
+              <CountryLink
                 href="/login"
+                countryCode={countryCode}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand font-semibold text-white"
               >
                 <LucideUserRound className="size-5" />
                 {t("login")}
-              </Link>
+              </CountryLink>
             </SheetClose>
           ) : null}
         </SheetFooter>

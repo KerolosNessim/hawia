@@ -16,12 +16,16 @@ export function pickServiceSlug(
   return (local ?? service.slug ?? "").trim();
 }
 
+/** Locale-neutral service detail path for next-intl `Link` / `getPathname`. */
+export function serviceDetailPath(slug: string): string {
+  return `/services/${encodeURIComponent(slug)}`;
+}
+
 export function servicePostPath(
   slug: string,
   opts?: { countryCode?: CountryRouteCode },
 ): string {
-  const base = `/services/${encodeURIComponent(slug)}`;
-  return withCountryPrefix(opts?.countryCode ?? "SA", base);
+  return withCountryPrefix(opts?.countryCode ?? "SA", serviceDetailPath(slug));
 }
 
 export function servicePostHref(

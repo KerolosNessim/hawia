@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLocale } from "next-intl";
 import ApplyJobModal from "@/features/careers/components/apply-job-modal";
+import { CareerCardImage } from "@/features/careers/components/career-card-image";
 import { jobOpeningPath, pickJobOpeningSlug } from "@/features/careers/lib/job-slug";
 import type { JobOpening } from "@/features/careers/types/jobs";
 import { Link } from "@/i18n/navigation";
@@ -44,17 +45,17 @@ export default function JobOpeningsGrid({ openings }: Props) {
             return (
               <Card
                 key={opening.id}
-                className="overflow-hidden border-border/70 shadow-sm transition hover:shadow-md"
+                className="gap-0 overflow-hidden border-border/70 py-0 shadow-sm transition hover:shadow-md"
               >
                 <Link href={detailHref} className="block">
                   {opening.media.image ? (
-                    <img
+                    <CareerCardImage
                       src={opening.media.image}
                       alt={opening.media.image_alt || title}
-                      className="h-44 w-full object-cover transition-opacity hover:opacity-95"
+                      className="transition-opacity hover:opacity-95"
                     />
                   ) : (
-                    <div className="flex h-44 items-center justify-center bg-muted/30 text-brand">
+                    <div className="flex aspect-video items-center justify-center bg-muted/30 text-brand">
                       <BriefcaseBusiness className="size-10" />
                     </div>
                   )}
