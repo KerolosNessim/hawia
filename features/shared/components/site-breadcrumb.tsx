@@ -14,11 +14,25 @@ import {
   type BreadcrumbTrailItem,
 } from "@/features/shared/lib/breadcrumb-trail";
 import { CountryLink } from "@/features/shared/components/country-link";
+import {
+  breadcrumbLabel,
+  localeFromBrowserPath,
+} from "@/features/shared/lib/breadcrumb-labels";
 import { usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { useMemo, useSyncExternalStore } from "react";
+
+const emptySubscribe = () => () => {};
+
+function useBrowserPathname(fallback: string): string {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => window.location.pathname,
+    () => fallback,
+  );
+}
 
 type SiteBreadcrumbProps = {
   /** On hero banners: light text over the image. Inline: below the fixed navbar. */
@@ -34,23 +48,25 @@ export default function SiteBreadcrumb({
   items: itemsOverride,
 }: SiteBreadcrumbProps) {
   const pathname = usePathname();
-  const locale = useLocale();
-  const t = useTranslations("seo.breadcrumb");
+  const browserPath = useBrowserPathname(pathname);
   const tPackages = useTranslations("packagesPage");
-  const isRtl = locale === "ar";
+  const labelLocale = localeFromBrowserPath(browserPath);
+  const isRtl = labelLocale === "ar";
 
   const items = useMemo(() => {
     if (itemsOverride?.length) return itemsOverride;
-    return getBreadcrumbTrailItems(pathname, (segment) => {
+    return getBreadcrumbTrailItems(browserPath, (segment) => {
       if (
         segment.toLowerCase() === "categories" &&
-        pathname.startsWith("/packages")
+        browserPath.includes("/packages")
       ) {
         return tPackages("breadcrumbCategories");
       }
-      return resolveBreadcrumbSegmentLabel(segment, (key) => t(key));
+      return resolveBreadcrumbSegmentLabel(segment, (key) =>
+        breadcrumbLabel(labelLocale, key),
+      );
     });
-  }, [itemsOverride, pathname, t, tPackages]);
+  }, [itemsOverride, browserPath, labelLocale, tPackages]);
 
   if (!items) {
     return null;

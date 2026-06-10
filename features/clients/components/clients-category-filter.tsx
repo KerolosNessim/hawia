@@ -1,6 +1,8 @@
+"use client";
+
 import { clientsIndexPath } from "@/features/clients/lib/clients-routes";
 import type { PublicSolutionCategory } from "@/features/clients/services/clients-public-api";
-import { Link } from "@/i18n/navigation";
+import { CountryLink } from "@/features/shared/components/country-link";
 import { cn } from "@/lib/utils";
 
 type CategoryWithCount = {
@@ -22,7 +24,7 @@ export default function ClientsCategoryFilter({
       {items.map(({ category: c, count }) => {
         const isActive = activeCategorySlug === c.slug;
         return (
-          <Link
+          <CountryLink
             key={c.id}
             href={clientsIndexPath({ categorySlug: c.slug })}
             className={cn(
@@ -36,7 +38,7 @@ export default function ClientsCategoryFilter({
             <span className="ms-1.5 rounded-md bg-black/10 px-1.5 py-px text-[11px] font-bold tabular-nums">
               {count}
             </span>
-          </Link>
+          </CountryLink>
         );
       })}
     </div>

@@ -6,12 +6,19 @@ import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import * as motion from "motion/react-client";
-import { Link } from "@/i18n/navigation";
+import { localePath } from "@/features/blogs/lib/blog-routes";
+import { getServerCountryRouteCode } from "@/lib/get-country";
+import type { Locale } from "next-intl";
+import { getLocale } from "next-intl/server";
 import { getAdsData } from "../services/ads";
 
 export default async function AdsSection({ countryId }: { countryId?: number }) {
   const t = await getTranslations("adsSection");
-  const section = await getAdsData(countryId);
+  const [section, locale, countryCode] = await Promise.all([
+    getAdsData(countryId),
+    getLocale(),
+    getServerCountryRouteCode(),
+  ]);
 
   if (!section?.categories?.length) return null;
 
@@ -52,10 +59,14 @@ export default async function AdsSection({ countryId }: { countryId?: number }) 
 
       <div className="container relative z-10 px-4">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {section.categories.map((item, index) => (
-            <Link
+          {section.categories.map((item, index) => {
+            const logicalPath =
+              item.href || clientsIndexPath({ categorySlug: item.slug });
+            const href = localePath(locale as Locale, logicalPath, countryCode);
+            return (
+            <a
               key={item.id}
-              href={item.href || clientsIndexPath({ categorySlug: item.slug })}
+              href={href}
               className="block"
             >
               <motion.div
@@ -75,17 +86,21 @@ export default async function AdsSection({ countryId }: { countryId?: number }) 
                 />
                 <h3 className="my-2 text-xl font-extrabold">{item.title}</h3>
               </motion.div>
-            </Link>
-          ))}
+            </a>
+          );
+          })}
         </div>
 
         <div className="mt-10 flex justify-center">
-          <Link href={clientsIndexPath()} className="inline-flex">
+          <a
+            href={localePath(locale as Locale, clientsIndexPath(), countryCode)}
+            className="inline-flex"
+          >
             <Button className="rounded-full bg-brand px-6 py-3 text-base text-white hover:bg-brand/90">
               {t("showAll")}
               <ArrowRight className="size-4 rtl:rotate-y-180" />
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </section>

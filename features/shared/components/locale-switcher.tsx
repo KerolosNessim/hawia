@@ -26,12 +26,24 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+function isValidNavigationUrl(url: string | null | undefined): url is string {
+  if (!url?.trim()) return false;
+  if (url.includes("undefined")) return false;
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 function hreflangTarget(newLocale: string): string | null {
   if (typeof document === "undefined") return null;
   const link = document.querySelector(
     `link[rel="alternate"][hreflang="${newLocale}"]`,
   ) as HTMLLinkElement | null;
-  return link?.href ?? null;
+  const href = link?.href ?? null;
+  return isValidNavigationUrl(href) ? href : null;
 }
 
 function syncLocaleCookie(newLocale: string): void {

@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/favicon.ico",
+        destination: "/logo.webp",
+        permanent: false,
+      },
+      {
         source: "/blogs/blog/:slug",
         destination: "/blogs/:slug",
         permanent: true,

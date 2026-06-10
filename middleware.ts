@@ -2,7 +2,11 @@ import createMiddleware from 'next-intl/middleware';
 import { localePath } from '@/features/blogs/lib/blog-routes';
 import { routing } from './i18n/routing';
 import type { Locale } from 'next-intl';
-import { promoteDefaultLocaleRedirectToPermanent } from '@/lib/i18n-locale-redirect';
+import {
+  hasExplicitArabicLocalePrefix,
+  promoteDefaultLocaleRedirectToPermanent,
+  stripExplicitArabicLocalePrefix,
+} from '@/lib/i18n-locale-redirect';
 import { applySecurityHeaders } from '@/lib/security-headers';
 import {
   isLegacyOmanEnglishPath,
@@ -40,6 +44,65 @@ function pickRedirectTarget(data: ResolvedRedirect): string {
   return String(data.target_path ?? data.targetPath ?? data.target_url ?? data.targetUrl ?? data.to ?? "").trim();
 }
 
+function isEnglishOmanIntlPath(pathWithoutCountry: string): boolean {
+  return pathWithoutCountry === '/en' || pathWithoutCountry.startsWith('/en/');
+}
+
+/** Pins NEXT_LOCALE on the intl sub-request so `/om/*` stays Arabic unless `/en/om/*`. */
+function withPinnedLocaleCookie(
+  req: NextRequest,
+  headers: Headers,
+  locale: 'ar' | 'en',
+): void {
+  const parts = (req.headers.get('cookie') ?? '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => !part.startsWith('NEXT_LOCALE='));
+  parts.push(`NEXT_LOCALE=${locale}`);
+  headers.set('cookie', parts.join('; '));
+}
+
+function redirectExplicitArabicLocalePrefix(
+  req: NextRequest,
+  pathname: string,
+  urlCountry: 'SA' | 'OM',
+  pathWithoutCountry: string,
+): NextResponse | null {
+  const search = req.nextUrl.search;
+
+  if (urlCountry === 'SA' && hasExplicitArabicLocalePrefix(pathname)) {
+    const target = stripExplicitArabicLocalePrefix(pathname);
+    return NextResponse.redirect(new URL(target + search, req.url), 301);
+  }
+
+  if (
+    urlCountry === 'OM' &&
+    hasExplicitArabicLocalePrefix(pathWithoutCountry)
+  ) {
+    const inner = stripExplicitArabicLocalePrefix(pathWithoutCountry);
+    const target = withCountryPrefix('OM', inner);
+    return NextResponse.redirect(new URL(target + search, req.url), 301);
+  }
+
+  return null;
+}
+
+function applyCountryToRedirectTarget(
+  target: string,
+  req: NextRequest,
+  countryCode: 'SA' | 'OM',
+): string {
+  if (countryCode !== 'OM') return target;
+  if (target.startsWith('http://') || target.startsWith('https://')) {
+    const url = new URL(target);
+    url.pathname = withCountryPrefix('OM', url.pathname);
+    return url.toString();
+  }
+  const path = target.startsWith('/') ? target : `/${target}`;
+  return withCountryPrefix('OM', path);
+}
+
 /**
  * next-intl returns `NextResponse.next()` when the intl path equals the request path
  * (e.g. `/en`). For Oman browser URLs (`/en/om`, `/en/om/...`) that leaves Next.js
@@ -74,7 +137,7 @@ function ensureOmanIntlRewrite(
 }
 
 function applyOmanPrefixToIntlResponse(
-  req: NextRequest,
+  originalReq: NextRequest,
   response: NextResponse,
   countryCode: 'SA' | 'OM',
 ): NextResponse {
@@ -83,12 +146,13 @@ function applyOmanPrefixToIntlResponse(
   const location = response.headers.get('Location');
   if (!location) return response;
 
-  const toUrl = new URL(location, req.url);
+  const toUrl = new URL(location, originalReq.url);
   const prefixed = withCountryPrefix('OM', toUrl.pathname);
   if (prefixed === toUrl.pathname) return response;
 
   toUrl.pathname = prefixed;
-  const next = NextResponse.redirect(toUrl, response.status);
+  const status = response.status === 301 || response.status === 308 ? response.status : 301;
+  const next = NextResponse.redirect(toUrl, status);
 
   response.headers.forEach((value, key) => {
     if (key.toLowerCase() === 'location') return;
@@ -119,7 +183,11 @@ function redirectLookupPaths(pathname: string): string[] {
   return [...paths];
 }
 
-async function resolveConfiguredRedirect(req: NextRequest, pathname: string) {
+async function resolveConfiguredRedirect(
+  req: NextRequest,
+  pathname: string,
+  countryCode: 'SA' | 'OM',
+) {
   const lookupPaths = redirectLookupPaths(pathname);
   if (!lookupPaths.length) return null;
 
@@ -150,7 +218,8 @@ async function resolveConfiguredRedirect(req: NextRequest, pathname: string) {
 
       const target = pickRedirectTarget(data);
       if (!target || target === lookupPath || target === pathname) continue;
-      return NextResponse.redirect(new URL(target, req.url), status);
+      const resolvedTarget = applyCountryToRedirectTarget(target, req, countryCode);
+      return NextResponse.redirect(new URL(resolvedTarget, req.url), status);
     }
 
     return null;
@@ -159,9 +228,23 @@ async function resolveConfiguredRedirect(req: NextRequest, pathname: string) {
   }
 }
 
+const STATIC_ASSET_RE =
+  /^\/(?:favicon\.ico|robots\.txt|sitemap\.xml|manifest\.webmanifest|manifest\.json)$/i;
+
+function isStaticAssetPath(pathname: string): boolean {
+  if (STATIC_ASSET_RE.test(pathname)) return true;
+  return /\.(?:ico|png|jpe?g|gif|webp|svg|woff2?|ttf|eot|css|js|map|txt|xml)$/i.test(
+    pathname,
+  );
+}
+
 export default async function middleware(req: NextRequest) {
   const token = req.cookies.get('auth_token')?.value;
   const { pathname } = req.nextUrl;
+
+  if (isStaticAssetPath(pathname)) {
+    return applySecurityHeaders(NextResponse.next());
+  }
 
   const { countryCode: urlCountry, pathname: pathWithoutCountry } = parseCountryPath(pathname);
 
@@ -169,6 +252,16 @@ export default async function middleware(req: NextRequest) {
     const migrated = migrateLegacyOmanEnglishPath(pathname);
     const redirectUrl = new URL(migrated + req.nextUrl.search, req.url);
     return applySecurityHeaders(NextResponse.redirect(redirectUrl, 301));
+  }
+
+  const explicitArRedirect = redirectExplicitArabicLocalePrefix(
+    req,
+    pathname,
+    urlCountry,
+    pathWithoutCountry,
+  );
+  if (explicitArRedirect) {
+    return applySecurityHeaders(explicitArRedirect);
   }
 
   const geoCountry = resolveSupportedCountry(
@@ -196,7 +289,11 @@ export default async function middleware(req: NextRequest) {
     ? `/${pathParts.slice(2).join('/')}` || '/'
     : pathWithoutCountry;
 
-  const configuredRedirect = await resolveConfiguredRedirect(req, pathWithoutCountry);
+  const configuredRedirect = await resolveConfiguredRedirect(
+    req,
+    pathWithoutCountry,
+    effectiveCountry,
+  );
   if (configuredRedirect) {
     return applySecurityHeaders(configuredRedirect);
   }
@@ -222,6 +319,14 @@ export default async function middleware(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-country-route', effectiveCountry);
 
+  if (effectiveCountry === 'OM') {
+    withPinnedLocaleCookie(
+      req,
+      requestHeaders,
+      isEnglishOmanIntlPath(pathWithoutCountry) ? 'en' : 'ar',
+    );
+  }
+
   const intlRequest =
     urlCountry === "OM"
       ? new NextRequest(new URL(pathWithoutCountry + req.nextUrl.search, req.url), {
@@ -238,8 +343,8 @@ export default async function middleware(req: NextRequest) {
       requestHeaders,
     );
   }
-  response = applyOmanPrefixToIntlResponse(intlRequest, response, effectiveCountry);
-  response = promoteDefaultLocaleRedirectToPermanent(intlRequest, response);
+  response = applyOmanPrefixToIntlResponse(req, response, effectiveCountry);
+  response = promoteDefaultLocaleRedirectToPermanent(req, response);
   response = applySecurityHeaders(response);
 
   response.cookies.set('user_country', effectiveCountry, {

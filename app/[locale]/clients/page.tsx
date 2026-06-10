@@ -9,7 +9,9 @@ import {
   getCategoriesWithClients,
 } from "@/features/clients/services/clients-public-api";
 import { PageSchemaScript } from "@/features/shared/components/seo/page-schema-script";
+import { localePath } from "@/features/blogs/lib/blog-routes";
 import { localePathname } from "@/lib/seo/metadata-helpers";
+import { getServerCountryRouteCode } from "@/lib/get-country";
 import {
   buildBreadcrumbList,
   buildCollectionPageSchemaGraph,
@@ -20,8 +22,8 @@ import { buildStaticPageMetadata } from "@/lib/seo/settings-page-seo";
 import type { Locale } from "next-intl";
 import type { Metadata } from "next";
 import { clientsIndexPath } from "@/features/clients/lib/clients-routes";
-import { redirect } from "@/i18n/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
+import { permanentRedirect } from "next/navigation";
 
 type Props = Readonly<{
   params: Promise<{ locale: string }>;
@@ -61,6 +63,7 @@ async function resolveCategorySlug(
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   await params;
   const loc = (await getLocale()) as Locale;
+  const countryCode = await getServerCountryRouteCode();
   const t = await getTranslations("clients");
   const sp = searchParams ? await searchParams : {};
   const categorySlug = await resolveCategorySlug(loc, sp);
@@ -70,7 +73,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   return buildStaticPageMetadata({
     locale: loc,
-    pathname: localePathname(loc, "/clients"),
+    pathname: localePathname(loc, "/clients", countryCode),
     pageKey: "clients",
     title,
     description,
@@ -79,8 +82,17 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function ClientsPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const loc = locale as Locale;
+  const countryCode = await getServerCountryRouteCode();
   const sp = searchParams ? await searchParams : {};
   const t = await getTranslations("clients");
+
+  const redirectToClientsIndex = (categorySlug?: string | null) => {
+    const path = categorySlug
+      ? clientsIndexPath({ categorySlug })
+      : clientsIndexPath();
+    permanentRedirect(localePath(loc, path, countryCode));
+  };
   const [categories, allClients, pageMeta] = await Promise.all([
     fetchPublicSolutionCategories(locale),
     fetchPublicClients(locale),
@@ -94,19 +106,11 @@ export default async function ClientsPage({ params, searchParams }: Props) {
       : null;
 
   if (parsedCategory && !validCategorySlug) {
-    redirect({
-      href: categoriesWithClients[0]
-        ? clientsIndexPath({ categorySlug: categoriesWithClients[0].category.slug })
-        : clientsIndexPath(),
-      locale,
-    });
+    redirectToClientsIndex(categoriesWithClients[0]?.category.slug);
   }
 
   if (!parsedCategory && categoriesWithClients[0]?.category.slug) {
-    redirect({
-      href: clientsIndexPath({ categorySlug: categoriesWithClients[0].category.slug }),
-      locale,
-    });
+    redirectToClientsIndex(categoriesWithClients[0].category.slug);
   }
 
   const categorySlug = validCategorySlug ?? categoriesWithClients[0]?.category.slug ?? null;
@@ -119,8 +123,7 @@ export default async function ClientsPage({ params, searchParams }: Props) {
     : allClients;
   const title = pageMeta.title || t("title");
   const description = pageMeta.description || t("description");
-  const loc = locale as Locale;
-  const pageUrl = buildCanonicalUrl(loc, "/clients");
+  const pageUrl = buildCanonicalUrl(loc, "/clients", countryCode);
   const clientsSchemaJson = jsonLdGraph([
     ...buildCollectionPageSchemaGraph({
       pageUrl,
@@ -136,7 +139,7 @@ export default async function ClientsPage({ params, searchParams }: Props) {
     }),
     buildBreadcrumbList(
       [
-        { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/") },
+        { name: t("breadcrumbHome"), url: buildCanonicalUrl(loc, "/", countryCode) },
         { name: t("breadcrumbClients"), url: pageUrl },
       ],
       pageUrl,

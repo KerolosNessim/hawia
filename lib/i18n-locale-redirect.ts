@@ -31,12 +31,26 @@ export function isDefaultLocalePrefixRemoval(
   return false;
 }
 
+/** Browser paths that still use an explicit `/ar` prefix for the default locale. */
+export function hasExplicitArabicLocalePrefix(pathname: string): boolean {
+  const normalized = normalizePathname(pathname);
+  return normalized === "/ar" || normalized.startsWith("/ar/");
+}
+
+/** Target after stripping `/ar` from SA or inner OM paths (`/om/ar/x` → `/om/x`). */
+export function stripExplicitArabicLocalePrefix(pathname: string): string {
+  const normalized = normalizePathname(pathname);
+  if (normalized === "/ar") return "/";
+  if (normalized.startsWith("/ar/")) return normalized.slice(3) || "/";
+  return normalized;
+}
+
 /** Upgrades next-intl temporary locale-prefix redirects (307) to permanent (301). */
 export function promoteDefaultLocaleRedirectToPermanent(
   req: NextRequest,
   response: NextResponse,
 ): NextResponse {
-  if (response.status !== 307 && response.status !== 302) {
+  if (response.status !== 307 && response.status !== 302 && response.status !== 308) {
     return response;
   }
 

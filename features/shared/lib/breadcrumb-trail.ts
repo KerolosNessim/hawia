@@ -6,6 +6,7 @@ export const BREADCRUMB_SEGMENTS = [
   "ai-services",
   "blog",
   "blogs",
+  "careers",
   "clients",
   "contact-us",
   "courses",

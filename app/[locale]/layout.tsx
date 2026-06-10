@@ -17,6 +17,8 @@ import GlobalSchemaScript from "@/features/shared/components/seo/global-schema-s
 import { HeadTagsFromMarkup } from "@/features/shared/components/seo/head-tags-from-markup";
 import { partitionBodyScripts } from "@/lib/seo/partition-body-scripts";
 import { SITE_REFERRER_POLICY } from "@/lib/seo/metadata-helpers";
+import { getCanonicalSiteUrl } from "@/lib/seo/site-url";
+import ChunkLoadRecovery from "@/components/providers/chunk-load-recovery";
 
 import { resolveSettingsPageSeo } from "@/features/settings/lib/resolve-settings-seo";
 import { getSettings, scriptsFromSettings } from "@/features/settings/services/settings-service";
@@ -24,7 +26,7 @@ import { getSettings, scriptsFromSettings } from "@/features/settings/services/s
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-const FALLBACK_FAVICON = "/logo.png";
+const FALLBACK_FAVICON = "/logo.webp";
 
 function resolveFaviconUrl(favicon: string | null | undefined): string {
   const raw = favicon?.trim();
@@ -38,6 +40,12 @@ function resolveFaviconUrl(favicon: string | null | undefined): string {
   return apiBase ? `${apiBase}${path}` : path;
 }
 
+function absoluteIconUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  const base = getCanonicalSiteUrl().replace(/\/$/, "");
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -48,27 +56,31 @@ export async function generateMetadata({
     const settings = response.data;
     const homeSeo = await resolveSettingsPageSeo("home");
 
+    const icon = absoluteIconUrl(resolveFaviconUrl(settings.general.favicon));
     return {
+      metadataBase: new URL(getCanonicalSiteUrl()),
       title: homeSeo?.title || settings.general.site_name,
       description:
         homeSeo?.description || settings.general.site_description || undefined,
       referrer: SITE_REFERRER_POLICY,
       icons: {
-        icon: resolveFaviconUrl(settings.general.favicon),
-        shortcut: resolveFaviconUrl(settings.general.favicon),
-        apple: resolveFaviconUrl(settings.general.favicon),
+        icon: [{ url: icon }],
+        shortcut: [{ url: icon }],
+        apple: [{ url: icon }],
       },
     };
   } catch (error) {
     console.error("Failed to fetch settings for metadata:", error);
+    const icon = absoluteIconUrl(FALLBACK_FAVICON);
     return {
+      metadataBase: new URL(getCanonicalSiteUrl()),
       title: "Howeyah",
       description: "Howeyah platform for consulting and educational services.",
       referrer: SITE_REFERRER_POLICY,
       icons: {
-        icon: FALLBACK_FAVICON,
-        shortcut: FALLBACK_FAVICON,
-        apple: FALLBACK_FAVICON,
+        icon: [{ url: icon }],
+        shortcut: [{ url: icon }],
+        apple: [{ url: icon }],
       },
     };
   }
@@ -125,6 +137,7 @@ export default async function RootLayout({
         className="relative max-w-full min-h-dvh overflow-x-clip"
         suppressHydrationWarning
       >
+        <ChunkLoadRecovery />
         <QueryProvider>
           <SmoothScrollProvider>
             <NextIntlClientProvider messages={messages}>
