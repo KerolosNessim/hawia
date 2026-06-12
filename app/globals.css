@@ -413,6 +413,29 @@
     background-color: transparent !important;
   }
 
+  /* Service highlight — white card; strip CMS inline backgrounds */
+  [data-service-highlight] .cms-rich-html,
+  [data-service-highlight] .cms-rich-html * {
+    background-image: none !important;
+    background-color: transparent !important;
+    text-align: center;
+  }
+
+  [data-service-highlight] .cms-rich-html :is(p, li, span, div, strong, em) {
+    color: inherit !important;
+  }
+
+  [data-service-highlight] .cms-rich-html [style*="background"] {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  /* Section headers — center titles and neutralize CMS inline text-align */
+  [data-slot="section-header"][data-align="center"] .cms-rich-html,
+  [data-slot="section-header"][data-align="center"] .cms-rich-html * {
+    text-align: center !important;
+  }
+
   /* Page heroes — photo + dim overlay only; strip CMS decorative band/pattern backgrounds */
   [data-slot="page-header"],
   [data-slot="page-header"] .cms-rich-html,

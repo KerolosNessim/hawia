@@ -1,5 +1,6 @@
 "use client";
 
+import { HeadingAccentDivider } from "@/features/shared/components/heading-accent-divider";
 import {
   sectionHeaderRichClass,
   type SectionHeaderTone,
@@ -24,6 +25,7 @@ type SectionHeaderProps = {
   titleColor?: string;
   /** When set, CMS inline colors align with dark/light section shells. */
   tone?: SectionHeaderTone;
+  showDivider?: boolean;
 };
 
 export default function SectionHeader({
@@ -36,6 +38,7 @@ export default function SectionHeader({
   subtitleColor = "text-gray-300",
   titleColor = "text-brand",
   tone,
+  showDivider = true,
 }: SectionHeaderProps) {
   const locale = useLocale();
   const hasRichTitle = Boolean(titleHtml?.trim());
@@ -55,7 +58,11 @@ export default function SectionHeader({
   };
 
   return (
-    <div className={cn("w-full min-w-0 max-w-full space-y-4", alignment[align])}>
+    <div
+      data-slot="section-header"
+      data-align={align}
+      className={cn("w-full min-w-0 max-w-full space-y-4", alignment[align])}
+    >
       {badge ? (
         <motion.span
           initial={{ opacity: 0, y: -10 }}
@@ -96,16 +103,7 @@ export default function SectionHeader({
         </motion.h2>
       ) : null}
 
-      <motion.div
-        initial={{ width: 0 }}
-        whileInView={{ width: "80px" }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
-        className={cn(
-          "h-[3px] rounded-full bg-brand",
-          align === "center" ? "mx-auto" : "ms-0",
-        )}
-      />
+      {showDivider ? <HeadingAccentDivider align={align} /> : null}
 
       {hasRichSubtitle ? (
         <motion.div

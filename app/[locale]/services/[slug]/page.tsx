@@ -8,7 +8,11 @@ import { shouldShowApplicationSeoForm } from "@/features/services/services/appli
 import ServiceArticleTags, {
   resolveServiceArticleTags,
 } from "@/features/services/components/service-article-tags";
-import { ServicePageSections } from "@/features/services/components/service-page-sections";
+import ServiceHighlightDescription from "@/features/services/components/service-highlight-description";
+import {
+  ServicePageCtaSections,
+  ServicePageSections,
+} from "@/features/services/components/service-page-sections";
 import { parseCountryId } from "@/features/services/lib/parse-services-search-params";
 import { resolveServiceCountryId } from "@/features/services/lib/resolve-service-country-id";
 import { getServices } from "@/features/services/services/get-services";
@@ -46,8 +50,6 @@ import { redirectToNotFound } from "@/features/shared/lib/redirect-to-not-found"
 import { plainTextFromHtml } from "@/lib/plain-text-from-html";
 
 import { localePath } from "@/features/blogs/lib/blog-routes";
-
-import * as motion from "framer-motion/client";
 
 import type { Locale } from "next-intl";
 
@@ -231,9 +233,13 @@ export default async function ServicePage({ params, searchParams }: Props) {
         image={service.image || "/whySeo.webp"}
         imageAlt={service.image_alt || ""}
         breadcrumbItems={breadcrumbItems}
+        showHeadingDivider
+        align="center"
       />
 
-      {service.description?.trim() && service.pageSections.length === 0 ? (
+      {service.description?.trim() &&
+      service.pageSections.length === 0 &&
+      plainTextFromHtml(service.description) !== plainTextFromHtml(heroSubtitle) ? (
 
         <div className="container py-12">
 
@@ -244,24 +250,13 @@ export default async function ServicePage({ params, searchParams }: Props) {
       ) : null}
 
       {service.highlight_description ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="container py-10 text-center leading-loose"
-        >
-          <RichHtml
-            html={service.highlight_description}
-            className="cms-rich-html mx-auto max-w-4xl space-y-4 rounded-xl border border-brand/30 bg-brand/5 p-6"
-          />
-        </motion.div>
+        <ServiceHighlightDescription html={service.highlight_description} />
       ) : null}
 
       <ServicePageSections
         service={service}
         locale={locale}
-        excludeKeys={["articleTags"]}
+        excludeKeys={["articleTags", "ctas"]}
         insertAfterIndex={applicationSeoVisible ? 0 : undefined}
         insertion={
           applicationSeoVisible ? (
@@ -294,6 +289,8 @@ export default async function ServicePage({ params, searchParams }: Props) {
           className="pb-16 pt-8"
         />
       ) : null}
+
+      <ServicePageCtaSections service={service} locale={locale} />
 
     </div>
 

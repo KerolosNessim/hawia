@@ -26,10 +26,8 @@ export default function PageContact({
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "container space-y-6 rounded-2xl px-4 py-10 text-center shadow-lg",
-        tone === "dark"
-          ? "bg-gray-800/90 ring-1 ring-white/10"
-          : "border border-brand/25 bg-brand/5",
+        "container space-y-6 rounded-2xl bg-white px-4 py-10 text-center shadow-lg",
+        tone === "dark" ? "ring-1 ring-gray-200" : "border border-brand/25",
       )}
     >
       {title ? (
@@ -42,7 +40,7 @@ export default function PageContact({
         <RichHtml html={description} className="text-2xl font-bold text-brand" />
       ) : null}
       <Button
-        className={`w-32 h-12 rounded-full font-bold shadow-md transition-all duration-300 bg-brand hover:bg-brand/90 text-white`}
+        className="h-12 w-32 rounded-full bg-brand font-bold text-white shadow-md transition-all duration-300 hover:bg-brand/90 hover:text-white"
         onClick={() => window.open(`https://wa.me/${phone}`)}
       >
         {t("btn")}

@@ -259,16 +259,56 @@ export async function ServicePageSections({
     }
 
     const tone = resolveSectionTone(startIndex + bandIndex, surface);
+    const effectiveTone = section.key === "ctas" ? "light" : tone;
     const blockKey = sectionBlockKey(section);
-    const inner = renderSectionInstance(section, service, t, locale, tone, surface);
+    const inner = renderSectionInstance(
+      section,
+      service,
+      t,
+      locale,
+      effectiveTone,
+      surface,
+    );
     if (inner) {
-      nodes.push(sectionShell(blockKey, tone, surface, inner));
+      nodes.push(sectionShell(blockKey, effectiveTone, surface, inner));
       bandIndex += 1;
     }
 
     if (insertion != null && insertAfterIndex === index) {
       pushInsertion(`section-insertion-after-${blockKey}`);
     }
+  });
+
+  return <>{nodes}</>;
+}
+
+export async function ServicePageCtaSections({
+  service,
+  locale,
+  surface = "default",
+}: Pick<Props, "service" | "surface"> & { locale: Locale }) {
+  const ctaSections = getOrderedServicePageSections(service.pageSections).filter(
+    (section) => section.key === "ctas",
+  );
+
+  if (ctaSections.length === 0) return null;
+
+  const nodes: ReactNode[] = [];
+
+  ctaSections.forEach((section) => {
+    const blockKey = sectionBlockKey(section);
+    const cta = section.data as Cta;
+    const inner = (
+      <SectionLinkShell link={sectionLinkFromData(cta)}>
+        <PageContact
+          title={cta.title}
+          phone={cta.phone_number}
+          description={cta.description}
+          tone="light"
+        />
+      </SectionLinkShell>
+    );
+    nodes.push(sectionShell(blockKey, "light", surface, inner));
   });
 
   return <>{nodes}</>;

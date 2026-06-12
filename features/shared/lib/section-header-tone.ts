@@ -12,7 +12,7 @@ export function sectionHeaderTitleColor(tone: SectionHeaderTone): string {
 
 export function sectionHeaderProps(tone: SectionHeaderTone) {
   return {
-    align: "start" as const,
+    align: "center" as const,
     tone,
     titleColor: sectionHeaderTitleColor(tone),
     subtitleColor: sectionHeaderSubtitleColor(tone),
@@ -27,6 +27,8 @@ export function sectionHeaderRichClass(
   return cn(
     "[&_*]:!text-inherit [&_p]:mb-2 [&_p:last-child]:mb-0 [&_a]:!text-brand [&_strong]:!font-bold",
     tone === "dark" && "[&_strong]:!text-white",
-    align === "center" ? "[&_*]:!text-center" : "[&_*]:!text-start",
+    align === "center"
+      ? "!text-center [&_*]:!text-center"
+      : "!text-start [&_*]:!text-start",
   );
 }

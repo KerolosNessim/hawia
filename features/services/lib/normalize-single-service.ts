@@ -494,8 +494,8 @@ export function normalizeSingleService(
     image_alt: pickImageAlt(raw.image_alt, locale) || null,
     title: plainTextFromHtml(pickLocalizedField(raw.title, locale)),
     singlePageTitle:
-      plainTextFromHtml(pickLocalizedField(raw.single_page_title, locale)) ||
-      plainTextFromHtml(pickLocalizedField(raw.singlePageTitle, locale)),
+      pickLocalizedField(raw.single_page_title, locale) ||
+      pickLocalizedField(raw.singlePageTitle, locale),
     pageScript:
       typeof raw.page_script === "string" && raw.page_script.trim()
         ? raw.page_script

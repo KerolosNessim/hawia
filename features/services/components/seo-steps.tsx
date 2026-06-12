@@ -10,7 +10,13 @@ import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
-import { sectionHeaderProps, sectionItemCardClassName } from "../lib/section-tone";
+import {
+  sectionHeaderProps,
+  sectionHeaderSubtitleColor,
+  sectionHeaderTitleColor,
+  sectionItemCardClassName,
+  sectionSplitItemCardClassName,
+} from "../lib/section-tone";
 import type { SectionTone } from "../lib/section-tone";
 import { orderSectionItemsForDisplay } from "../lib/section-items-display-order";
 import type { Section, SectionItem } from "../types";
@@ -160,6 +166,68 @@ export default function SeoSteps({
     );
   }
 
+  if (hasImage && steps.image) {
+    return (
+      <div className="container">
+        <div
+          className={cn(
+            "flex flex-col gap-8 lg:flex-row lg:items-stretch lg:gap-10 xl:gap-14",
+            !isRTL && "lg:flex-row-reverse",
+          )}
+        >
+          <div className="flex min-w-0 flex-1 flex-col gap-6">
+            <SectionHeader
+              titleHtml={steps?.title || undefined}
+              title={t("title")}
+              subtitleHtml={steps?.description || t("subtitle")}
+              align="start"
+              showDivider={false}
+              tone={tone}
+              titleColor={sectionHeaderTitleColor(tone)}
+              subtitleColor={sectionHeaderSubtitleColor(tone)}
+            />
+            <div className="grid grid-cols-1 gap-4">
+              {displayItems.map((item: SectionItem, index: number) => (
+                <ServiceSectionItemCard
+                  key={`${item.sort_order ?? index}-${index}`}
+                  link={item.link}
+                  icon={item.icon}
+                  className={sectionSplitItemCardClassName(tone)}
+                >
+                  <RichHtml
+                    html={item.title}
+                    as="h3"
+                    className="text-lg font-bold [&_p]:mb-0"
+                  />
+                  <RichHtml
+                    html={item.description}
+                    className={cn(
+                      "mt-2 leading-relaxed",
+                      tone === "dark" ? "text-gray-300" : "text-gray-600",
+                    )}
+                  />
+                </ServiceSectionItemCard>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-md shrink-0 lg:w-[42%] lg:max-w-none">
+            <div className="lg:sticky lg:top-28 lg:z-10 lg:w-full">
+              <Image
+                src={steps.image}
+                alt={steps.image_alt ?? ""}
+                width={500}
+                height={500}
+                className="mask-blob h-auto w-full max-w-full"
+                unoptimized={isRemoteMediaUrl(steps.image)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container space-y-8">
       <SectionHeader
@@ -168,53 +236,28 @@ export default function SeoSteps({
         subtitleHtml={steps?.description || t("subtitle")}
         {...sectionHeaderProps(tone)}
       />
-      <div
-        className={cn(
-          "flex flex-col gap-8",
-          hasImage && "lg:flex-row lg:items-start",
-        )}
-      >
-        <div
-          className={cn(
-            "grid w-full grid-cols-1 gap-4",
-            hasImage ? "flex-1 lg:grid-cols-2" : "mx-auto max-w-4xl",
-          )}
-        >
-          {displayItems.map((item: SectionItem, index: number) => (
-            <ServiceSectionItemCard
-              key={`${item.sort_order ?? index}-${index}`}
-              link={item.link}
-              icon={item.icon}
-              className={sectionItemCardClassName(tone)}
-            >
-              <RichHtml
-                html={item.title}
-                as="h3"
-                className="font-bold [&_p]:mb-0"
-              />
-              <RichHtml
-                html={item.description}
-                className={cn(
-                  "mt-2",
-                  tone === "dark" ? "text-gray-200" : "text-gray-600",
-                )}
-              />
-            </ServiceSectionItemCard>
-          ))}
-        </div>
-
-        {hasImage && steps.image ? (
-          <div className="mx-auto w-full max-w-md flex-1 lg:max-w-none">
-            <Image
-              src={steps.image}
-              alt={steps.image_alt ?? ""}
-              width={500}
-              height={500}
-              className="mask-blob h-auto max-w-full"
-              unoptimized={isRemoteMediaUrl(steps.image)}
+      <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-4 md:grid-cols-2">
+        {displayItems.map((item: SectionItem, index: number) => (
+          <ServiceSectionItemCard
+            key={`${item.sort_order ?? index}-${index}`}
+            link={item.link}
+            icon={item.icon}
+            className={sectionItemCardClassName(tone)}
+          >
+            <RichHtml
+              html={item.title}
+              as="h3"
+              className="font-bold [&_p]:mb-0"
             />
-          </div>
-        ) : null}
+            <RichHtml
+              html={item.description}
+              className={cn(
+                "mt-2",
+                tone === "dark" ? "text-gray-200" : "text-gray-600",
+              )}
+            />
+          </ServiceSectionItemCard>
+        ))}
       </div>
     </div>
   );

@@ -20,11 +20,14 @@ export default function SeoTools({
       : "text-3xl font-bold text-gray-900 [&_*]:!text-inherit [&_*]:!text-start [&_a]:!text-brand [&_strong]:!font-bold";
   const panelClass =
     tone === "dark"
-      ? "space-y-5 rounded-lg border border-brand/60 bg-white/5 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
-      : cn(sectionItemCardClassName(tone), "space-y-5");
+      ? "flex h-full min-h-full flex-col justify-start space-y-5 rounded-lg border border-brand/60 bg-white/5 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)]"
+      : cn(
+          sectionItemCardClassName(tone),
+          "flex h-full min-h-full flex-col justify-start space-y-5",
+        );
 
   return (
-    <div className="container grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
+    <div className="container grid grid-cols-1 gap-8 md:grid-cols-[1.5fr_1fr] md:items-stretch">
         {/* tools */}
         <div className="space-y-5">
           <RichHtml html={tools?.title} className={headingClass} />

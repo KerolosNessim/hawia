@@ -132,6 +132,8 @@ export default async function ServicesPage(props: {
         title={t("title")}
         description={t("description")}
         image="/hero-bg.webp"
+        showHeadingDivider
+        align="center"
       />
 
       <div className="container space-y-10">

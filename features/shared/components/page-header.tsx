@@ -1,9 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { HeadingAccentDivider } from "@/features/shared/components/heading-accent-divider";
 import SiteBreadcrumb from "@/features/shared/components/site-breadcrumb";
 import type { BreadcrumbTrailItem } from "@/features/shared/lib/breadcrumb-trail";
 import { Link } from "@/i18n/navigation";
+import { splitHeroTitleHtml } from "@/features/shared/lib/split-hero-title-html";
 import { enhanceCmsHtml } from "@/lib/inline-image-alt";
 import { cn } from "@/lib/utils";
 import * as motion from "framer-motion/client";
@@ -42,6 +44,8 @@ interface PageHeaderProps {
   /** Optional CTA below the hero title/description (e.g. AI tools on `/ai-services`). */
   action?: PageHeaderAction;
   align?: "center" | "start";
+  /** Lime line + dots between title and description (service heroes). */
+  showHeadingDivider?: boolean;
 }
 
 /** Hero title — compact on mobile, large on desktop (matches legacy blog hero). */
@@ -87,20 +91,32 @@ export default function PageHeader({
   breadcrumbItems,
   action,
   align = "start",
+  showHeadingDivider = false,
 }: PageHeaderProps) {
   const locale = useLocale();
   const hasRichTitle = Boolean(titleHtml?.trim());
-  const hasRichDescription = Boolean(descriptionHtml?.trim());
 
   const enhancedTitleHtml = useMemo(
-    () =>
-      titleHtml?.trim() ? inlineTitleHtml(enhanceCmsHtml(titleHtml, locale)) : "",
+    () => (titleHtml?.trim() ? enhanceCmsHtml(titleHtml, locale) : ""),
     [titleHtml, locale],
   );
+  const titleSegments = useMemo(
+    () => splitHeroTitleHtml(enhancedTitleHtml),
+    [enhancedTitleHtml],
+  );
+  const hasSplitTitle = titleSegments.length >= 2;
+  const primaryTitleHtml = inlineTitleHtml(
+    hasSplitTitle ? titleSegments[0] : enhancedTitleHtml,
+  );
+  const secondaryTitleHtml = hasSplitTitle
+    ? inlineTitleHtml(titleSegments.slice(1).join("<br />"))
+    : "";
   const enhancedDescriptionHtml = useMemo(
     () => (descriptionHtml?.trim() ? enhanceCmsHtml(descriptionHtml, locale) : ""),
     [descriptionHtml, locale],
   );
+  const hasSeparateDescription =
+    Boolean(descriptionHtml?.trim()) || Boolean(description?.trim());
 
   const showTitle = !descriptionAsHeader;
 
@@ -112,8 +128,7 @@ export default function PageHeader({
     : undefined;
 
   const showDescriptionBelow =
-    !descriptionAsHeader &&
-    (hasRichDescription || Boolean(description?.trim()));
+    !descriptionAsHeader && hasSeparateDescription;
 
   return (
     <section
@@ -174,13 +189,40 @@ export default function PageHeader({
           ) : null
         ) : showTitle ? (
           hasRichTitle ? (
-            <motion.h1
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className={cn(titleRichClass, align === "center" ? "mx-auto" : "")}
-              dangerouslySetInnerHTML={{ __html: enhancedTitleHtml }}
-            />
+            hasSplitTitle ? (
+              <div
+                className={cn(
+                  "w-full space-y-3 sm:space-y-4",
+                  align === "center" ? "text-center" : "",
+                )}
+              >
+                <motion.h1
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className={cn(titleRichClass, align === "center" ? "mx-auto" : "")}
+                  dangerouslySetInnerHTML={{ __html: primaryTitleHtml }}
+                />
+                <motion.p
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className={cn(titleRichClass, align === "center" ? "mx-auto" : "")}
+                  dangerouslySetInnerHTML={{ __html: secondaryTitleHtml }}
+                />
+              </div>
+            ) : (
+              <motion.h1
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className={cn(
+                  titleRichClass,
+                  align === "center" ? "mx-auto text-center" : "",
+                )}
+                dangerouslySetInnerHTML={{ __html: primaryTitleHtml }}
+              />
+            )
           ) : title ? (
             <motion.h1
               initial={{ opacity: 0, y: 12 }}
@@ -193,13 +235,21 @@ export default function PageHeader({
           ) : null
         ) : null}
 
+        {showHeadingDivider && showTitle && showDescriptionBelow ? (
+          <HeadingAccentDivider align={align} className="my-3 sm:my-4" />
+        ) : null}
+
         {showDescriptionBelow ? (
-          hasRichDescription ? (
+          enhancedDescriptionHtml ? (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className={cn(descriptionRichClass, align === "center" ? "mx-auto" : "")}
+              className={cn(
+                descriptionRichClass,
+                showHeadingDivider && "mt-0",
+                align === "center" ? "mx-auto" : "",
+              )}
               dangerouslySetInnerHTML={{
                 __html: enhancedDescriptionHtml,
               }}
@@ -209,7 +259,11 @@ export default function PageHeader({
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className={cn(descriptionSizeClass, align === "center" ? "mx-auto" : "")}
+              className={cn(
+                descriptionSizeClass,
+                showHeadingDivider && "mt-0",
+                align === "center" ? "mx-auto" : "",
+              )}
             >
               {description}
             </motion.p>

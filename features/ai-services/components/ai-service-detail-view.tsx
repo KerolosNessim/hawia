@@ -48,6 +48,8 @@ export default async function AiServiceDetailView({
           descriptionHtml={heroSubtitle || undefined}
           image={heroImage}
           imageAlt={service.image_alt || ""}
+          showHeadingDivider
+          align="center"
         />
       ) : (
         <div className="container max-w-6xl border-t border-border pt-12">
@@ -58,7 +60,9 @@ export default async function AiServiceDetailView({
         </div>
       )}
 
-      {service.description?.trim() && service.pageSections.length === 0 ? (
+      {service.description?.trim() &&
+      service.pageSections.length === 0 &&
+      plainTextFromHtml(service.description) !== plainTextFromHtml(heroSubtitle) ? (
         <div className="container py-12">
           <RichHtml
             html={service.description}
